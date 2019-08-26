@@ -31,6 +31,13 @@ namespace EPlayerEffect
 }
 UENUM(BlueprintType)
 enum ECustomMovementMode {
-	MOVE_Wall, MOVE_Rail
+	MOVE_Wall, MOVE_Rail, MOVE_Path
 };
+
+namespace ECustomTags {
+	const FName RailTag = FName("rail");
+	const FName WallTag = FName("wall");
+	const FName PathTag = FName("path");
+};
+
 const EPlaneConstraintAxisSetting LockXAxis = EPlaneConstraintAxisSetting::X;

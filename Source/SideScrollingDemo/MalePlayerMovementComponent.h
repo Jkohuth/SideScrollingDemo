@@ -91,6 +91,14 @@ public:
 	void TurnOnSliding() { bSlidingDownWall = true; }
 	bool CheckCustomMovementMode(uint8 CustomMode);
 
+	/////////////////////////////////////////////////
+	// PATH MOVEMENT - 
+	/////////////////////////////////////////////////
+	void PhysPath(float DeltaTime, int32 Iterations);
+	void AttachToPath(USplineComponent* PathSpline);
+	class USplineComponent* PathSplineRef;
+	void ConfirmPathExit();
+
 	///////////////////////////////////////////////
 	// RAIL MOVEMENT - (Should really be grinding)
 	///////////////////////////////////////////////
@@ -112,10 +120,6 @@ public:
 	float RailFriction = 1.f;
 	float MaxRailAccel = 1000.f;
 	float MaxSplineSpeed = 1000.f;
-	FVector GetRailAcceleration(float DeltaTime, FVector RailSplineDirection);
-	FVector GetRailControl(float DeltaTime, float TickRailControl, const FVector& RailAcceleration);
-	float BoostRailControl(float DeltaTime, float TickRailControl, const FVector& RailAcceleration);
-	FVector NewRailVelocity(const FVector& InitVelocity, const FVector& Gravity, float DeltaTime) const;
 	UFUNCTION(BlueprintCallable)
 		void AttachToRail(USplineComponent* RailSpline);
 	FVector RailSpeed;

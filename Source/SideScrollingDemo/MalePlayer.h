@@ -60,7 +60,8 @@ public:
 	virtual void StopJumping() override;
 	UPROPERTY(EditAnywhere)
 	float JumpTime = .22f;
-	FName RailTag = FName("rail");
+	//FName RailTag = FName("rail");
+	//FName WallTag = FName("wall");
 	////////////////////////////////////
 	// Focus Movement (Maybe Echo Movement)
 	////////////////////////////////////
