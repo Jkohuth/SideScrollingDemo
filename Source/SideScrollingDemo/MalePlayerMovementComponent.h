@@ -68,7 +68,10 @@ public:
 		void OnJumpInput();
 	UFUNCTION(BlueprintCallable)
 		void SetCustomMovementMode(uint8 custom);
-
+	UFUNCTION(BlueprintCallable)
+		void KnockBack(const FHitResult& Hit);
+	UPROPERTY(EditAnywhere)
+		FVector KnockBackVelocity;
 	////////////////////////////////////
 	// WALL MOVEMENT
 	////////////////////////////////////

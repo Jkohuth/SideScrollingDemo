@@ -68,6 +68,8 @@ public:
 	// Group these up in a struct later
 	UPROPERTY(EditAnywhere)
 	float focusDilation = 0.1f; // How much to dilate time
+	UPROPERTY(EditAnywhere)
+	float focusDilationPlayer = 0.1f;
 	float normalTime = 1.f;
 	UPROPERTY(EditAnywhere)
 	float focusRealTimeDilation = 1.5f; // Amount of real world seconds that need to pass
@@ -103,6 +105,13 @@ public:
 	void JumpActual();
 	void SetupJumpCalculations();
 
+	// Crude Damage Handler
+	float frameImmunity = 90.f;
+	float currentDamageFrame = 0.f;
+	bool immuneDamage = false;
+	UFUNCTION(BlueprintCallable)
+		void PostDamageImmunity(float DeltaTime);
+
 
 
 	// DAMAGE SYSTEM
@@ -111,7 +120,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void InflictDamage(AActor* ImpactActor);
 	UFUNCTION(BlueprintCallable)
-	float TakeDamage(float Damage, struct FDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser);
+	float TakeDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser);
 
 
 	/**Determines when collided with certain objects, will use Line Tracing in tandem*/

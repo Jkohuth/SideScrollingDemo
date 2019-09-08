@@ -27,15 +27,26 @@ protected:
 		class UBoxComponent* BoxComponent;	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Movement)
 		class UCustomFloatingPawnMovement* PawnMovement;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Awareness)
+		class UPawnSensingComponent* PawnSensor;
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
 	UFUNCTION()
-		void WasAttacked();
+		float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser);
 	UFUNCTION()
-		void DisableActor();
+		void InflictDamage(AActor* ImpactActor, const FHitResult& Hit);
+	UFUNCTION()
+		void OnHearNoise(APawn *OtherActor, const FVector &Location, float Volume);
+	UFUNCTION()
+		void OnSeePawn(APawn *OtherPawn);
+	float Health = 1.0f;
+	//UFUNCTION()
+	//	void WasAttacked();
+	//UFUNCTION()
+	//	void DisableActor();
 
 	virtual UPawnMovementComponent* GetMovementComponent() const override;
 

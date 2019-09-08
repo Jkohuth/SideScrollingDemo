@@ -68,12 +68,14 @@ AMalePlayer::AMalePlayer(const FObjectInitializer& ObjectInitializer)
 	increaseRadiusRate = focusRadiusApex / focusIncreaseRadiusTime;
 	decreaseRadiusRate = (focusRadiusApex - GetCapsuleComponent()->GetScaledCapsuleHalfHeight()) / (recoilTime - focusIncreaseRadiusTime);
 	GetCapsuleComponent()->bHiddenInGame = false;
+
 }
 
 // Called when the game starts or when spawned
 void AMalePlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
 	
 }
 
@@ -85,7 +87,9 @@ void AMalePlayer::Tick(float DeltaTime)
 	if (isFocusing) { 
 		UpdateFocus(DeltaTime);
 	}
-
+	if (immuneDamage) {
+		PostDamageImmunity(DeltaTime);
+	}
 	//if (CustomMovementComponent->CustomMovementMode == ECustomMovementMode::MOVE_Wall) CameraBoom->SocketOffset = FVector::ZeroVector;
 
 }
@@ -241,7 +245,7 @@ void AMalePlayer::UpdateFocus(float DeltaTime) {
 	//DrawDebugSphere(GetWorld(), End, focusRadius, 10, FColor::Red, false, 2.0f);
 	//GetWorldSettings()->SetTimeDilation(0.1f);
 
-	this->CustomTimeDilation = focusDilation;
+	this->CustomTimeDilation = focusDilationPlayer;
 }
 void AMalePlayer::ActivateFocus() {
 
@@ -311,18 +315,32 @@ void AMalePlayer::InflictDamage(AActor* ImpactActor) {
 		}
 	}
 }
-float AMalePlayer::TakeDamage(float Damage, struct FDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser) {
-	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
-	if (ActualDamage > 0.f) {
-		Health -= ActualDamage;
-		if (Health <= 0.f) {
-			UE_LOG(LogClass, Log, TEXT("You should be dead right now"));
+float AMalePlayer::TakeDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser) {
+	const float ActualDamage = Super::TakeDamage(Damage, (FDamageEvent)DamageEvent, EventInstigator, DamageCauser);
+
+	// This ensures the player won't get hit repeatedly by the same creature
+	if (!immuneDamage) {
+		MalePlayerMovement->KnockBack(DamageEvent.HitInfo);
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Player Took Damage");
+		if (ActualDamage > 0.f) {
+			Health -= ActualDamage;
+			if (Health <= 0.f) {
+				UE_LOG(LogClass, Log, TEXT("You should be dead right now"));
+			}
 		}
+		immuneDamage = true;
 	}
 
 	return ActualDamage;
 }
-
+void AMalePlayer::PostDamageImmunity(float DeltaTime) {
+	currentDamageFrame++;
+	if (currentDamageFrame >= frameImmunity) {
+		currentDamageFrame = 0.f;
+		immuneDamage = false;
+	}
+}
 
 // This is how I determine which how hight the player jump
 void AMalePlayer::JumpCalculated() {

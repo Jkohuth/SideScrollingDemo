@@ -35,6 +35,7 @@ void UMalePlayerMovementComponent::InitializeComponent() {
 
 	MaxMovementSpeeds = FVector(0.f, MaxWalkSpeed, JumpZVelocity);
 	RailSpeed = FVector(0.f, -500.0f, 0.f);
+	KnockBackVelocity = FVector(0.f, 1000.f, 700.f);
 }
 void UMalePlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -243,6 +244,17 @@ void UMalePlayerMovementComponent::PhysRail(float DeltaTime, int32 Iterations) {
 			// I am in shock that this crude and simple fix worked so well
 		}
 		
+/*		FHitResult RailHit;
+		FVector Start = GetActorLocation();
+		//FVector End = Start + (focusRadius *FVector(1.f)); // Something is a miss here, I want to draw a single sphere in place
+		FVector End = Start;
+		End.Z -= 3.f;
+		FCollisionQueryParams CollisionParams;
+		FCollisionShape capsule = FCollisionShape::MakeCapsule(capsuleRadius, capsuleHalfHeight);
+		CollisionParams.AddIgnoredActor(CharacterOwner);
+		bool isHit = GetWorld()->SweepSingleByChannel(RailHit, Start, End, FQuat::Identity, ECollisionChannel::ECC_Visibility, capsule);
+		DrawDebugCapsule(GetWorld(), End, capsuleHalfHeight, capsuleRadius, UpdatedComponent->GetComponentQuat(), FColor::Red, 1.f);
+*/
 		FHitResult RailHit;
 		FVector Start = GetActorFeetLocation();
 		FVector End = Start;
@@ -258,6 +270,11 @@ void UMalePlayerMovementComponent::PhysRail(float DeltaTime, int32 Iterations) {
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 			return;
 		}
+		// I need to figure out how to know if the player is in midair
+		/*else if (!isHit) {
+			SetMovementMode(MOVE_Falling);
+			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+		}*/
 
 		RailSplineDirection = RailSplineReference->GetWorldDirectionAtDistanceAlongSpline(distanceAlongSpline);
 		if (bJumpOffRail) {
@@ -271,6 +288,21 @@ void UMalePlayerMovementComponent::PhysRail(float DeltaTime, int32 Iterations) {
 
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 
+		}
+		// If Rail is suspended in Air make sure you stop the rail movement when the character isn't on it anymore
+		//FVector LocationClosetsTo = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
+		INT32 NumOfSplinePoints = RailSplineReference->GetNumberOfSplinePoints();
+		FVector firstSplinePointLocation = RailSplineReference->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
+		FVector lastSplinePointLocation = RailSplineReference->GetLocationAtSplinePoint(NumOfSplinePoints, ESplineCoordinateSpace::World);
+		
+		// Because Negative set world
+		float yLocation = FMath::Abs(GetActorLocation().Y);
+		float yLocationFirstSpline = FMath::Abs(firstSplinePointLocation.Y);
+		float yLocationLastSpline = FMath::Abs(lastSplinePointLocation.Y);
+
+		if ((yLocation + capsuleRadius) <= yLocationFirstSpline || (yLocation - capsuleRadius) >= yLocationLastSpline) {
+			SetMovementMode(MOVE_Falling);
+			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 		}
 	}
 }
@@ -459,7 +491,17 @@ bool UMalePlayerMovementComponent::CheckCustomMovementMode(uint8 CustomMode)
 void UMalePlayerMovementComponent::SetFacingDirection(FVector Value) {
 	FacingDirection = Value;
 }
+void UMalePlayerMovementComponent::KnockBack(const FHitResult& Hit) {
 
+	//FString tmp = *Hit.ImpactPoint.ToCompactString();
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *tmp);
+	
+	FVector characterKnockedBack = KnockBackVelocity;
+	characterKnockedBack.Y = characterKnockedBack.Y * Hit.ImpactNormal.Y * -1;
+
+	Velocity = characterKnockedBack;
+
+}
 
 
 void UMalePlayerMovementComponent::AttachToRail(USplineComponent* RailSpline) {

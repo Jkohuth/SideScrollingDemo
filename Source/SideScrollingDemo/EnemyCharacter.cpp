@@ -4,7 +4,7 @@
 #include "Perception/PawnSensingComponent.h"
 #include "Engine.h"
 #include "Constants.h"
-
+#include "MalePlayer.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogEnemy, Log, All);
 
@@ -66,7 +66,7 @@ void AEnemyCharacter::TurnAround() {
 	FQuat EnemyDirection;
 	if (FMath::IsNearlyEqual(GetActorForwardVector().Y, 1.0f, .1f)) {
 		EnemyDirection = FQuat::MakeFromEuler(FVector::UpVector * -90.f);
-		UE_LOG(LogEnemy, Log, TEXT("UpVector %s"), *FVector::UpVector.ToString());
+		//UE_LOG(LogEnemy, Log, TEXT("UpVector %s"), *FVector::UpVector.ToString());
 
 	}
 	else if (FMath::IsNearlyEqual(GetActorForwardVector().Y, -1.0f, .1f)) {
@@ -80,6 +80,9 @@ void AEnemyCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	//UE_LOG(LogEnemy, Log, TEXT("Enemy Hit %s"), *OtherActor->GetName());
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "OnHit was called");
 	TurnAround();
+	if (OtherActor != nullptr && OtherActor->ActorHasTag(ECustomTags::PlayerTag)) {
+		InflictDamage(OtherActor, Hit);
+	}
 
 
 }
@@ -93,54 +96,20 @@ float AEnemyCharacter::TakeDamage(float Damage, struct FDamageEvent const& Damag
 	}
 	return ActualDamage;
 }
-void AEnemyCharacter::InflictDamage() {
+void AEnemyCharacter::InflictDamage(AActor* ImpactActor, const FHitResult& Hit) {
 	AController* EnemyController = Cast<AController>(GetController());
-	if (EnemyController != nullptr) {
-		UE_LOG(LogClass, Log, TEXT("There is a player enemy controller"));
-		FHitResult TraceResult(ForceInit);
-		FVector Start = GetActorLocation();
-		Start.Y += GetActorForwardVector().Y * GetCapsuleComponent()->GetUnscaledCapsuleRadius();
-		FVector End = Start;
-		float AttackRange = 30.f; //Still have to account to the raidus of the sphere
+	if (EnemyController != nullptr && (ImpactActor != nullptr) && (ImpactActor != this)) {
+			TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+			//FDamageEvent DamageEvent(ValidDamageTypeClass);
+			const float DamageAmount = 1.0f;
 
+			FPointDamageEvent DamageEvent(DamageAmount, Hit, GetActorForwardVector(), ValidDamageTypeClass);
 
-		End.Y += GetActorForwardVector().Y * AttackRange;
-		FCollisionQueryParams CollisionParams(FName("EnemyAttack"));
-		CollisionParams.AddIgnoredActor(this);
-
-		bool isHit = GetWorld()->LineTraceSingleByChannel(TraceResult, Start, End, ECollisionChannel::ECC_Pawn, CollisionParams);
-
-		DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 1.f);
-		if (isHit) {
-			AActor* ImpactActor = TraceResult.GetActor();
-			if ((ImpactActor != nullptr) && (ImpactActor != this)) {
-				TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
-				FDamageEvent DamageEvent(ValidDamageTypeClass);
-
-				const float DamageAmount = 1.0f;
-				ImpactActor->TakeDamage(DamageAmount, DamageEvent, EnemyController, this);
-			}
-			
-		}
+			AMalePlayer* player = Cast<AMalePlayer>(ImpactActor);
+			if(player)
+				player->TakeDamage(DamageAmount, DamageEvent, EnemyController, this);
 
 	}
-	/*
-		// Perform a trace @See LineTraceSingle  
-		FHitResult TraceResult(ForceInit);
-		TraceHitForward(PlayerController, TraceResult);
-
-		// If the trace return an actor, inflict some damage to that actor  
-		AActor* ImpactActor = TraceResult.GetActor();
-		if ((ImpactActor != nullptr) && (ImpactActor != this))
-		{
-			// Create a damage event  
-			TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
-			FDamageEvent DamageEvent(ValidDamageTypeClass);
-
-			const float DamageAmount = 60.0f;
-			ImpactActor->TakeDamage(DamageAmount, DamageEvent, PlayerController, this);
-		}
-	*/
 }
 
 void AEnemyCharacter::OnHearNoise(APawn *OtherActor, const FVector &Location, float Volume) {
@@ -153,7 +122,7 @@ void AEnemyCharacter::OnSeePawn(APawn* OtherPawn) {
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, message);
 	Jump();
 	GetCharacterMovement()->Velocity.Y += GetActorForwardVector().Y * lungeVelocity;
-	InflictDamage();
+
 }
 // Called to bind functionality to input
 void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
