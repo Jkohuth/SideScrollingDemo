@@ -35,6 +35,7 @@ void UMalePlayerMovementComponent::InitializeComponent() {
 
 	MaxMovementSpeeds = FVector(0.f, MaxWalkSpeed, JumpZVelocity);
 	RailSpeed = FVector(0.f, -500.0f, 0.f);
+	KnockBackVelocity = FVector(0.f, 1000.f, 700.f);
 }
 void UMalePlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -102,6 +103,9 @@ void UMalePlayerMovementComponent::PhysCustom(float DeltaTime, int32 Iterations)
 		break;
 	case MOVE_Rail:
 		PhysRail(DeltaTime, Iterations);
+		break;
+	case MOVE_Path:
+		PhysPath(DeltaTime, Iterations);
 		break;
 	default:
 		UE_LOG(LogCharacterMovement, Warning, TEXT("Unsupported Movement Mode %d"), int32(MovementMode));
@@ -172,7 +176,7 @@ void UMalePlayerMovementComponent::PhysWall(float DeltaTime, int32 Iterations) {
 		FCollisionQueryParams CollisionParams;
 		CollisionParams.AddIgnoredActor(CharacterOwner);
 		bool isHit = GetWorld()->LineTraceSingleByChannel(WallHit, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionParams);
-		DrawDebugLine(GetWorld(), Start, End, FColor::Red, 1.f);
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, 1.f);
 		if (!isHit) {
 			SetMovementMode(MOVE_Falling);
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
@@ -212,14 +216,7 @@ void UMalePlayerMovementComponent::PhysRail(float DeltaTime, int32 Iterations) {
 		
 		FVector Forward = CharacterOwner->GetActorForwardVector();
 
-
-		// Should put in a Terminal Velocity
-		//splineSpeed += GravityAccel * timeTick;
-
-		//distanceAlongSpline += splineSpeed * timeTick;
-
 		FVector RailSplineDirection = RailSplineReference->GetWorldDirectionAtDistanceAlongSpline(distanceAlongSpline);
-		//FVector RailAcceleration = GetRailAcceleration(DeltaTime, RailSplineDirection);
 		float GravityDir = FVector::DotProduct(FVector(0.f, 0.f, GetGravityZ()), RailSplineDirection);
 		FVector GravityAccel = GravityDir * RailSplineDirection;
 		GravityAccel = FVector(0.f, GravityAccel.Y, GravityAccel.Z);
@@ -233,17 +230,7 @@ void UMalePlayerMovementComponent::PhysRail(float DeltaTime, int32 Iterations) {
 
 		//Apply Gravity
 		FRotator splineRotater = RailSplineReference->FindRotationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
-		//float GravityY = GetGravityZ() * FMath::Cos(FMath::DegreesToRadians(splineRotater.Pitch));
-		//float GravityZ = GetGravityZ() * FMath::Sin(FMath::DegreesToRadians(splineRotater.Pitch));
 
-		
-		
-		//float GravityTime = timeTick;
-		//UE_LOG(LogClass, Log, TEXT("GravityDir %s | Acceleration %s"), *GravityAccel.ToCompactString(), *RailAcceleration.ToString());
-
-		//Velocity = NewRailVelocity(Velocity, GravityAccel, GravityTime);
-		//UE_LOG(LogClass, Log, TEXT("The Acceleration %s"), *RailAcceleration.ToCompactString());
-		
 		FHitResult Hit(1.f);
 		FVector Adjusted = 0.5f*(Velocity + OldVelocity) * timeTick;
 		distanceAlongSpline += Adjusted.SizeSquared() * timeTick;
@@ -257,6 +244,17 @@ void UMalePlayerMovementComponent::PhysRail(float DeltaTime, int32 Iterations) {
 			// I am in shock that this crude and simple fix worked so well
 		}
 		
+/*		FHitResult RailHit;
+		FVector Start = GetActorLocation();
+		//FVector End = Start + (focusRadius *FVector(1.f)); // Something is a miss here, I want to draw a single sphere in place
+		FVector End = Start;
+		End.Z -= 3.f;
+		FCollisionQueryParams CollisionParams;
+		FCollisionShape capsule = FCollisionShape::MakeCapsule(capsuleRadius, capsuleHalfHeight);
+		CollisionParams.AddIgnoredActor(CharacterOwner);
+		bool isHit = GetWorld()->SweepSingleByChannel(RailHit, Start, End, FQuat::Identity, ECollisionChannel::ECC_Visibility, capsule);
+		DrawDebugCapsule(GetWorld(), End, capsuleHalfHeight, capsuleRadius, UpdatedComponent->GetComponentQuat(), FColor::Red, 1.f);
+*/
 		FHitResult RailHit;
 		FVector Start = GetActorFeetLocation();
 		FVector End = Start;
@@ -266,103 +264,112 @@ void UMalePlayerMovementComponent::PhysRail(float DeltaTime, int32 Iterations) {
 		CollisionParams.AddIgnoredActor(CharacterOwner);
 		
 		bool isHit = GetWorld()->LineTraceSingleByChannel(RailHit, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionParams);
-		DrawDebugLine(GetWorld(), Start, End, FColor::Red, 1.f);
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, 1.f);
 		if (isHit && RailHit.GetActor() && !RailHit.GetActor()->ActorHasTag(FName("rail"))) {
 			SetMovementMode(MOVE_Walking);
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 			return;
 		}
+		// I need to figure out how to know if the player is in midair
+		/*else if (!isHit) {
+			SetMovementMode(MOVE_Falling);
+			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+		}*/
 
 		RailSplineDirection = RailSplineReference->GetWorldDirectionAtDistanceAlongSpline(distanceAlongSpline);
 		if (bJumpOffRail) {
 			bJumpOffRail = false; 
 			SetMovementMode(MOVE_Falling);
-			//FVector XVector = FVector(1.0f, 0.0f, 0.0f);
-			//FVector RailNormal = RailSplineDirection.GetSafeNormal();
-			//FVector Cross = FVector::CrossProduct(XVector, RailNormal);
-			//Velocity = Velocity * RailNormal;
 			
 			// Clamp max Jump Velocity
 			FVector JumpOffRail = JumpVelocity * FVector(0.f, FMath::Sin(FMath::DegreesToRadians(splineRotater.Pitch)), FMath::Cos(FMath::DegreesToRadians(splineRotater.Pitch)));
-			//JumpOffRail *= forward;
 			Velocity += JumpOffRail;
 			UE_LOG(LogClass, Log, TEXT("JumpOffRail %s"), *JumpOffRail.ToCompactString());
 
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 
 		}
-		/*if(distanceAlongSpline > RailSplineReference->GetSplineLength()){
-			SetMovementMode(MOVE_Falling);
-			worldLocationAlongSpline.Y -= capsuleRadius;
-			worldLocationAlongSpline.Z += capsuleHalfHeight;
-			//Maybe put in a timer to delay the rays grabbing
-			CharacterOwner->SetActorLocation(worldLocationAlongSpline);
-			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
-		}*/
-		//if (Hit.IsValidBlockingHit()) {
-		//	SetMovementMode(MOVE_Walking);
-		//	StartNewPhysics(remainingTime + timeTick, Iterations - 1);
-		//	return;
-		//}
-		/*else if (distanceAlongSpline < 0) {
-			SetMovementMode(MOVE_Falling);
-			worldLocationAlongSpline.Y += capsuleRadius;
-			worldLocationAlongSpline.Z += capsuleHalfHeight;
-			//Maybe put in a timer to delay the rays grabbing
-			CharacterOwner->SetActorLocation(worldLocationAlongSpline);
-			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
-		}*/
+		// If Rail is suspended in Air make sure you stop the rail movement when the character isn't on it anymore
+		//FVector LocationClosetsTo = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
+		INT32 NumOfSplinePoints = RailSplineReference->GetNumberOfSplinePoints();
+		FVector firstSplinePointLocation = RailSplineReference->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
+		FVector lastSplinePointLocation = RailSplineReference->GetLocationAtSplinePoint(NumOfSplinePoints, ESplineCoordinateSpace::World);
+		
+		float yLocation = GetActorLocation().Y;
+		float yLocationFirstSpline = firstSplinePointLocation.Y;
+		float yLocationLastSpline = lastSplinePointLocation.Y;
+		// Having a flipped world is giving me a headache
+		// This is ugly I know but I don't feel like working out a more elegant solution atm
+		// Also this expects a left right setting not good for long term
+		if (firstSplinePointLocation.Y >= 0.f && lastSplinePointLocation.Y >= 0.f) {
+
+
+			if ((yLocation - capsuleRadius) >= yLocationFirstSpline ||(yLocation + capsuleRadius) <= yLocationLastSpline) {
+				SetMovementMode(MOVE_Falling);
+				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+			}
+		}
+		else if (firstSplinePointLocation.Y >= 0.f && lastSplinePointLocation.Y <= 0.f) {
+			// HEEEEEEEEEEEAAAAAAAAAAAADDDDDDDDDDDDDAAACCCCHHEEES
+
+			if ((yLocation - capsuleRadius) >= yLocationFirstSpline || (yLocation + capsuleRadius) <= yLocationLastSpline) {
+
+				SetMovementMode(MOVE_Falling);
+				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+			}
+		}
+		else if (firstSplinePointLocation.Y <= 0.f && lastSplinePointLocation.Y <= 0.f) {
+			yLocation = FMath::Abs(yLocation);
+			yLocationFirstSpline = FMath::Abs(yLocationFirstSpline);
+			yLocationLastSpline = FMath::Abs(yLocationLastSpline);
+			
+			if ((yLocation + capsuleRadius) <= yLocationFirstSpline || yLocationLastSpline <= (yLocation - capsuleRadius)) {
+				SetMovementMode(MOVE_Falling);
+				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+			}
+		}
 
 	}
 }
-FVector UMalePlayerMovementComponent::NewRailVelocity(const FVector& InitVelocity, const FVector& Gravity, float DeltaTime) const {
-	FVector Result = InitVelocity;
-	if (DeltaTime > 0.f) {
-		//Apply Gravity
-		Result += Gravity * DeltaTime;
-		// Dont Exceed TerminalVelocity
-		//TODO Set a rail terminal velocity
-	}
-	return Result;
-}
-FVector UMalePlayerMovementComponent::GetRailAcceleration(float DeltaTime, FVector RailSplineDirection) {
+void UMalePlayerMovementComponent::PhysPath(float DeltaTime, int32 Iterations) {
 
-	
-	// Acceleration only in direction of spline
-	float railAccelMagnitude = FVector::DotProduct(Acceleration, RailSplineDirection);
-	FMath::Clamp(railAccelMagnitude, -MaxRailAccel, MaxRailAccel);
-	FVector RailAcceleration = railAccelMagnitude * RailSplineDirection;
+}
+void UMalePlayerMovementComponent::AttachToPath(USplineComponent* PathSpline) {
+	FVector LocationClosets = PathSpline->FindLocationClosestToWorldLocation(GetActorLocation(), ESplineCoordinateSpace::World);
+	UE_LOG(LogCharacterMovement, Log, TEXT("LocationClosest %s"), *LocationClosets.ToCompactString());
 
-	/*if (!HasAnimRootMotion() && RailAcceleration.SizeSquared() > 0.f) {
-		RailAcceleration = GetRailControl(DeltaTime, RailControl, RailAcceleration);
-		RailAcceleration = RailAcceleration.GetClampedToMaxSize(GetMaxAcceleration());
-	}*/
-	if (RailAcceleration.X < SMALL_NUMBER) RailAcceleration.X = 0.f;
-	return RailAcceleration;
-}
-FVector UMalePlayerMovementComponent::GetRailControl(float DeltaTime, float TickRailControl, const FVector& RailAcceleration) {
-	//Boost
-	if (TickRailControl != 0.f) {
-		TickRailControl = BoostRailControl(DeltaTime, TickRailControl, RailAcceleration);
-	}
-	return TickRailControl * RailAcceleration;
-}
-float UMalePlayerMovementComponent::BoostRailControl(float DeltaTime, float TickRailControl, const FVector& RailAcceleration) {
-	// Allow a burst of initial acceleration
-	if (RailControlBoostMultiplier > 0.f && Velocity.SizeSquared() < FMath::Square(RailControlBoostVelocityThreshold)) {
-		TickRailControl = FMath::Min(1.f, RailControlBoostMultiplier * TickRailControl);
-	}
-	return TickRailControl;
-}
+	FVector SplineBeginning = PathSpline->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
+	FVector SplineEnding = PathSpline->GetLocationAtSplinePoint(1, ESplineCoordinateSpace::World);
 
+	FVector splinePoint1 = SplineBeginning - LocationClosets;
+	FVector splinePoint2 = SplineEnding - LocationClosets;
+	SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Path);
+	PathSplineRef = PathSpline;
+	Velocity = FVector::ZeroVector;
+	if (splinePoint1.SizeSquared() < splinePoint2.SizeSquared()) {
+		CharacterOwner->SetActorLocation(SplineBeginning);
+	}
+	else {
+		CharacterOwner->SetActorLocation(SplineEnding);
+
+	}
+
+
+}
+void UMalePlayerMovementComponent::ConfirmPathExit() {
+
+}
 void UMalePlayerMovementComponent::MoveRightInput(float Value) {
 	// This will handle all input and call all necessary functions with CustomMovementComponent;;
 	//if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Rail)) {
 	//	AddInputVector(FVector(0.0f, -Value, 0.0f));
 	//}
 	//else {
+	if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Path)) {
+
+	}else{
 		AddInputVector(FVector(0.0f, -Value, 0.0f));
-	//}
+	}
 }
 void UMalePlayerMovementComponent::MoveUpInput(float Value) {
 	if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Wall)) {
@@ -388,11 +395,13 @@ void UMalePlayerMovementComponent::TriggerWallMovement(FHitResult Hit) {
 	wallDirection.Y = Hit.ImpactNormal.Y; // Perhaps something needs to be done about the variable wallDirection but I worry about that later
 
 	FCollisionQueryParams CollisionParams;
-	CollisionParams.TraceTag = TraceTag;
+	//CollisionParams.TraceTag = TraceTag;
 	CollisionParams.AddIgnoredActor(CharacterOwner);
 	//CollisionParams.AddIgnoredActor(); Find out how to remove boundingbox
 	for (int i = 0; i < wallLinesCount; i++) {
-		if (GetWorld()->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECollisionChannel::ECC_Visibility, CollisionParams)) {
+		//DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Red, 1.f);
+
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams)) {
 			wallRayCheck.Emplace(true);
 			// I calculate the rays from the top down
 			// if All of the rays hit the same object then stick to wall
@@ -428,10 +437,11 @@ void UMalePlayerMovementComponent::WallCollisionHandler() {
 
 	if (truePercent >= 0.6f) {
 		Velocity = FVector::ZeroVector;
-		SetCustomMovementMode(ECustomMovementMode::MOVE_Wall);
+  		SetCustomMovementMode(ECustomMovementMode::MOVE_Wall);
 	}
 	else if (!wallRayCheck[0] && !wallRayCheck[midpoint]) { // if half of the rays return false including the top and the midpoint  
 		//Do roll onto ledge
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "You're trying to roll");
 
 		//CharacterOwner->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		FVector updatedLocation = GetActorLocation();
@@ -462,7 +472,7 @@ void UMalePlayerMovementComponent::CheckWallBehind()
 	WallCheckLocationEnd = FVector(WallCheckLocationStart.X, WallCheckLocationStart.Y + (-1*FacingDirection.Y), WallCheckLocationStart.Z);
 	FHitResult outHit;
 	bool isHit = GetWorld()->LineTraceSingleByChannel(outHit, WallCheckLocationStart, WallCheckLocationEnd, ECC_Visibility);
-	DrawDebugLine(GetWorld(), WallCheckLocationStart, WallCheckLocationEnd, FColor::Red);
+	//DrawDebugLine(GetWorld(), WallCheckLocationStart, WallCheckLocationEnd, FColor::Red);
 	if (isHit) {
 		UE_LOG(LogClass, Log, TEXT("YUUUUUUUUGGGGGEEEE WALL"));
 		Velocity = FVector::ZeroVector;
@@ -506,7 +516,17 @@ bool UMalePlayerMovementComponent::CheckCustomMovementMode(uint8 CustomMode)
 void UMalePlayerMovementComponent::SetFacingDirection(FVector Value) {
 	FacingDirection = Value;
 }
+void UMalePlayerMovementComponent::KnockBack(const FHitResult& Hit) {
 
+	//FString tmp = *Hit.ImpactPoint.ToCompactString();
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *tmp);
+	
+	FVector characterKnockedBack = KnockBackVelocity;
+	characterKnockedBack.Y = characterKnockedBack.Y * Hit.ImpactNormal.Y * -1;
+
+	Velocity = characterKnockedBack;
+
+}
 
 
 void UMalePlayerMovementComponent::AttachToRail(USplineComponent* RailSpline) {
@@ -596,5 +616,5 @@ FVector UMalePlayerMovementComponent::AverageBetweenSplinePoints(FVector splineP
 
 }
 void UMalePlayerMovementComponent::AccumulateForce(FVector Force) {
-	this->Velocity += Force;
+	this->Velocity = Force;
 }

@@ -43,7 +43,7 @@ public:
 	UFUNCTION()
 		float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser);
 	UFUNCTION()
-		void InflictDamage();
+		void InflictDamage(AActor* ImpactActor, const FHitResult& Hit);
 
 	UFUNCTION()
 		void TurnAround();

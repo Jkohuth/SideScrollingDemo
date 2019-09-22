@@ -91,3 +91,15 @@ void ACameraBoundingBox::UpdatePosition(AActor* targetActor) {
 void ACameraBoundingBox::InitializePosition(AActor* targetActor) {
 	BoundingBox->SetWorldLocation(targetActor->GetActorLocation());
 }
+void ACameraBoundingBox::ResetCamera(AActor* targetActor) {
+
+	TargetLocation = targetActor->GetActorLocation();
+	halfHeight = targetActor->GetSimpleCollisionHalfHeight();
+	radius = targetActor->GetSimpleCollisionRadius();
+	
+	FVector OffsetGround = TargetLocation;
+	OffsetGround.Z += (BoxExtent.Z - halfHeight);
+
+	this->SetActorLocation(OffsetGround);
+	
+}

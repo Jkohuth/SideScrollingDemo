@@ -31,6 +31,25 @@ namespace EPlayerEffect
 }
 UENUM(BlueprintType)
 enum ECustomMovementMode {
-	MOVE_Wall, MOVE_Rail
+	MOVE_Wall, MOVE_Rail, MOVE_Path
 };
+UENUM(BlueprintType)
+enum ECharacterState {
+	ACTIVE, DEAD
+};
+UENUM(BlueprintType)
+enum ENavigationType {
+	MainLeft, MainRight
+};
+namespace ECustomTags {
+	const FName RailTag = FName("rail");
+	const FName WallTag = FName("wall");
+	const FName PathTag = FName("path");
+	
+	// Later I may seperate the enemies from the movement modes
+	const FName PlayerTag = FName("player");
+
+
+};
+
 const EPlaneConstraintAxisSetting LockXAxis = EPlaneConstraintAxisSetting::X;
