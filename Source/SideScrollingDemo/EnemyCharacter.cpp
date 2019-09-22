@@ -106,9 +106,9 @@ void AEnemyCharacter::InflictDamage(AActor* ImpactActor, const FHitResult& Hit) 
 			FPointDamageEvent DamageEvent(DamageAmount, Hit, GetActorForwardVector(), ValidDamageTypeClass);
 
 			AMalePlayer* player = Cast<AMalePlayer>(ImpactActor);
-			if(player)
+			if (player) {
 				player->TakeDamage(DamageAmount, DamageEvent, EnemyController, this);
-
+			}
 	}
 }
 
@@ -120,9 +120,11 @@ void AEnemyCharacter::OnHearNoise(APawn *OtherActor, const FVector &Location, fl
 void AEnemyCharacter::OnSeePawn(APawn* OtherPawn) {
 	//FString message = TEXT("Saw Actor ") + OtherPawn->GetName();
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, message);
-	Jump();
-	GetCharacterMovement()->Velocity.Y += GetActorForwardVector().Y * lungeVelocity;
-
+	AMalePlayer* player = Cast<AMalePlayer>(OtherPawn);
+	if (player && player->GetCharacterState() == ECharacterState::ACTIVE) {
+		Jump();
+		GetCharacterMovement()->Velocity.Y += GetActorForwardVector().Y * lungeVelocity;
+	}
 }
 // Called to bind functionality to input
 void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

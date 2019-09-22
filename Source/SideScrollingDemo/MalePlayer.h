@@ -32,7 +32,10 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 		class UMalePlayerMovementComponent* MalePlayerMovement;
-
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MalePlayer")
+	//	class ACameraBoundingBox* Camera;
+	UPROPERTY(Category = "Character State: CharacterState", BlueprintReadOnly)
+		TEnumAsByte<enum ECharacterState> CharacterState;
 		
 	// Called for the side to side input //
 	void MoveRight(float Value);
@@ -69,7 +72,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	float focusDilation = 0.1f; // How much to dilate time
 	UPROPERTY(EditAnywhere)
-	float focusDilationPlayer = 0.1f;
+	float focusDilationPlayer = 0.5f;
 	float normalTime = 1.f;
 	UPROPERTY(EditAnywhere)
 	float focusRealTimeDilation = 1.5f; // Amount of real world seconds that need to pass
@@ -77,11 +80,11 @@ public:
 	UPROPERTY(EditAnywhere)
 		float focusRadiusApex = 500.f;
 	
-	float focusRadius = 300.f;
+	float focusRadius = 500.f;
 	FVector focusInitialLocation;
 	float increaseRadiusRate = 0.0f;
 	float decreaseRadiusRate = .0f;
-	float recoilTime = 3.0f; // This needs to be expressed in the ratio of actual time by dilated time
+	float recoilTime = 1.0f; // This needs to be expressed in the ratio of actual time by dilated time
 	float focusIncreaseRadiusTime = .5f; // Time till radius is finished expanding
 	float focusTimeCount; // Keeps track of how much time has passed since activation
 	bool isFocusing;
@@ -112,16 +115,30 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void PostDamageImmunity(float DeltaTime);
 
-
+	// Camera System needs to be held by the Player as well
 
 	// DAMAGE SYSTEM
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 		float Health = 3.0f;
+	UPROPERTY(EditAnywhere)
+		float FullHealth = 3.0;
 	UFUNCTION(BlueprintCallable)
 	void InflictDamage(AActor* ImpactActor);
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintNativeEvent, Category="Damage")
 	float TakeDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser);
+	UFUNCTION(BlueprintImplementableEvent, category = "Anim")
+		void TriggerDeathAnim();
+	UPROPERTY(BlueprintReadWrite)
+	bool isDead = false;
+	UFUNCTION(BlueprintCallable, Category="MalePlayer")
+	void Respawn(FVector LastCheckPoint);
 
+	// This is better than a bunch of booleans to dictate behavior
+
+	UFUNCTION(BlueprintCallable, Category = "MalePlayer")
+		virtual void SetCharacterState(ECharacterState NewCharacterState);
+	UFUNCTION(BlueprintCallable, Category = "MalePlayer")
+		virtual ECharacterState GetCharacterState();
 
 	/**Determines when collided with certain objects, will use Line Tracing in tandem*/
 	UFUNCTION()

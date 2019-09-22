@@ -54,6 +54,9 @@ AMalePlayer::AMalePlayer(const FObjectInitializer& ObjectInitializer)
 	SideViewCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	SideViewCameraComponent->bUsePawnControlRotation = false; // We don't want the controller rotating the camera*/
 	
+	//Camera = CreateDefaultSubobject<ACameraBoundingBox>(TEXT("Camera"));
+
+
 	MalePlayerMovement = Cast<UMalePlayerMovementComponent>(GetCharacterMovement());
 	
 	if (MalePlayerMovement) {
@@ -75,6 +78,7 @@ AMalePlayer::AMalePlayer(const FObjectInitializer& ObjectInitializer)
 void AMalePlayer::BeginPlay()
 {
 	Super::BeginPlay();
+	SetCharacterState(ECharacterState::ACTIVE);
 
 	
 }
@@ -200,7 +204,10 @@ void AMalePlayer::UpdateFocus(float DeltaTime) {
 	}
 
 	focusTimeCount += DeltaTime;
-	
+	if (focusTimeCount >= recoilTime) {
+		DeactivateFocus();
+		return;
+	}
 	/*if (focusTimeCount <= focusIncreaseRadiusTime) {
 		focusRadius += increaseRadiusRate * DeltaTime;
 	}
@@ -276,7 +283,18 @@ void AMalePlayer::DeactivateFocus() {
 	this->CustomTimeDilation = normalTime;
 	//GetWorldSettings()->SetTimeDilation(normalTime);
 	FocusSphereZone.Empty();
-	focusImpluse = FVector(0.f, 20.f, 10.f); // Find some interesting way to calculate this
+	float focusScalar = 1 - focusTimeCount / recoilTime;
+	
+	if (FMath::IsNearlyZero(focusScalar, 0.3f)) {
+		focusScalar = .5f;
+	}
+	focusScalar = FMath::Pow(focusScalar, -1.f);
+	
+	focusImpluse = MalePlayerMovement->Velocity * focusScalar;// Find some interesting way to calculate this
+	FString tmp = MalePlayerMovement->Velocity.ToCompactString() + " is the velocity and this is the scalar: " + FString::SanitizeFloat(focusScalar);
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, *tmp);
+
 	MalePlayerMovement->AccumulateForce(focusImpluse);
 	/*//UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
 	GetWorldSettings()->SetTimeDilation(1.f);
@@ -315,24 +333,39 @@ void AMalePlayer::InflictDamage(AActor* ImpactActor) {
 		}
 	}
 }
-float AMalePlayer::TakeDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser) {
-	const float ActualDamage = Super::TakeDamage(Damage, (FDamageEvent)DamageEvent, EventInstigator, DamageCauser);
+float AMalePlayer::TakeDamage_Implementation(float Damage, struct FPointDamageEvent const & PointDamageEvent, class AController *EventInstigator, AActor *DamageCauser) {
+	FDamageEvent DamageEvent = PointDamageEvent;
+	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
 	// This ensures the player won't get hit repeatedly by the same creature
-	if (!immuneDamage) {
-		MalePlayerMovement->KnockBack(DamageEvent.HitInfo);
+	if (!immuneDamage && CharacterState == ECharacterState::ACTIVE) {
+		MalePlayerMovement->KnockBack(PointDamageEvent.HitInfo);
 
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Player Took Damage");
 		if (ActualDamage > 0.f) {
 			Health -= ActualDamage;
-			if (Health <= 0.f) {
-				UE_LOG(LogClass, Log, TEXT("You should be dead right now"));
+			if (Health <= 0.f && !isDead) {
+				TriggerDeathAnim();
+				SetCharacterState(ECharacterState::DEAD);
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "He's dead Jim");
 			}
 		}
 		immuneDamage = true;
 	}
 
 	return ActualDamage;
+}
+void AMalePlayer::Respawn(FVector LastCheckPoint) {
+	Health = FullHealth;
+	SetCharacterState(ECharacterState::ACTIVE);
+	SetActorLocation(LastCheckPoint);
+	
+}
+void AMalePlayer::SetCharacterState(ECharacterState NewCharacterState) {
+	CharacterState = NewCharacterState;
+}
+ECharacterState AMalePlayer::GetCharacterState() {
+	return CharacterState;
 }
 void AMalePlayer::PostDamageImmunity(float DeltaTime) {
 	currentDamageFrame++;

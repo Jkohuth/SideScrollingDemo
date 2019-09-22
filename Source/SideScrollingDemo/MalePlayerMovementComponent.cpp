@@ -176,7 +176,7 @@ void UMalePlayerMovementComponent::PhysWall(float DeltaTime, int32 Iterations) {
 		FCollisionQueryParams CollisionParams;
 		CollisionParams.AddIgnoredActor(CharacterOwner);
 		bool isHit = GetWorld()->LineTraceSingleByChannel(WallHit, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionParams);
-		DrawDebugLine(GetWorld(), Start, End, FColor::Red, 1.f);
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, 1.f);
 		if (!isHit) {
 			SetMovementMode(MOVE_Falling);
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
@@ -264,7 +264,7 @@ void UMalePlayerMovementComponent::PhysRail(float DeltaTime, int32 Iterations) {
 		CollisionParams.AddIgnoredActor(CharacterOwner);
 		
 		bool isHit = GetWorld()->LineTraceSingleByChannel(RailHit, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionParams);
-		DrawDebugLine(GetWorld(), Start, End, FColor::Red, 1.f);
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, 1.f);
 		if (isHit && RailHit.GetActor() && !RailHit.GetActor()->ActorHasTag(FName("rail"))) {
 			SetMovementMode(MOVE_Walking);
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
@@ -295,15 +295,40 @@ void UMalePlayerMovementComponent::PhysRail(float DeltaTime, int32 Iterations) {
 		FVector firstSplinePointLocation = RailSplineReference->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
 		FVector lastSplinePointLocation = RailSplineReference->GetLocationAtSplinePoint(NumOfSplinePoints, ESplineCoordinateSpace::World);
 		
-		// Because Negative set world
-		float yLocation = FMath::Abs(GetActorLocation().Y);
-		float yLocationFirstSpline = FMath::Abs(firstSplinePointLocation.Y);
-		float yLocationLastSpline = FMath::Abs(lastSplinePointLocation.Y);
+		float yLocation = GetActorLocation().Y;
+		float yLocationFirstSpline = firstSplinePointLocation.Y;
+		float yLocationLastSpline = lastSplinePointLocation.Y;
+		// Having a flipped world is giving me a headache
+		// This is ugly I know but I don't feel like working out a more elegant solution atm
+		// Also this expects a left right setting not good for long term
+		if (firstSplinePointLocation.Y >= 0.f && lastSplinePointLocation.Y >= 0.f) {
 
-		if ((yLocation + capsuleRadius) <= yLocationFirstSpline || (yLocation - capsuleRadius) >= yLocationLastSpline) {
-			SetMovementMode(MOVE_Falling);
-			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+
+			if ((yLocation - capsuleRadius) >= yLocationFirstSpline ||(yLocation + capsuleRadius) <= yLocationLastSpline) {
+				SetMovementMode(MOVE_Falling);
+				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+			}
 		}
+		else if (firstSplinePointLocation.Y >= 0.f && lastSplinePointLocation.Y <= 0.f) {
+			// HEEEEEEEEEEEAAAAAAAAAAAADDDDDDDDDDDDDAAACCCCHHEEES
+
+			if ((yLocation - capsuleRadius) >= yLocationFirstSpline || (yLocation + capsuleRadius) <= yLocationLastSpline) {
+
+				SetMovementMode(MOVE_Falling);
+				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+			}
+		}
+		else if (firstSplinePointLocation.Y <= 0.f && lastSplinePointLocation.Y <= 0.f) {
+			yLocation = FMath::Abs(yLocation);
+			yLocationFirstSpline = FMath::Abs(yLocationFirstSpline);
+			yLocationLastSpline = FMath::Abs(yLocationLastSpline);
+			
+			if ((yLocation + capsuleRadius) <= yLocationFirstSpline || yLocationLastSpline <= (yLocation - capsuleRadius)) {
+				SetMovementMode(MOVE_Falling);
+				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+			}
+		}
+
 	}
 }
 void UMalePlayerMovementComponent::PhysPath(float DeltaTime, int32 Iterations) {
@@ -447,7 +472,7 @@ void UMalePlayerMovementComponent::CheckWallBehind()
 	WallCheckLocationEnd = FVector(WallCheckLocationStart.X, WallCheckLocationStart.Y + (-1*FacingDirection.Y), WallCheckLocationStart.Z);
 	FHitResult outHit;
 	bool isHit = GetWorld()->LineTraceSingleByChannel(outHit, WallCheckLocationStart, WallCheckLocationEnd, ECC_Visibility);
-	DrawDebugLine(GetWorld(), WallCheckLocationStart, WallCheckLocationEnd, FColor::Red);
+	//DrawDebugLine(GetWorld(), WallCheckLocationStart, WallCheckLocationEnd, FColor::Red);
 	if (isHit) {
 		UE_LOG(LogClass, Log, TEXT("YUUUUUUUUGGGGGEEEE WALL"));
 		Velocity = FVector::ZeroVector;
@@ -591,5 +616,5 @@ FVector UMalePlayerMovementComponent::AverageBetweenSplinePoints(FVector splineP
 
 }
 void UMalePlayerMovementComponent::AccumulateForce(FVector Force) {
-	this->Velocity += Force;
+	this->Velocity = Force;
 }
