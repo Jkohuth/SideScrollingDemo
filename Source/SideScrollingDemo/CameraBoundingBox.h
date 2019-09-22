@@ -40,6 +40,8 @@ public:
 		void InitializePosition(AActor* targetActor);
 	UFUNCTION(BlueprintCallable)
 	void UpdatePosition(AActor* targetActor);
+	UFUNCTION(BlueprintCallable)
+		void ResetCamera(AActor* targetActor);
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

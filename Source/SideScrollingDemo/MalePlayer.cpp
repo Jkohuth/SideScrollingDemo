@@ -12,6 +12,7 @@
 #include "CameraBoundingBox.h"
 #include "Rail.h"
 #include "Components/SplineComponent.h"
+#include "WalkingPath.h"
 //#include "Enemy.h"
 #include "Engine.h"
 
@@ -53,6 +54,9 @@ AMalePlayer::AMalePlayer(const FObjectInitializer& ObjectInitializer)
 	SideViewCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	SideViewCameraComponent->bUsePawnControlRotation = false; // We don't want the controller rotating the camera*/
 	
+	//Camera = CreateDefaultSubobject<ACameraBoundingBox>(TEXT("Camera"));
+
+
 	MalePlayerMovement = Cast<UMalePlayerMovementComponent>(GetCharacterMovement());
 	
 	if (MalePlayerMovement) {
@@ -67,12 +71,15 @@ AMalePlayer::AMalePlayer(const FObjectInitializer& ObjectInitializer)
 	increaseRadiusRate = focusRadiusApex / focusIncreaseRadiusTime;
 	decreaseRadiusRate = (focusRadiusApex - GetCapsuleComponent()->GetScaledCapsuleHalfHeight()) / (recoilTime - focusIncreaseRadiusTime);
 	GetCapsuleComponent()->bHiddenInGame = false;
+
 }
 
 // Called when the game starts or when spawned
 void AMalePlayer::BeginPlay()
 {
 	Super::BeginPlay();
+	SetCharacterState(ECharacterState::ACTIVE);
+
 	
 }
 
@@ -84,7 +91,9 @@ void AMalePlayer::Tick(float DeltaTime)
 	if (isFocusing) { 
 		UpdateFocus(DeltaTime);
 	}
-
+	if (immuneDamage) {
+		PostDamageImmunity(DeltaTime);
+	}
 	//if (CustomMovementComponent->CustomMovementMode == ECustomMovementMode::MOVE_Wall) CameraBoom->SocketOffset = FVector::ZeroVector;
 
 }
@@ -143,12 +152,15 @@ void AMalePlayer::StopJumping() {
 }
 
 void AMalePlayer::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
-	if (abs(Hit.ImpactNormal.Y) == 1 && MalePlayerMovement->IsFalling()) {
+	
+	if(OtherActor != nullptr && OtherActor->ActorHasTag(ECustomTags::WallTag) && FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.2f) 
+		&& MalePlayerMovement->MovementMode == MOVE_Falling){ // Angle Tolerance
+		UE_LOG(LogClass, Log, TEXT("just hit the wall %s"), *OtherActor->GetName());
 		if (MalePlayerMovement) {
 			MalePlayerMovement->TriggerWallMovement(Hit);
 		}
 	}
-	else if (OtherActor && OtherActor->ActorHasTag(RailTag)) {
+	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::RailTag)) {
 		if (MalePlayerMovement->CheckCustomMovementMode(ECustomMovementMode::MOVE_Rail)) return;
 		UE_LOG(LogClass, Log, TEXT("Hit the rail "));
 
@@ -160,24 +172,21 @@ void AMalePlayer::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 }
 void AMalePlayer::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, 
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
-/*
-	//UE_LOG(LogClass, Log, TEXT("I want to eat your pancreas Hit Location %s | Closest Rail Point"), *SweepResult.ToString());
 
-	if (OtherActor && OtherActor->ActorHasTag(Rail)) {
-		ARail* rail = Cast<ARail>(OtherActor);
-		if (rail) {
-			MalePlayerMovement->AttachToRail(rail->GetRailSpline());
+	if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::PathTag)) {
+		UE_LOG(LogClass, Log, TEXT("It Makes it this far"));
+
+		AWalkingPath* WalkingPath = Cast<AWalkingPath>(OtherActor);
+		if (WalkingPath) {
+			UE_LOG(LogClass, Log, TEXT("It can detect the walking path"));
+			MalePlayerMovement->AttachToPath(WalkingPath->GetSplineComponent());
 		}
 	}
-*/
 }
 void AMalePlayer::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
-/*	if (OtherActor && OtherActor->ActorHasTag(Rail) && MalePlayerMovement->CheckCustomMovementMode(ECustomMovementMode::MOVE_Rail)) {
-		// Probably more complex than this but if it works
-		MalePlayerMovement->SetMovementMode(MOVE_Falling);
-
+	if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::PathTag)) {
+		UE_LOG(LogClass, Log, TEXT("You are no longer overlapping with the laddy with the path tag"));
 	}
-*/
 }
 
 
@@ -186,15 +195,19 @@ void AMalePlayer::DebugString() {
 }
 void AMalePlayer::UpdateFocus(float DeltaTime) {
 	float dist = FVector::Dist(focusInitialLocation, GetActorLocation());
-	UE_LOG(LogClass, Log, TEXT("distance %s"), *FString::SanitizeFloat(dist));
+	//UE_LOG(LogClass, Log, TEXT("distance %s"), *FString::SanitizeFloat(dist));
 
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Distance %s", *FString::SanitizeFloat(dist));
 	if (focusRadius < dist) {
 		DeactivateFocus();
 		return;
 	}
 
 	focusTimeCount += DeltaTime;
-	
+	if (focusTimeCount >= recoilTime) {
+		DeactivateFocus();
+		return;
+	}
 	/*if (focusTimeCount <= focusIncreaseRadiusTime) {
 		focusRadius += increaseRadiusRate * DeltaTime;
 	}
@@ -212,27 +225,26 @@ void AMalePlayer::UpdateFocus(float DeltaTime) {
 	FVector Start = focusInitialLocation;
 	//FVector End = Start + (focusRadius *FVector(1.f)); // Something is a miss here, I want to draw a single sphere in place
 	FVector End = Start;
+	End.X += 1.f;
 	FCollisionQueryParams CollisionParams(FName(TEXT("Focus")), true, this);
 	FCollisionShape Sphere = FCollisionShape::MakeSphere(focusRadius);
 
 	CollisionParams.AddIgnoredActor(this);
 
 	//CollisionParams.bTraceComplex = true;
-	bool isHit = GetWorld()->SweepMultiByChannel(FocusSphereZone, Start, End, FQuat::Identity, ECollisionChannel::ECC_Visibility, Sphere, CollisionParams);
-	if (isHit) { UE_LOG(LogClass, Log, TEXT("It Hit")) }
-	else {
-		UE_LOG(LogClass, Log, TEXT("It did not Hit"))
-	}
+	bool isHit = GetWorld()->SweepMultiByChannel(FocusSphereZone, Start, End, FQuat::Identity, ECollisionChannel::ECC_WorldDynamic, Sphere, CollisionParams);
+
 	if (isHit) {
 
-		UE_LOG(LogClass, Log, TEXT("Size of FocusSphereZone %s"), *FString::FromInt(FocusSphereZone.Num()));
+		//UE_LOG(LogClass, Log, TEXT("Size of FocusSphereZone %s"), *FString::FromInt(FocusSphereZone.Num()));
 
 		for (auto& Hit : FocusSphereZone) {
 			if (Hit.GetActor()) {
 				Hit.GetActor()->CustomTimeDilation = focusDilation;
-				FString tmp = GetDebugName(Hit.GetActor());
-				UE_LOG(LogClass, Log, TEXT("The Actor that was dialated: %s"), *tmp);
+				FString tmp = FString::FString("The Actor that was dialated ") + GetDebugName(Hit.GetActor());
+				//UE_LOG(LogClass, Log, TEXT("The Actor that was dialated: %s"), *tmp);
 
+				//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, *tmp);
 			}
 		}
 	}
@@ -240,7 +252,7 @@ void AMalePlayer::UpdateFocus(float DeltaTime) {
 	//DrawDebugSphere(GetWorld(), End, focusRadius, 10, FColor::Red, false, 2.0f);
 	//GetWorldSettings()->SetTimeDilation(0.1f);
 
-	this->CustomTimeDilation = focusDilation;
+	this->CustomTimeDilation = focusDilationPlayer;
 }
 void AMalePlayer::ActivateFocus() {
 
@@ -271,6 +283,19 @@ void AMalePlayer::DeactivateFocus() {
 	this->CustomTimeDilation = normalTime;
 	//GetWorldSettings()->SetTimeDilation(normalTime);
 	FocusSphereZone.Empty();
+	float focusScalar = 1 - focusTimeCount / recoilTime;
+	
+	if (FMath::IsNearlyZero(focusScalar, 0.3f)) {
+		focusScalar = .5f;
+	}
+	focusScalar = FMath::Pow(focusScalar, -1.f);
+	
+	focusImpluse = MalePlayerMovement->Velocity * focusScalar;// Find some interesting way to calculate this
+	FString tmp = MalePlayerMovement->Velocity.ToCompactString() + " is the velocity and this is the scalar: " + FString::SanitizeFloat(focusScalar);
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, *tmp);
+
+	MalePlayerMovement->AccumulateForce(focusImpluse);
 	/*//UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
 	GetWorldSettings()->SetTimeDilation(1.f);
 	FString tmp = FString::SanitizeFloat(focusTimeCount);
@@ -308,18 +333,47 @@ void AMalePlayer::InflictDamage(AActor* ImpactActor) {
 		}
 	}
 }
-float AMalePlayer::TakeDamage(float Damage, struct FDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser) {
+float AMalePlayer::TakeDamage_Implementation(float Damage, struct FPointDamageEvent const & PointDamageEvent, class AController *EventInstigator, AActor *DamageCauser) {
+	FDamageEvent DamageEvent = PointDamageEvent;
 	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
-	if (ActualDamage > 0.f) {
-		Health -= ActualDamage;
-		if (Health <= 0.f) {
-			UE_LOG(LogClass, Log, TEXT("You should be dead right now"));
+
+	// This ensures the player won't get hit repeatedly by the same creature
+	if (!immuneDamage && CharacterState == ECharacterState::ACTIVE) {
+		MalePlayerMovement->KnockBack(PointDamageEvent.HitInfo);
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Player Took Damage");
+		if (ActualDamage > 0.f) {
+			Health -= ActualDamage;
+			if (Health <= 0.f && !isDead) {
+				TriggerDeathAnim();
+				SetCharacterState(ECharacterState::DEAD);
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "He's dead Jim");
+			}
 		}
+		immuneDamage = true;
 	}
 
 	return ActualDamage;
 }
-
+void AMalePlayer::Respawn(FVector LastCheckPoint) {
+	Health = FullHealth;
+	SetCharacterState(ECharacterState::ACTIVE);
+	SetActorLocation(LastCheckPoint);
+	
+}
+void AMalePlayer::SetCharacterState(ECharacterState NewCharacterState) {
+	CharacterState = NewCharacterState;
+}
+ECharacterState AMalePlayer::GetCharacterState() {
+	return CharacterState;
+}
+void AMalePlayer::PostDamageImmunity(float DeltaTime) {
+	currentDamageFrame++;
+	if (currentDamageFrame >= frameImmunity) {
+		currentDamageFrame = 0.f;
+		immuneDamage = false;
+	}
+}
 
 // This is how I determine which how hight the player jump
 void AMalePlayer::JumpCalculated() {
