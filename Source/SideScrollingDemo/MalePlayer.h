@@ -36,7 +36,11 @@ protected:
 	//	class ACameraBoundingBox* Camera;
 	UPROPERTY(Category = "Character State: CharacterState", BlueprintReadOnly)
 		TEnumAsByte<enum ECharacterState> CharacterState;
-		
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
+		class UCameraBoundingBoxComponent* CameraBounds;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
+	//	class USceneComponent* SceneComponent;
 	// Called for the side to side input //
 	void MoveRight(float Value);
 	// Called for the slide down wall component

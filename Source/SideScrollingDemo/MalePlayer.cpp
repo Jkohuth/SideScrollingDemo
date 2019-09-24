@@ -15,6 +15,8 @@
 #include "WalkingPath.h"
 //#include "Enemy.h"
 #include "Engine.h"
+//#include "Components/SceneComponent.h"
+#include "CameraBoundingBoxComponent.h"
 
 
 
@@ -36,6 +38,7 @@ AMalePlayer::AMalePlayer(const FObjectInitializer& ObjectInitializer)
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AMalePlayer::OnHit);
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AMalePlayer::OnActorOverlapBegin);
 	GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &AMalePlayer::OnActorOverlapEnd);
+	
 	//BoundingBox = CreateDefaultSubobject<ACameraBoundingBox>(TEXT("BoundingBox"));
 	//BoundingBox->GetCameraComponent()->SetFieldOfView(10.f);
 	// Create a camera boom attached to the root (capsule)
@@ -55,7 +58,9 @@ AMalePlayer::AMalePlayer(const FObjectInitializer& ObjectInitializer)
 	SideViewCameraComponent->bUsePawnControlRotation = false; // We don't want the controller rotating the camera*/
 	
 	//Camera = CreateDefaultSubobject<ACameraBoundingBox>(TEXT("Camera"));
-
+	//SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
+	CameraBounds = CreateDefaultSubobject<UCameraBoundingBoxComponent>(TEXT("CameraBounds"));
+	CameraBounds->GetCameraComponent()->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 
 	MalePlayerMovement = Cast<UMalePlayerMovementComponent>(GetCharacterMovement());
 	
@@ -87,6 +92,7 @@ void AMalePlayer::BeginPlay()
 void AMalePlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	CameraBounds->UpdatePosition(GetCapsuleComponent());
 	if (isJumping) countJumpTime += DeltaTime;
 	if (isFocusing) { 
 		UpdateFocus(DeltaTime);
@@ -341,13 +347,13 @@ float AMalePlayer::TakeDamage_Implementation(float Damage, struct FPointDamageEv
 	if (!immuneDamage && CharacterState == ECharacterState::ACTIVE) {
 		MalePlayerMovement->KnockBack(PointDamageEvent.HitInfo);
 
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Player Took Damage");
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Player Took Damage");
 		if (ActualDamage > 0.f) {
 			Health -= ActualDamage;
 			if (Health <= 0.f && !isDead) {
 				TriggerDeathAnim();
 				SetCharacterState(ECharacterState::DEAD);
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "He's dead Jim");
+				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "He's dead Jim");
 			}
 		}
 		immuneDamage = true;
