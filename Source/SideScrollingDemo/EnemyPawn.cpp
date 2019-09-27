@@ -8,7 +8,7 @@
 #include "CustomFloatingPawnMovement.h"
 #include "Engine.h"
 #include "Constants.h"
-
+#include "GameFramework/PawnMovementComponent.h"
 // Sets default values
 AEnemyPawn::AEnemyPawn()
 {
@@ -70,10 +70,13 @@ void AEnemyPawn::OnHearNoise(APawn *OtherActor, const FVector &Location, float V
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, message);
 }
 void AEnemyPawn::OnSeePawn(APawn* OtherPawn) {
-	//FString message = TEXT("Saw Actor ") + OtherPawn->GetName();
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, message);
+	// Handle all the chain of events logic here
+	Attack(OtherPawn); 
 }
+void AEnemyPawn::Attack(APawn* OtherPawn){
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Attack was called from enemy pawn");
 
+}
 float AEnemyPawn::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser) {
 	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	if (ActualDamage > 0.f) {

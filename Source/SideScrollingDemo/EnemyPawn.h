@@ -16,6 +16,8 @@ public:
 	AEnemyPawn();
 
 protected:
+	// I should have the desired code inherit from this class but for the time being this will just be the for the worm
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -47,7 +49,8 @@ public:
 	//	void WasAttacked();
 	//UFUNCTION()
 	//	void DisableActor();
-
+	UFUNCTION()
+		void Attack(APawn *OtherPawn);
 	virtual UPawnMovementComponent* GetMovementComponent() const override;
 
 	UFUNCTION()
