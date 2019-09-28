@@ -26,9 +26,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mesh)
 		class UStaticMeshComponent* MeshComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Box)
-		class UBoxComponent* BoxComponent;	
+		class UCapsuleComponent* CapsuleComponent;	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Movement)
-		class UCustomFloatingPawnMovement* PawnMovement;
+		class UPawnMovementComponent* PawnMovement;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Awareness)
 		class UPawnSensingComponent* PawnSensor;
 
@@ -57,5 +57,5 @@ public:
 		void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	FORCEINLINE class UStaticMeshComponent* GetMeshComponent() const { return MeshComponent; }
-	FORCEINLINE class UBoxComponent* GetBoxComponent() const { return BoxComponent; }
+	FORCEINLINE class UCapsuleComponent* GetCapsuleComponent() const { return CapsuleComponent; }
 };

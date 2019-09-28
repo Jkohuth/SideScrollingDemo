@@ -18,7 +18,7 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	BoundingBox->InitBoxExtent(BoxSize);
 	BoundingBox->SetRelativeLocation(FVector(0.f, 0.f,0.f));
 	BoundingBox->bVisible = true;
-	BoundingBox->bHiddenInGame = false;
+	//BoundingBox->bHiddenInGame = false;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 

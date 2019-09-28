@@ -1,11 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "EnemyPawn.h"
-#include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Perception/PawnSensingComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
-#include "CustomFloatingPawnMovement.h"
 #include "Engine.h"
 #include "Constants.h"
 #include "GameFramework/PawnMovementComponent.h"
@@ -15,25 +14,28 @@ AEnemyPawn::AEnemyPawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
-	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
-	BoxComponent->InitBoxExtent(FVector(10.0f, 40.0f, 40.0f));
+	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Box"));
+	//BoxComponent->InitBoxExtent(FVector(10.0f, 40.0f, 40.0f));
 
-	RootComponent = BoxComponent;
+	RootComponent = CapsuleComponent;
 
-	BoxComponent->OnComponentHit.AddDynamic(this, &AEnemyPawn::OnHit);
+	CapsuleComponent->OnComponentHit.AddDynamic(this, &AEnemyPawn::OnHit);
 
 	PawnSensor = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("Sensor"));
 	PawnSensor->SensingInterval = .25f; // How often does pawn react
 	PawnSensor->bOnlySensePlayers = false;
 	PawnSensor->SetPeripheralVisionAngle(35.f);
 
+	
+
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnemyMesh"));
 	MeshComponent->SetupAttachment(RootComponent);
 	//MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	PawnMovement = CreateDefaultSubobject<UCustomFloatingPawnMovement>(TEXT("CustomMovement"));
-	PawnMovement->UpdatedComponent = RootComponent;
-
+	PawnMovement = CreateDefaultSubobject<UPawnMovementComponent>(TEXT("PawnMovement"));
+	if(PawnMovement){
+		PawnMovement->UpdatedComponent = RootComponent;
+	}
 }
 void AEnemyPawn::PostInitializeComponents() {
 	Super::PostInitializeComponents();
@@ -41,7 +43,7 @@ void AEnemyPawn::PostInitializeComponents() {
 	PawnSensor->OnSeePawn.AddDynamic(this, &AEnemyPawn::OnSeePawn);
 	PawnSensor->OnHearNoise.AddDynamic(this, &AEnemyPawn::OnHearNoise);
 	
-	if (GetMovementComponent() && BoxComponent) {
+	if (GetMovementComponent() && CapsuleComponent) {
 		GetMovementComponent()->UpdateNavAgent(*this);
 	}
 }
