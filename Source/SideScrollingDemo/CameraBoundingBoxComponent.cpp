@@ -18,15 +18,11 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	BoundingBox->InitBoxExtent(BoxSize);
 	BoundingBox->SetRelativeLocation(FVector(0.f, 0.f,0.f));
 	BoundingBox->bVisible = true;
-	BoundingBox->bHiddenInGame = false;
+	//BoundingBox->bHiddenInGame = false;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 
 	CameraComponent->SetupAttachment(BoundingBox);
-	CameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
-	CameraComponent->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
-	CameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
-
 }
 
 
