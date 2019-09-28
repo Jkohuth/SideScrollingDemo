@@ -29,7 +29,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	FVector BoxSize = FVector(50.f, 300.f, 3000.f);
+	FVector BoxSize = FVector(50.f, 300.f, 300.f);
 
 	FVector Origin; // This is just origin
 	FVector BoxExtent; // This should exist somewhere in here
