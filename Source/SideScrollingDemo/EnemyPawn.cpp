@@ -21,11 +21,14 @@ AEnemyPawn::AEnemyPawn()
 
 	CapsuleComponent->OnComponentHit.AddDynamic(this, &AEnemyPawn::OnHit);
 
+	ArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
+	ArrowComponent->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+
 	PawnSensor = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("Sensor"));
 	PawnSensor->SensingInterval = .25f; // How often does pawn react
 	PawnSensor->bOnlySensePlayers = false;
 	PawnSensor->SetPeripheralVisionAngle(35.f);
-
+	
 	
 
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnemyMesh"));

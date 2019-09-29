@@ -31,6 +31,8 @@ protected:
 		class UPawnMovementComponent* PawnMovement;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Awareness)
 		class UPawnSensingComponent* PawnSensor;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Direction)
+		class UArrowComponent* ArrowComponent;
 
 public:	
 	// Called every frame
