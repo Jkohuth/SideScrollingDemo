@@ -29,8 +29,8 @@ protected:
 		class UCapsuleComponent* CapsuleComponent;	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Movement)
 		class UPawnMovementComponent* PawnMovement;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Awareness)
-		class UPawnSensingComponent* PawnSensor;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Awareness)
+	//	class UPawnSensingComponent* PawnSensor;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Direction)
 		class UArrowComponent* ArrowComponent;
 
@@ -43,10 +43,17 @@ public:
 	UFUNCTION()
 		void InflictDamage(AActor* ImpactActor, const FHitResult& Hit);
 	UFUNCTION()
-		void OnHearNoise(APawn *OtherActor, const FVector &Location, float Volume);
-	UFUNCTION()
-		void OnSeePawn(APawn *OtherPawn);
+		void OnCustomSense(APawn* OtherPawn, float DeltaTime);
+	//UFUNCTION()
+	//	void OnHearNoise(APawn *OtherActor, const FVector &Location, float Volume);
+	//UFUNCTION()
+	//	void OnSeePawn(APawn *OtherPawn);
 	float Health = 1.0f;
+	TArray<FHitResult> ObjsInSight;
+	float reducedTickRate;
+	float tickCounter = 0;
+	UPROPERTY(EditAnywhere)
+	float secondDivsor = 3.f; // ie 20 ticks in 60 fps is 1/3 second
 	//UFUNCTION()
 	//	void WasAttacked();
 	//UFUNCTION()
