@@ -8,6 +8,7 @@
 #include "MalePlayer.h"
 #include "Engine.h"
 #include "Constants.h"
+#include "Components/SplineComponent.h"
 // Sets default values
 AEnemyPawn::AEnemyPawn()
 {
@@ -35,10 +36,17 @@ AEnemyPawn::AEnemyPawn()
 	MeshComponent->SetupAttachment(RootComponent);
 	//MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	// This needs to be in the worm specific class
+	SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("SplineMovement"));
+//	SplineComponent->SetupAttachment(RootComponent);
+
 	PawnMovement = CreateDefaultSubobject<UPawnMovementComponent>(TEXT("PawnMovement"));
 	if(PawnMovement){
 		PawnMovement->UpdatedComponent = RootComponent;
 	}
+	 // This actor will move on Rails so the only thing it should touch is the player
+	CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore); // This actor will move on Rails so the only thing it should touch is the player
+	CapsuleComponent->SetCollisionResponseToChannel(COLLISION_PLAYER, ECollisionResponse::ECR_Block);
 }
 void AEnemyPawn::PostInitializeComponents() {
 	Super::PostInitializeComponents();
@@ -65,7 +73,7 @@ void AEnemyPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	
 	tickCounter++;
-	if (FMath::IsNearlyZero(FMath::Fmod(tickCounter, secondDivsor))) {
+	if (FMath::IsNearlyZero(FMath::Fmod(tickCounter, sensesPerSecond))) {
 		OnCustomSense(this, DeltaTime);
 		tickCounter = 0.f;
 	}
@@ -73,7 +81,10 @@ void AEnemyPawn::Tick(float DeltaTime)
 }
 
 void AEnemyPawn::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
-
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Enemy Pawn on Hit was called");
+	if (OtherActor != nullptr && OtherActor->ActorHasTag(ECustomTags::PlayerTag)) {
+		InflictDamage(OtherActor, Hit);
+	}
 }
 /*void AEnemyPawn::OnHearNoise(APawn *OtherActor, const FVector &Location, float Volume) {
 	//const FString VolumeDesc = FString::Printf(TEXT(" at volume %f"), Volume);
@@ -123,6 +134,7 @@ void AEnemyPawn::OnCustomSense(APawn* OtherPawn, float DeltaTime) {
 	//FVector End = Start + (focusRadius *FVector(1.f)); // Something is a miss here, I want to draw a single sphere in place
 	FVector End = Start;
 	End.Z += halfHeight;
+	radius *= 1.5;
 	FCollisionQueryParams CollisionParams(FName(TEXT("Sight")), true, this);
 	FCollisionShape capsule = FCollisionShape::MakeCapsule(radius, halfHeight);
 
@@ -140,6 +152,9 @@ void AEnemyPawn::OnCustomSense(APawn* OtherPawn, float DeltaTime) {
 				AMalePlayer* player = Cast<AMalePlayer>(Hit.GetActor());
 				if (player) {
 					GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, "Hit the other player");
+					OnSensePawn();
+					// Could trigger event function and have collision
+
 					//Start.Z += 40.f;
 					//this->SetActorLocation(Start);
 					//FHitResult Hit;

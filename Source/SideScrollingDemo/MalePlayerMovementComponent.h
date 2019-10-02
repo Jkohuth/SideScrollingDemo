@@ -63,7 +63,8 @@ public:
 	//virtual void StopJumping() override;
 	//virtual void DoJump() override;
 
-	
+	UFUNCTION(BlueprintCallable)
+		void BackDash();
 	UFUNCTION(BlueprintCallable)
 		void OnJumpInput();
 	UFUNCTION(BlueprintCallable)

@@ -130,10 +130,9 @@ public:
 	void InflictDamage(AActor* ImpactActor);
 	UFUNCTION(BlueprintNativeEvent, Category="Damage")
 	float TakeDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser);
-	UFUNCTION(BlueprintImplementableEvent, category = "Anim")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Anim")
 		void TriggerDeathAnim();
-	UPROPERTY(BlueprintReadWrite)
-	bool isDead = false;
+
 	UFUNCTION(BlueprintCallable, Category="MalePlayer")
 	void Respawn(FVector LastCheckPoint);
 
@@ -143,6 +142,10 @@ public:
 		virtual void SetCharacterState(ECharacterState NewCharacterState);
 	UFUNCTION(BlueprintCallable, Category = "MalePlayer")
 		virtual ECharacterState GetCharacterState();
+	UFUNCTION(BlueprintCallable, Category = "MalePlayer")
+		void BackDash();
+	UFUNCTION(BlueprintImplementableEvent, Category = "MalePlayer")
+		void BackDashTrigger();
 
 	/**Determines when collided with certain objects, will use Line Tracing in tandem*/
 	UFUNCTION()
