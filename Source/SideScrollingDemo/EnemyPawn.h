@@ -33,6 +33,8 @@ protected:
 	//	class UPawnSensingComponent* PawnSensor;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Direction)
 		class UArrowComponent* ArrowComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
+		class USplineComponent* SplineComponent;
 
 public:	
 	// Called every frame
@@ -53,7 +55,7 @@ public:
 	float reducedTickRate;
 	float tickCounter = 0;
 	UPROPERTY(EditAnywhere)
-	float secondDivsor = 3.f; // ie 20 ticks in 60 fps is 1/3 second
+	float sensesPerSecond = 3.f; // ie 20 ticks in 60 fps is 1/3 second
 	//UFUNCTION()
 	//	void WasAttacked();
 	//UFUNCTION()
@@ -64,7 +66,12 @@ public:
 
 	UFUNCTION()
 		void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	UFUNCTION(BlueprintImplementableEvent, Category = "Event")
+		void OnSensePawn();
+
 
 	FORCEINLINE class UStaticMeshComponent* GetMeshComponent() const { return MeshComponent; }
 	FORCEINLINE class UCapsuleComponent* GetCapsuleComponent() const { return CapsuleComponent; }
+	FORCEINLINE class UPawnMovementComponent* GetPawnMovement() const { return PawnMovement; }
+	FORCEINLINE class USplineComponent* GetSplineComponent() const { return SplineComponent; }
 };

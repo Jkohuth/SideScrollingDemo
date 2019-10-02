@@ -113,6 +113,7 @@ void AMalePlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &AMalePlayer::DebugString);
 	PlayerInputComponent->BindAction("Focus", IE_Pressed, this, &AMalePlayer::ActivateFocus);
 	PlayerInputComponent->BindAction("Focus", IE_Released, this, &AMalePlayer::DeactivateFocus);
+	PlayerInputComponent->BindAction("BackDash", IE_Pressed, this, &AMalePlayer::BackDash);
 
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMalePlayer::MoveRight);
 	PlayerInputComponent->BindAxis("MoveUp", this, &AMalePlayer::MoveUp);
@@ -120,7 +121,7 @@ void AMalePlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 }
 void AMalePlayer::MoveRight(float Value) {
 	if (MalePlayerMovement && (MalePlayerMovement->UpdatedComponent == RootComponent)) {
-		MalePlayerMovement->MoveRightInput(Value);
+		GetMalePlayerMovement()->MoveRightInput(Value);
 		
 		if (Value != 0.0) {
 			Direction = FVector(0.f, -Value, 0.f);// Negative because of the worlds orientation
@@ -137,13 +138,13 @@ void AMalePlayer::NotifyJumpApex()
 	Super::NotifyJumpApex(); 
 	GetMalePlayerMovement()->isJumping = false;
 	// Think of a better way to do this
-	MalePlayerMovement->SetGravity(MalePlayerMovement->FallingGravityScalar);
+	GetMalePlayerMovement()->SetGravity(MalePlayerMovement->FallingGravityScalar);
 	//JumpActual();
 }
 
 void AMalePlayer::Jump() {
 
-	MalePlayerMovement->OnJumpInput();
+	GetMalePlayerMovement()->OnJumpInput();
 	//SetupJumpCalculations();
 	GetMalePlayerMovement()->isJumping = true;
 
@@ -152,7 +153,7 @@ void AMalePlayer::Jump() {
 void AMalePlayer::StopJumping() {
 	Super::StopJumping();
 	if (MalePlayerMovement->MovementMode == MOVE_Falling) {
-		MalePlayerMovement->SetGravity(MalePlayerMovement->FallingGravityScalar);
+		GetMalePlayerMovement()->SetGravity(MalePlayerMovement->FallingGravityScalar);
 		GetMalePlayerMovement()->isJumping = false;
 	}
 }
@@ -163,7 +164,7 @@ void AMalePlayer::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 		&& MalePlayerMovement->MovementMode == MOVE_Falling){ // Angle Tolerance
 		UE_LOG(LogClass, Log, TEXT("just hit the wall %s"), *OtherActor->GetName());
 		if (MalePlayerMovement) {
-			MalePlayerMovement->TriggerWallMovement(Hit);
+			GetMalePlayerMovement()->TriggerWallMovement(Hit);
 		}
 	}
 	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::RailTag)) {
@@ -172,7 +173,7 @@ void AMalePlayer::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 
 		ARail* Rail = Cast<ARail>(OtherActor);
 		if (Rail) {
-			MalePlayerMovement->AttachToRail(Rail->GetRailSpline());
+			GetMalePlayerMovement()->AttachToRail(Rail->GetRailSpline());
 		}
 	}
 }
@@ -185,7 +186,7 @@ void AMalePlayer::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 		AWalkingPath* WalkingPath = Cast<AWalkingPath>(OtherActor);
 		if (WalkingPath) {
 			UE_LOG(LogClass, Log, TEXT("It can detect the walking path"));
-			MalePlayerMovement->AttachToPath(WalkingPath->GetSplineComponent());
+			GetMalePlayerMovement()->AttachToPath(WalkingPath->GetSplineComponent());
 		}
 	}
 }
@@ -301,7 +302,7 @@ void AMalePlayer::DeactivateFocus() {
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, *tmp);
 
-	MalePlayerMovement->AccumulateForce(focusImpluse);
+	GetMalePlayerMovement()->AccumulateForce(focusImpluse);
 	/*//UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
 	GetWorldSettings()->SetTimeDilation(1.f);
 	FString tmp = FString::SanitizeFloat(focusTimeCount);
@@ -330,12 +331,16 @@ void AMalePlayer::InflictDamage(AActor* ImpactActor) {
 	UE_LOG(LogClass, Log, TEXT("Here is the damage"));
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController != nullptr) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Player Controller exists");
 		if ((ImpactActor != nullptr) && (ImpactActor != this)) {
 			TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
 			FDamageEvent DamageEvent(ValidDamageTypeClass);
 
 			const float DamageAmount = 1.0f;
 			ImpactActor->TakeDamage(DamageAmount, DamageEvent, PlayerController, this);
+			FString tmp = "The get name of the impact actor " + ImpactActor->GetName();
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *tmp);
+
 		}
 	}
 }
@@ -350,7 +355,7 @@ float AMalePlayer::TakeDamage_Implementation(float Damage, struct FPointDamageEv
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Player Took Damage");
 		if (ActualDamage > 0.f) {
 			Health -= ActualDamage;
-			if (Health <= 0.f && !isDead) {
+			if (Health <= 0.f && GetCharacterState() != ECharacterState::DEAD) {
 				TriggerDeathAnim();
 				SetCharacterState(ECharacterState::DEAD);
 				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "He's dead Jim");
@@ -380,7 +385,12 @@ void AMalePlayer::PostDamageImmunity(float DeltaTime) {
 		immuneDamage = false;
 	}
 }
-
+void AMalePlayer::BackDash(){
+	if(GetMalePlayerMovement()){
+		GetMalePlayerMovement()->BackDash();
+		BackDashTrigger();
+	}
+}
 // This is how I determine which how hight the player jump
 void AMalePlayer::JumpCalculated() {
 	if (MalePlayerMovement) {

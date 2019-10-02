@@ -507,6 +507,19 @@ void UMalePlayerMovementComponent::JumpOffWall()
 	Velocity = FVector(wallJumpVelocity.X, wallDirection.Y * wallJumpVelocity.Y, wallJumpVelocity.Z);
 
 }
+//Crude come up for a better name than jump back
+void UMalePlayerMovementComponent::BackDash(){
+	if(MovementMode != MOVE_Walking) return;
+	FVector forward = CharacterOwner->GetActorForwardVector();
+	forward.Y = forward.Y*-1;
+	
+	FVector BackDashVelocity = FVector(0.f, 2000.f, 300.f);
+
+	BackDashVelocity.Y *= forward.Y;
+
+	this->Velocity = BackDashVelocity;
+
+}
 bool UMalePlayerMovementComponent::CheckCustomMovementMode(uint8 CustomMode)
 {
 	if (MovementMode == MOVE_Custom && CustomMovementMode == CustomMode) return true;
@@ -569,7 +582,8 @@ void UMalePlayerMovementComponent::AttachToRail(USplineComponent* RailSpline) {
 			// Make sure to add Z when you tilt the damn thing
 			else if (splinePoint1.Y <= GetActorFeetLocation().Y && GetActorFeetLocation().Y <= splinePoint2.Y ||
 				splinePoint2.Y <= GetActorFeetLocation().Y && GetActorFeetLocation().Y <= splinePoint1.Y) {
-
+				
+			
 				float DisFromPoint1ToActor = DistanceBetweenTwoVectors(GetActorFeetLocation(), splinePoint1);
 				float DisFromPoint1ToSplinePoint2 = DistanceBetweenTwoVectors(splinePoint2, splinePoint1);
 				distanceAlongSpline = RailSplineReference->GetDistanceAlongSplineAtSplinePoint(i);
