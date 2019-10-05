@@ -40,9 +40,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 		float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser);
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 		void InflictDamage(AActor* ImpactActor, const FHitResult& Hit);
 	UFUNCTION()
 		void OnCustomSense(APawn* OtherPawn, float DeltaTime);
