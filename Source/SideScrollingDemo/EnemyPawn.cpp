@@ -84,6 +84,7 @@ void AEnemyPawn::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UP
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Enemy Pawn on Hit was called");
 	if (OtherActor != nullptr && OtherActor->ActorHasTag(ECustomTags::PlayerTag)) {
 		InflictDamage(OtherActor, Hit);
+		Attack(this);
 	}
 }
 /*void AEnemyPawn::OnHearNoise(APawn *OtherActor, const FVector &Location, float Volume) {
@@ -111,6 +112,7 @@ float AEnemyPawn::TakeDamage(float Damage, struct FDamageEvent const& DamageEven
 }
 void AEnemyPawn::InflictDamage(AActor* ImpactActor, const FHitResult& Hit) {
 	AController* EnemyController = Cast<AController>(GetController());
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Inflict damage");
 	if (EnemyController != nullptr && (ImpactActor != nullptr) && (ImpactActor != this)) {
 		TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
 		//FDamageEvent DamageEvent(ValidDamageTypeClass);
@@ -129,36 +131,36 @@ void AEnemyPawn::OnCustomSense(APawn* OtherPawn, float DeltaTime) {
 	float halfHeight = GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
 	float radius = GetCapsuleComponent()->GetUnscaledCapsuleRadius();
 
-
 	FVector Start = GetActorLocation();
-	//FVector End = Start + (focusRadius *FVector(1.f)); // Something is a miss here, I want to draw a single sphere in place
 	FVector End = Start;
-	End.Z += halfHeight;
+	End.Y += halfHeight;
+	/*FString tmpRight = "Capsule Components right vector " + GetCapsuleComponent()->GetRightVector().ToCompactString();
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, tmpRight);
+	tmpRight = "Capsule Components up vector " +  GetCapsuleComponent()->GetUpVector().ToCompactString();
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, tmpRight);*/
 	radius *= 1.5;
+	
+	FQuat capsuleQuat = GetCapsuleComponent()->GetComponentQuat();
+
 	FCollisionQueryParams CollisionParams(FName(TEXT("Sight")), true, this);
 	FCollisionShape capsule = FCollisionShape::MakeCapsule(radius, halfHeight);
 
 	CollisionParams.AddIgnoredActor(this);
 
 	//CollisionParams.bTraceComplex = true;
-	bool isHit = GetWorld()->SweepMultiByChannel(ObjsInSight, Start, End, FQuat::Identity, ECollisionChannel::ECC_WorldDynamic, capsule, CollisionParams);
+	bool isHit = GetWorld()->SweepMultiByChannel(ObjsInSight, Start, End, capsuleQuat, ECollisionChannel::ECC_WorldDynamic, capsule, CollisionParams);
 
 	if (isHit) {
-		 
 		//UE_LOG(LogClass, Log, TEXT("Size of FocusSphereZone %s"), *FString::FromInt(FocusSphereZone.Num()));
-
 		for (auto& Hit : ObjsInSight) {
 			if (Hit.GetActor()) {
 				AMalePlayer* player = Cast<AMalePlayer>(Hit.GetActor());
 				if (player) {
-					GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, "Hit the other player");
+					FString tmp = capsuleQuat.ToString();
+					GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, *tmp);
+					
 					OnSensePawn();
 					// Could trigger event function and have collision
-
-					//Start.Z += 40.f;
-					//this->SetActorLocation(Start);
-					//FHitResult Hit;
-					//FVector DeltaMovement = FVector(0.f, 0.f, 40.f)*DeltaTime;
 					//PawnMovement->SafeMoveUpdatedComponent(DeltaMovement, FQuat::Identity, true, Hit);
 				}
 
@@ -168,5 +170,5 @@ void AEnemyPawn::OnCustomSense(APawn* OtherPawn, float DeltaTime) {
 	}
 	ObjsInSight.Empty();
 	//DrawDebugSphere(GetWorld(), Start, focusRadius, 10, FColor::Red, false, 2.0f);
-	DrawDebugCapsule(GetWorld(), End, halfHeight, radius, FQuat::Identity, FColor::Red);
+	DrawDebugCapsule(GetWorld(), End, halfHeight, radius, capsuleQuat, FColor::Red);
 }
