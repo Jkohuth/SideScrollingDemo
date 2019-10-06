@@ -516,8 +516,8 @@ void UMalePlayerMovementComponent::BackDash(){
 	FVector BackDashVelocity = FVector(0.f, 2000.f, 300.f);
 
 	BackDashVelocity.Y *= forward.Y;
-
-	this->Velocity = BackDashVelocity;
+	Launch(BackDashVelocity);
+	//this->Velocity = BackDashVelocity;
 
 }
 bool UMalePlayerMovementComponent::CheckCustomMovementMode(uint8 CustomMode)
