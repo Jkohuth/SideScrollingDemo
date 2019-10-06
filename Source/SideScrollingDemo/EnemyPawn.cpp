@@ -15,12 +15,12 @@ AEnemyPawn::AEnemyPawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
-	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Box"));
+	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule"));
 	//BoxComponent->InitBoxExtent(FVector(10.0f, 40.0f, 40.0f));
 
 	RootComponent = CapsuleComponent;
 
-	CapsuleComponent->OnComponentHit.AddDynamic(this, &AEnemyPawn::OnHit);
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AEnemyPawn::OnHit);
 
 	ArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
 	ArrowComponent->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
@@ -45,8 +45,8 @@ AEnemyPawn::AEnemyPawn()
 		PawnMovement->UpdatedComponent = RootComponent;
 	}
 	 // This actor will move on Rails so the only thing it should touch is the player
-	CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore); // This actor will move on Rails so the only thing it should touch is the player
-	CapsuleComponent->SetCollisionResponseToChannel(COLLISION_PLAYER, ECollisionResponse::ECR_Block);
+	//CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore); // This actor will move on Rails so the only thing it should touch is the player
+	//CapsuleComponent->SetCollisionResponseToChannel(COLLISION_PLAYER, ECollisionResponse::ECR_Block);
 }
 void AEnemyPawn::PostInitializeComponents() {
 	Super::PostInitializeComponents();
@@ -120,10 +120,10 @@ void AEnemyPawn::InflictDamage(AActor* ImpactActor, const FHitResult& Hit) {
 
 		FPointDamageEvent DamageEvent(DamageAmount, Hit, GetActorForwardVector(), ValidDamageTypeClass);
 
-		//AMalePlayer* player = Cast<AMalePlayer>(ImpactActor);
-		//if (player)
-			//player->TakeDamage(DamageAmount, DamageEvent, EnemyController, this);
-
+		AMalePlayer* player = Cast<AMalePlayer>(ImpactActor);
+		if (player) {
+			player->TakeDamage(DamageAmount, DamageEvent, EnemyController, this);
+		}
 	}
 }
 void AEnemyPawn::OnCustomSense(APawn* OtherPawn, float DeltaTime) {
@@ -157,7 +157,7 @@ void AEnemyPawn::OnCustomSense(APawn* OtherPawn, float DeltaTime) {
 				AMalePlayer* player = Cast<AMalePlayer>(Hit.GetActor());
 				if (player) {
 					FString tmp = capsuleQuat.ToString();
-					GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, *tmp);
+					//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, *tmp);
 					
 					OnSensePawn();
 					// Could trigger event function and have collision
