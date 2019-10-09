@@ -16,9 +16,8 @@ AEnemyPawn::AEnemyPawn()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule"));
-	//BoxComponent->InitBoxExtent(FVector(10.0f, 40.0f, 40.0f));
 
-	RootComponent = CapsuleComponent;
+//	RootComponent = GetCapsuleComponent();
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AEnemyPawn::OnHit);
 
@@ -29,8 +28,6 @@ AEnemyPawn::AEnemyPawn()
 	//PawnSensor->SensingInterval = .25f; // How often does pawn react
 	//PawnSensor->bOnlySensePlayers = false;
 	//PawnSensor->SetPeripheralVisionAngle(35.f);
-	
-	
 
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnemyMesh"));
 	MeshComponent->SetupAttachment(RootComponent);
@@ -54,29 +51,34 @@ void AEnemyPawn::PostInitializeComponents() {
 	//PawnSensor->OnSeePawn.AddDynamic(this, &AEnemyPawn::OnSeePawn);
 	//PawnSensor->OnHearNoise.AddDynamic(this, &AEnemyPawn::OnHearNoise);
 	
-	if (GetMovementComponent() && CapsuleComponent) {
-		GetMovementComponent()->UpdateNavAgent(*this);
-	}
+//	if (GetMovementComponent() && GetCapsuleComponent()) {
+//		GetMovementComponent()->UpdateNavAgent(*this);
+//	}
 }
 // Called when the game starts or when spawned
 void AEnemyPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	GetWorld()->GetTimerManager().SetTimer(SenseTimer, this, &AEnemyPawn::OnCustomSense, 1.0f, true, 1.0f);
 }
 UPawnMovementComponent* AEnemyPawn::GetMovementComponent() const {
 	return PawnMovement;
+}
+void AEnemyPawn::Nothing(){
+	UE_LOG(LogClass, Log, TEXT("Nothing"));
 }
 // Called every frame
 void AEnemyPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	tickCounter++;
-	if (FMath::IsNearlyZero(FMath::Fmod(tickCounter, sensesPerSecond))) {
+	/*tickCounter++;
+	float value = FMath::Fmod(tickCounter, sensesPerSecond);
+	if (FMath::IsNearlyZero(value, 0.2f)) {
+		FString tmp = FString::SanitizeFloat(value);
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, *tmp);
 		OnCustomSense(this, DeltaTime);
 		tickCounter = 0.f;
-	}
+	}*/
 
 }
 
@@ -119,17 +121,22 @@ void AEnemyPawn::InflictDamage(AActor* ImpactActor, const FHitResult& Hit) {
 		const float DamageAmount = 1.0f;
 
 		FPointDamageEvent DamageEvent(DamageAmount, Hit, GetActorForwardVector(), ValidDamageTypeClass);
-
+ 
 		AMalePlayer* player = Cast<AMalePlayer>(ImpactActor);
 		if (player) {
 			player->TakeDamage(DamageAmount, DamageEvent, EnemyController, this);
 		}
 	}
 }
-void AEnemyPawn::OnCustomSense(APawn* OtherPawn, float DeltaTime) {
+void AEnemyPawn::OnCustomSense() {
 	
-	float halfHeight = GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
-	float radius = GetCapsuleComponent()->GetUnscaledCapsuleRadius();
+//	float halfHeight = CapsuleComponent->GetUnscaledCapsuleHalfHeight();
+//	float radius = CapsuleComponent->GetUnscaledCapsuleRadius();
+
+	GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Green, "This should be called once a second");
+
+	float halfHeight = 50.f;
+	float radius = 30.f;
 
 	FVector Start = GetActorLocation();
 	FVector End = Start;
@@ -140,8 +147,8 @@ void AEnemyPawn::OnCustomSense(APawn* OtherPawn, float DeltaTime) {
 	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, tmpRight);*/
 	radius *= 1.5;
 	
-	FQuat capsuleQuat = GetCapsuleComponent()->GetComponentQuat();
-
+	//FQuat capsuleQuat = GetCapsuleComponent()->GetComponentQuat();
+	FQuat capsuleQuat = FQuat::Identity;
 	FCollisionQueryParams CollisionParams(FName(TEXT("Sight")), true, this);
 	FCollisionShape capsule = FCollisionShape::MakeCapsule(radius, halfHeight);
 
