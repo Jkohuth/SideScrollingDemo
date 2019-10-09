@@ -23,11 +23,11 @@ protected:
 
 	virtual void PostInitializeComponents() override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Mesh)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 		class UStaticMeshComponent* MeshComponent;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Box)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Capsule)
 		class UCapsuleComponent* CapsuleComponent;	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Movement)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 		class UPawnMovementComponent* PawnMovement;
 	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Awareness)
 	//	class UPawnSensingComponent* PawnSensor;
@@ -45,7 +45,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void InflictDamage(AActor* ImpactActor, const FHitResult& Hit);
 	UFUNCTION()
-		void OnCustomSense(APawn* OtherPawn, float DeltaTime);
+		void OnCustomSense();
+	UFUNCTION()
+		void Nothing();
+	FTimerHandle SenseTimer;
 	//UFUNCTION()
 	//	void OnHearNoise(APawn *OtherActor, const FVector &Location, float Volume);
 	//UFUNCTION()
