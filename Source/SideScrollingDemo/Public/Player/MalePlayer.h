@@ -117,7 +117,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void InflictDamage(AActor* ImpactActor);
 	UFUNCTION(BlueprintNativeEvent, Category="Damage")
-	float TakeDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser) override;
+	float TakeDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser);
 	UFUNCTION(BlueprintImplementableEvent, Category = "Anim")
 		void TriggerDeathAnim();
 
@@ -134,6 +134,25 @@ public:
 		void BackDash();
 	UFUNCTION(BlueprintImplementableEvent, Category = "MalePlayer")
 		void BackDashTrigger();
+
+	/**************************************
+	 **  		Slide Movement		     **
+	 **************************************/
+
+	UFUNCTION(BlueprintCallable, Category = "Pawn|Character")
+	bool IsSliding() const;
+
+	bool WantsToSlide() const;
+
+	// Event called when player presses slide button
+	void OnStartSlide();
+	// Event called when player releases slide button
+	void OnStopSlide();
+private:
+	uint32 bPressedSlide:1;
+
+public:
+
 
 	/**Determines when collided with certain objects, will use Line Tracing in tandem*/
 	UFUNCTION()

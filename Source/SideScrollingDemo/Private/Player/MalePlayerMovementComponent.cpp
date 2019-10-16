@@ -1,5 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
- 
+// Fill out your copyright notice in the Description page of Project Settings. 
+
 #include "MalePlayerMovementComponent.h"
 #include "GameFramework/Character.h"
 #include "Components/PrimitiveComponent.h"
@@ -7,8 +7,9 @@
 #include "GameFramework/PhysicsVolume.h"
 #include "CameraBoundingBox.h"
 #include "Components/SplineComponent.h"
-#include "Constants.h"
 #include "Components/CapsuleComponent.h"
+#include "MalePlayer.h"
+
 
 DEFINE_LOG_CATEGORY_STATIC(LogCharacterMovement, Log, All);
 
@@ -33,6 +34,15 @@ void UMalePlayerMovementComponent::InitializeComponent() {
 	MaxMovementSpeeds = FVector(0.f, MaxWalkSpeed, JumpZVelocity);
 	RailSpeed = FVector(0.f, -500.0f, 0.f);
 	KnockBackVelocity = FVector(0.f, 1000.f, 700.f);
+
+	// Slide Information
+	SlideVelocityReduction = 200.f;
+	SlideHeight = 60.f;
+	SlideMeshRelativeLocationOffset = FVector(0.f, 0.f, 34.f);
+	bWantsSlideMeshRelativeLocationOffset = true;
+	MinSlideSpeed = 200.f;
+	MaxSlideSpeed = MaxWalkSpeed + 200.f;
+
 }
 void UMalePlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -538,6 +548,101 @@ void UMalePlayerMovementComponent::KnockBack(const FHitResult& Hit) {
 
 }
 
+void UMalePlayerMovementComponent::StartFalling(int32 Iteration, float remainingTime, float timeTick, const FVector& Delta, const FVector& subLoc) {
+	Super::StartFalling(Iteration, remainingTime, timeTick, Delta, subLoc);
+
+	if (MovementMode == MOVE_Falling && IsSliding()) {
+		TryToEndSlide();
+	}
+}
+void UMalePlayerMovementComponent::PhysWalking(float deltaTime, int32 Iterations) {
+	AMalePlayer* MyPawn = Cast<AMalePlayer>(PawnOwner);
+	if (MyPawn) {
+		const bool bWantsToSlide = MyPawn->WantsToSlide();
+		if (IsSliding()) {
+			CalcSlideVelocity(Velocity);
+
+			const float CurrentSpeedSq = Velocity.SizeSquared();
+			if (CurrentSpeedSq <= FMath::Square(MinSlideSpeed)) {
+				TryToEndSlide();
+			}
+		}
+		else if (bWantsToSlide) {
+			if (!IsFlying() && Velocity.SizeSquared() > FMath::Square(MinSlideSpeed*2.0f)) {
+				StartSlide();
+			}
+		}
+	}
+	Super::PhysWalking(deltaTime, Iterations);
+}
+void UMalePlayerMovementComponent::CalcSlideVelocity(FVector& OutVelocity) const {
+	FVector NewVelocity = Velocity;
+	OutVelocity = NewVelocity;
+}
+void UMalePlayerMovementComponent::StartSlide() {
+	if (!bInSlide) {
+		bInSlide = true;
+		SetSlideCollisionHeight();
+
+	}
+}
+void UMalePlayerMovementComponent::SetSlideCollisionHeight() {
+	if (!CharacterOwner || SlideHeight <= 0.f) {
+		return;
+	}
+	if (CharacterOwner->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() == SlideHeight) {
+		return;
+	}
+	//Change Collision size to new value
+	CharacterOwner->GetCapsuleComponent()->SetCapsuleSize(CharacterOwner->GetCapsuleComponent()->GetUnscaledCapsuleRadius(), SlideHeight);
+
+	// Applying correction to PawnOwner mesh relative location
+	if (bWantsSlideMeshRelativeLocationOffset) {
+		ACharacter* DefCharacter = CharacterOwner->GetClass()->GetDefaultObject<ACharacter>();
+		const FVector correction = DefCharacter->GetMesh()->RelativeLocation + SlideMeshRelativeLocationOffset;
+		CharacterOwner->GetMesh()->SetRelativeLocation(correction);
+	}
+}
+void UMalePlayerMovementComponent::TryToEndSlide() {
+	if (bInSlide) {
+		if (RestoreCollisionHeightAfterSlide()) {
+			bInSlide = false;
+		}
+	}
+}
+bool UMalePlayerMovementComponent::RestoreCollisionHeightAfterSlide() {
+	if (!CharacterOwner || !UpdatedPrimitive) {
+		return false;
+	}
+	ACharacter* DefCharacter = CharacterOwner->GetClass()->GetDefaultObject<ACharacter>();
+	const float DefHalfHeight = DefCharacter->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
+	const float DefRadius = DefCharacter->GetCapsuleComponent()->GetUnscaledCapsuleRadius();
+
+	if (CharacterOwner->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() == DefHalfHeight) {
+		return true;
+	}
+
+	const float HeightAdjust = DefHalfHeight - CharacterOwner->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight();
+	const FVector NewLocation = CharacterOwner->GetActorLocation() + FVector(0.0f, 0.0f, HeightAdjust);
+	
+	FCollisionQueryParams TraceParams(SCENE_QUERY_STAT(FinishSlide), false, CharacterOwner);
+	FCollisionResponseParams ResponseParams;
+	InitCollisionParams(TraceParams, ResponseParams);
+	const bool bBlocked = GetWorld()->OverlapBlockingTestByChannel(NewLocation, FQuat::Identity, UpdatedPrimitive->GetCollisionObjectType(), FCollisionShape::MakeCapsule(DefRadius, DefHalfHeight), TraceParams);
+	if (bBlocked) {
+		return false;
+	}
+	CharacterOwner->TeleportTo(NewLocation, CharacterOwner->GetActorRotation(), false, true);
+	CharacterOwner->GetCapsuleComponent()->SetCapsuleSize(DefRadius, DefHalfHeight);
+
+	if (bWantsSlideMeshRelativeLocationOffset) {
+		CharacterOwner->GetMesh()->SetRelativeLocation(DefCharacter->GetMesh()->RelativeLocation);
+	}
+	return true;
+}
+bool UMalePlayerMovementComponent::IsSliding() const {
+	return bInSlide;
+}
 
 void UMalePlayerMovementComponent::AttachToRail(USplineComponent* RailSpline) {
 	if (MovementMode == MOVE_Custom && CustomMovementMode == MOVE_Rail) {

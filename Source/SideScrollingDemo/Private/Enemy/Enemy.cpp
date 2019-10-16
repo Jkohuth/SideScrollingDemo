@@ -6,7 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Constants.h"
+#include "SideScrollingDemo.h"
 
 // Sets default values
 AEnemy::AEnemy()

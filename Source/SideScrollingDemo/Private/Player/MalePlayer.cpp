@@ -13,9 +13,8 @@
 #include "Components/SplineComponent.h"
 #include "WalkingPath.h"
 #include "CameraBoundingBoxComponent.h"
-//#include "Constants.h"
+#include "SideScrollingDemoGameMode.h"
 #include "DrawDebugHelpers.h"
-//#include "SideScrollingDemoTypes.h"
 
 // Sets default values
 AMalePlayer::AMalePlayer(const FObjectInitializer& ObjectInitializer) 
@@ -39,21 +38,7 @@ AMalePlayer::AMalePlayer(const FObjectInitializer& ObjectInitializer)
 	//BoundingBox = CreateDefaultSubobject<ACameraBoundingBox>(TEXT("BoundingBox"));
 	//BoundingBox->GetCameraComponent()->SetFieldOfView(10.f);
 	// Create a camera boom attached to the root (capsule)
-	/*CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->bAbsoluteRotation = true; // Rotation of the character should not affect rotation of boom
-	CameraBoom->bDoCollisionTest = false;
-	CameraBoom->TargetArmLength = 1000.f;
-	CameraBoom->SocketOffset = SocketOffset;
-	CameraBoom->RelativeRotation = FRotator(0.f, 180.f, 0.f);
-	CameraBoom->bUsePawnControlRotation = false;
-	CameraBoom->bInheritPitch = false;	CameraBoom->bInheritYaw = false;	CameraBoom->bInheritRoll = false;
 
-	// Create a camera and attach to boom
-	SideViewCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("SideViewCamera"));
-	SideViewCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-	SideViewCameraComponent->bUsePawnControlRotation = false; // We don't want the controller rotating the camera*/
-	
 	//Camera = CreateDefaultSubobject<ACameraBoundingBox>(TEXT("Camera"));
 	//SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
 	CameraBounds = CreateDefaultSubobject<UCameraBoundingBoxComponent>(TEXT("CameraBounds"));
@@ -111,6 +96,8 @@ void AMalePlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Focus", IE_Pressed, this, &AMalePlayer::ActivateFocus);
 	PlayerInputComponent->BindAction("Focus", IE_Released, this, &AMalePlayer::DeactivateFocus);
 	PlayerInputComponent->BindAction("BackDash", IE_Pressed, this, &AMalePlayer::BackDash);
+	PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &AMalePlayer::OnStartSlide);
+	PlayerInputComponent->BindAction("Slide", IE_Released, this, &AMalePlayer::OnStopSlide);
 
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMalePlayer::MoveRight);
 	PlayerInputComponent->BindAxis("MoveUp", this, &AMalePlayer::MoveUp);
@@ -447,4 +434,22 @@ void AMalePlayer::SetupJumpCalculations() {
 	this->JumpMaxHoldTime = JumpTime;
 	InitialLocation = GetActorLocation();
 	isJumping = true;
+}
+
+bool AMalePlayer::IsSliding() const {
+	UMalePlayerMovementComponent* MoveComp = GetMalePlayerMovement();
+	return MoveComp && MoveComp->IsSliding();
+}
+bool AMalePlayer::WantsToSlide() const {
+	return bPressedSlide;
+}
+
+void AMalePlayer::OnStartSlide() {
+	ASideScrollingDemoGameMode* MyGame = GetWorld()->GetAuthGameMode<ASideScrollingDemoGameMode>();
+	if (MyGame) {
+		bPressedSlide = true;
+	}
+}
+void AMalePlayer::OnStopSlide() {
+	bPressedSlide = false;
 }

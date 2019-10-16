@@ -3,7 +3,6 @@
 #include "EnemyCharacter.h"
 #include "Perception/PawnSensingComponent.h"
 #include "Engine.h"
-#include "Constants.h"
 #include "MalePlayer.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogEnemy, Log, All);

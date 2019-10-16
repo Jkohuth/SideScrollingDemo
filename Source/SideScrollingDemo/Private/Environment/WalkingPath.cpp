@@ -4,8 +4,7 @@
 #include "WalkingPath.h"
 #include "Components/SplineComponent.h"
 #include "Components/BoxComponent.h"
-#include "Constants.h"
-
+#include "SideScrollingDemoTypes.h"
 // Sets default values
 AWalkingPath::AWalkingPath()
 {
