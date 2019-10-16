@@ -7,7 +7,6 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "MalePlayer.h"
 #include "Engine.h"
-#include "Constants.h"
 #include "Components/SplineComponent.h"
 // Sets default values
 AEnemyPawn::AEnemyPawn()

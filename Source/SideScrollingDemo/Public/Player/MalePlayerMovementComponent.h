@@ -135,9 +135,58 @@ public:
 	///////////////////////////////////////////////
 	void AccumulateForce(FVector Force);
 	FVector MaxMovementSpeeds;
+
+	/**************************************
+	 **  		Slide Movement		     **
+	 **************************************/
+	// Going to make some adjustments to this considering I want the player to have the slide velocity for a set amount of time    
+	// Stop Slide when falling
+	virtual void StartFalling(int32 Iteration, float remainingTime, float timeTick, const FVector& Delta, const FVector& subLoc) override;
+	// Returns true when pawn is sliding
+	bool IsSliding() const;
+	// Attempts to end slide move- fails if collisions above pawn don't allow it
+	void TryToEndSlide();
+
+protected:
+	// Update Walking to meet slide
+	virtual void PhysWalking(float deltaTime, int32 Iterations) override;
+
+	// Calculates OutVelocity which is new velocity for pawn during slide
+	void CalcSlideVelocity(FVector& OutVelocity) const;
+
+	// forces pawn to start sliding
+	void StartSlide();
+
+	// Chjanges pawn height to SlideHeight and adjusts pawn collisions
+	void SetSlideCollisionHeight();
+
+	bool RestoreCollisionHeightAfterSlide();
+
+private:
+	UPROPERTY(EditDefaultsOnly, Category = Config)	
+	float MinSlideSpeed;
+	
+	UPROPERTY(EditDefaultsOnly, Category = Config)
+	float MaxSlideSpeed;
+	
+	UPROPERTY(EditDefaultsOnly, Category = Config)
+	float SlideVelocityReduction;
+
+	UPROPERTY(EditDefaultsOnly, Category = Config)
+	float SlideHeight;
+
+	// Offset value, by which relative location of pawn mesh needs to be changed when pawn is sliding
+	FVector SlideMeshRelativeLocationOffset;
+
+	// Value by which sliding pawn speed  to restore after animation finish
+	float SavedSpeed;
+
+	//Value by which current pawn speed is being reduced
+	float CurrentSlideVelocityReduction;
+
+	// true when pawn is sliding
+	uint32 bInSlide : 1;
+
+	// true if pawn needs to use SlideMeshRelativeLocationOffset while sliding
+	uint32 bWantsSlideMeshRelativeLocationOffset : 1; 
 };
-/*
-FORCEINLINE_DEBUGGABLE bool UMalePlayerMovementComponet::IsGrinding() const {
-	if(MovementMode == MOVE_Custom && Move)
-}
-*/

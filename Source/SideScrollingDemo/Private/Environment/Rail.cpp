@@ -8,7 +8,6 @@
 #include "Components/SplineMeshComponent.h"
 #include "MalePlayer.h"
 #include "malePlayerMovementComponent.h"
-#include "Constants.h"
 #include "Components/CapsuleComponent.h"
 
 
