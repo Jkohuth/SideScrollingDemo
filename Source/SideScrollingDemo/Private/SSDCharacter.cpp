@@ -85,14 +85,26 @@ void ASSDCharacter::MoveRight(float Value) {
 }
 
 // EVENT TRIGGERS
-void ASSDCharacter::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
-
-}
-void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
-
-}
+void ASSDCharacter::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) { }
+void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) { }
 void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
 
+	// Check for Wall Movement
+	if(OtherActor != nullptr && OtherActor->ActorHasTag(ECustomTags::WallTag) && FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.2f) 
+		&& PlayerMovement->MovementMode == MOVE_Falling){ // Angle Tolerance
+		if (GetPlayerMovement()) {
+			GetPlayerMovement()->TriggerWallMovement(Hit);
+		}
+	} 
+	// Check for Rail Movement
+	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::RailTag)) {
+		if (GetPlayerMovement()->CheckCustomMovementMode(ECustomMovementMode::MOVE_Rail)) return;
+
+		ARail* Rail = Cast<ARail>(OtherActor);
+		if (Rail) {
+			GetPlayerMovement()->AttachToRail(Rail->GetRailSpline());
+		}
+	}
 }
 
 // JUMP
@@ -121,4 +133,77 @@ void ASSDCharacter::NotifyJumpApex()
 	// I may want to have a ton of different gravitys based on situation
 	GetPlayerMovement()->SetGravity(GetPlayerMovement()->FallingGravityScalar);
 	//JumpActual();
+}
+
+// CHARACTER STATE
+
+void ASSDCharacter::SetCharacterState(ECharacterState NewCharacterState){
+	CharacterState = NewCharacterState;
+}
+ECharacterState ASSDCharacter::GetCharacterState(){
+	return CharacterState;
+}
+
+
+// DAMAGE
+
+void ASSDCharacter::InflictDamage(AActor* ImpactActor){
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController != nullptr) {
+		if ((ImpactActor != nullptr) && (ImpactActor != this)) {
+			TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+			FDamageEvent DamageEvent(ValidDamageTypeClass);
+
+			const float DamageAmount = 1.0f;
+			ImpactActor->TakeDamage(DamageAmount, DamageEvent, PlayerController, this);
+	
+		}
+	}
+}
+
+void ASSDCharacter::TakeDamage_Implementation(float Damage, struct FPointDamageEvent const & PointDamageEvent, class AController *EventInstigator, AActor *DamageCauser){
+	FDamageEvent DamageEvent = PointDamageEvent;
+	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+
+	// This ensures the player won't get hit repeatedly by the same creature
+	if (!immuneDamage && CharacterState == ECharacterState::ACTIVE) {
+		GetPlayerMovement()->KnockBack(PointDamageEvent.HitInfo);
+
+		if (ActualDamage > 0.f) {
+			Health -= ActualDamage;
+			if (Health <= 0.f && GetCharacterState() != ECharacterState::DEAD) {
+				TriggerDeathAnim();
+				SetCharacterState(ECharacterState::DEAD);
+			}
+		}
+		immuneDamage = true;
+	}
+
+	return ActualDamage;
+}
+void ASSDCharacter::PostDamageImmunity(float DeltaTime){
+	currentDaamgeFrame++;
+	if (currentDamageFrame >= frameImmunity) {
+		currentDamageFrame = 0.f;
+		immuneDamage = false;
+	}
+}
+void ASSDCharacter::Respawn(FVector LastCheckPoint){
+	Health = FullHealth;
+	SetCharacterState(ECharacterState::ACTIVE);
+	SetActorLocation(LastCheckPoint); // May need to use a different method
+}
+
+
+// SLIDE 
+
+// This slide implementation isn't finished and is based off the 
+// slide from Epic Games "PlatformerGame" I think it is worth 
+// Looking into how they instantiate the effect to draw out what I want
+
+bool ASSDCharacter::IsSliding() const {
+	return GetPlayerMovement() && GetPlayerMovement()->IsSliding();
+}
+bool ASSDCharacter::WantsToSlide() const {
+	return bPressedSlide;
 }
