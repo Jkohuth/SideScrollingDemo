@@ -207,3 +207,9 @@ bool ASSDCharacter::IsSliding() const {
 bool ASSDCharacter::WantsToSlide() const {
 	return bPressedSlide;
 }
+void ASSDCharacter::OnStartSlide(){
+
+}
+void ASSDCharacter::OnStopSlide(){
+	
+}

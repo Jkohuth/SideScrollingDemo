@@ -22,7 +22,7 @@ namespace EPlayerEffect
 }
 UENUM(BlueprintType)
 enum ECustomMovementMode {
-	MOVE_Wall, MOVE_Rail, MOVE_Path
+	MOVE_Wall, MOVE_Rail, MOVE_Path, MOVE_Grind, MOVE_Climb
 };
 UENUM(BlueprintType)
 enum ECharacterState {
