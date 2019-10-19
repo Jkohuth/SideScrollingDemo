@@ -32,6 +32,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
 	class UCameraBoundingBoxComponent* CameraBounds;
 
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = Direction)
+	class UArrowComponent* ArrowComponent;
 	// Handle Axis Input
 	void MoveRight(float Value);
 	void MoveUp(float Value);
@@ -49,7 +51,7 @@ public:
 	UFUNCTION()
 	void OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	UFUNCTION()
-		void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	// JUMP - Platformer must have satisfying vertical movment
 	virtual void Jump() override;
@@ -104,6 +106,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MalePlayer")
 	virtual ECharacterState GetCharacterState();
 	
+	UFUNCTION(BlueprintCallable, Category = "Pawn|Character")
+	bool IsGrinding() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Pawn|Character")
+	bool IsClimbing() const;
+
+
+
 	// BACK DASH - needs button delay
 	UFUNCTION(BlueprintCallable, Category = "MalePlayer")
 	void BackDash();
@@ -124,6 +134,9 @@ public:
 	void OnStartSlide();
 	// Event called when player releases slide button
 	void OnStopSlide();
+
+	FORCEINLINE class UArrowComponent* GetArrowComponent const { return ArrowComponent; }
+
 
 private:
 	uint32 bPressedSlide:1;
