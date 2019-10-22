@@ -13,13 +13,13 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogCharacterMovement, Log, All);
 
-void UPlayerMovementComponent::InitializeComponent() {
+void USSDPlayerMovementComponent::InitializeComponent() {
     Super::InitializeComponent();
 
     // Lock Movement on X Plane
     bConstrainToPlane = true;
     SetPlaneConstraintAxisSetting(LockXAxis);
-    bOrientRotationMovement = true;
+    bOrientRotationToMovement = true;
 
     AirControl = 0.6f;
     JumpZVelocity = 1750.f;
@@ -32,7 +32,7 @@ void UPlayerMovementComponent::InitializeComponent() {
 	WallSlideFriction = 30.0f;
 
 	MaxMovementSpeeds = FVector(0.f, MaxWalkSpeed, JumpZVelocity);
-	RailSpeed = FVector(0.f, -500.0f, 0.f);
+	//RailSpeed = FVector(0.f, -500.0f, 0.f);
 	KnockBackVelocity = FVector(0.f, 1000.f, 700.f);
 
 }
@@ -55,10 +55,18 @@ void USSDPlayerMovementComponent::BeginPlay() {
 void USSDPlayerMovementComponent::MoveRightInput(float Value){
     AddInputVector(FVector(0.0f, -Value, 0.0f));
 }
-void USSDPlayerMovementComponent::SetCustomMovementMode(uint8 custom) {
-	SetMovementMode(MOVE_Custom, custom);
-}
+void USSDPlayerMovementComponent::MoveUpInput(float Value){
 
+}
+void USSDPlayerMovementComponent::SetCustomMovementMode(uint8 CustomMovement) {
+	SetMovementMode(MOVE_Custom, CustomMovement);
+}
+bool USSDPlayerMovementComponent::CheckCustomMovementMode(uint8 CustomMovement){
+	return MovementMode == MOVE_Custom && CustomMovementMode == CustomMovement;
+}
+void USSDPlayerMovementComponent::SetCharacterGravity(float Value){
+	GravityScale = Value;
+}
 void USSDPlayerMovementComponent::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) {
 
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
@@ -66,14 +74,14 @@ void USSDPlayerMovementComponent::OnMovementModeChanged(EMovementMode PrevMoveme
 	case EMovementMode::MOVE_Custom:
 		switch (PreviousCustomMode) {
 		case ECustomMovementMode::MOVE_Climb:
-			bSlidingDownWall = false;
+//			bSlidingDownWall = false;
 			break;
 		case ECustomMovementMode::MOVE_Grind:
 			break;		
 		}
 		break;
 	case EMovementMode::MOVE_Falling:
-		SetGravity(RisingGravityScalar);
+		SetCharacterGravity(RisingGravityScalar);
 		bNotifyApex = true;
 		break;
 	case EMovementMode::MOVE_MAX:
@@ -94,7 +102,6 @@ void USSDPlayerMovementComponent::PhysCustom(float DeltaTime, int32 Iterations) 
 		PhysGrind(DeltaTime, Iterations);
 		break;
 	case MOVE_Path:
-		PhysPath(DeltaTime, Iterations);
 		break;
 	default:
 		UE_LOG(LogCharacterMovement, Warning, TEXT("Unsupported Movement Mode %d"), int32(MovementMode));
@@ -165,7 +172,7 @@ void USSDPlayerMovementComponent::PhysClimb(float DeltaTime, int32 Iterations){
 		FVector End = Start;
 
         // ARROW COMPONENT
-		End.Y += (-1*wallDirection.Y * (capsuleRadius + 10.f));
+		//End.Y += (-1*wallDirection.Y * (capsuleRadius + 10.f));
 
 		FCollisionQueryParams CollisionParams;
 		CollisionParams.AddIgnoredActor(CharacterOwner);
@@ -178,12 +185,39 @@ void USSDPlayerMovementComponent::PhysClimb(float DeltaTime, int32 Iterations){
 		}
 	}
 }
+void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 
+}
+bool USSDPlayerMovementComponent::IsClimbing() const {
+	return (MovementMode == MOVE_Climb) && UpdatedComponent;
+}
+bool USSDPlayerMovementComponent::IsGrinding() const {
+	return (MovementMode == MOVE_Grind) && UpdatedComponent;
+}
+void USSDPlayerMovementComponent::BackDash(){
+
+}
+void USSDPlayerMovementComponent::KnockBack(const FHitResult& Hit){
+
+}
+
+void USSDPlayerMovementComponent::TriggerClimbMovmement(){
+
+}
+void USSDPlayerMovementComponent::TriggerGrindMovement(){
+
+}
 void USSDPlayerMovementComponent::OnJumpInput(){
-    if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Wall)) {
-		JumpOffWall();
+    if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Climb)) {
+//		JumpOffWall();
+		UE_LOG(LogCharacterMovement, Log, TEXT("Jump off the wall"));
 	}
-	else if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Rail)) {
-		bJumpOffRail = true;
+	else if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) {
+//		bJumpOffRail = true;
+		UE_LOG(LogCharacterMovement, Log, TEXT("Jump off the rail"));
+	
 	}
+}
+bool USSDPlayerMovementComponent::IsSliding() const {
+	return bInSlide;
 }
