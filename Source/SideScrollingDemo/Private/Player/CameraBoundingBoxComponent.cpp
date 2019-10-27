@@ -3,8 +3,8 @@
 
 #include "CameraBoundingBoxComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/BoxComponent.h"
-#include "Engine.h"
 
 // Sets default values for this component's properties
 UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
@@ -18,11 +18,14 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	BoundingBox->InitBoxExtent(BoxSize);
 	BoundingBox->SetRelativeLocation(FVector(0.f, 0.f,0.f));
 	BoundingBox->bVisible = true;
-	//BoundingBox->bHiddenInGame = false;
+	BoundingBox->bHiddenInGame = false;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 
 	CameraComponent->SetupAttachment(BoundingBox);
+	// Have a Camera Transform in the blueprints its not necessary
+	//CameraComponent->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+
 }
 
 

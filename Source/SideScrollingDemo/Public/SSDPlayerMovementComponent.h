@@ -17,9 +17,10 @@ class SIDESCROLLINGDEMO_API USSDPlayerMovementComponent : public UCharacterMovem
 protected:
 	float capsuleHalfHeight;
 	float capsuleRadius;
-	float capsuleRadius;
 	float wallLinesCount;
 	float wallLinesSpace;
+
+	USSDPlayerMovementComponent(const FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rail)
 		class USplineComponent* RailSplineReference;
@@ -45,7 +46,11 @@ public:
 	// Controls passed to Movement Component
 	void MoveRightInput(float Value);
 	void MoveUpInput(float Value);
-
+	
+	UFUNCTION(BlueprintCallable)
+	void SetCustomMovementMode(uint8 CustomMovement);	
+	UFUNCTION(BlueprintCallable)
+	bool CheckCustomMovementMode(uint8 CustomMovement);
 	
 	UPROPERTY(EditAnywhere)
 	float WallSlideFriction;
@@ -66,9 +71,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void BackDash();
-	UFUNCTION(BlueprintCallable)
-	void SetCustomMovementMode(uint8 custom);
 	
+	FVector MaxMovementSpeeds;
+
 	// DAMAGE
 
 	UFUNCTION(BlueprintCallable)
@@ -76,13 +81,20 @@ public:
 	UPROPERTY(EditAnywhere)
 	FVector KnockBackVelocity;
 	
+	// Slide
+	bool IsSliding() const;
+
 	// Climb
 	void PhysClimb(float DeltaTime, int32 Iterations);
 	bool IsClimbing() const;
+	void InitiateClimbMovement(FHitResult ClimbTrigger);
+	void ClimbCollisionHandler();
 
 
 	// Grind
 	void PhysGrind(float DeltaTime, int32 Iterations);
 	bool IsGrinding() const;
-
+	void TriggerGrindMovement();
+private:
+	uint32 bInSlide:1;
 };

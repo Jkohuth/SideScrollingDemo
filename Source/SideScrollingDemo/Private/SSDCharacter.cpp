@@ -2,7 +2,14 @@
 
 
 #include "SSDCharacter.h"
-#include "SSDPlayerMovementComponent"
+#include "SSDPlayerMovementComponent.h"
+#include "Components/InputComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "CameraBoundingBoxComponent.h"
+#include "Rail.h"
+#include "Components/SplineComponent.h"
+
 
 // Sets default values
 ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
@@ -15,18 +22,18 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	RootComponent = GetCapsuleComponent();
 
 	GetCapsuleComponent()->InitCapsuleSize(24.5, 94.5);
-	GetCapsuleComponent()->SetWorldRotation(FRotator(0.0f, 0.0f, 90.f));
+	//GetCapsuleComponent()->SetWorldRotation(FRotator(0.0f, 0.0f, 90.f));
+
+	RootComponent = GetCapsuleComponent();
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ASSDCharacter::OnHit);
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ASSDCharacter::OnActorOverlapBegin);
 	GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &ASSDCharacter::OnActorOverlapEnd);
 
 	CameraBounds = CreateDefaultSubobject<UCameraBoundingBoxComponent>(TEXT("CameraBounds"));
-	CameraBounds->GetCameraComponent()->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
-
+	//CameraBounds->GetCameraComponent()->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 
 	PlayerMovement = Cast<USSDPlayerMovementComponent>(GetCharacterMovement());
 
@@ -62,11 +69,11 @@ void ASSDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	//PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &ASSDCharacter::DebugString);
-	PlayerInputComponent->BindAction("Focus", IE_Pressed, this, &ASSDCharacter::ActivateFocus);
-	PlayerInputComponent->BindAction("Focus", IE_Released, this, &ASSDCharacter::DeactivateFocus);
-	PlayerInputComponent->BindAction("BackDash", IE_Pressed, this, &ASSDCharacter::BackDash);
-	PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &ASSDCharacter::OnStartSlide);
-	PlayerInputComponent->BindAction("Slide", IE_Released, this, &ASSDCharacter::OnStopSlide);
+	//PlayerInputComponent->BindAction("Focus", IE_Pressed, this, &ASSDCharacter::ActivateFocus);
+	//PlayerInputComponent->BindAction("Focus", IE_Released, this, &ASSDCharacter::DeactivateFocus);
+	//PlayerInputComponent->BindAction("BackDash", IE_Pressed, this, &ASSDCharacter::BackDash);
+	//PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &ASSDCharacter::OnStartSlide);
+	//PlayerInputComponent->BindAction("Slide", IE_Released, this, &ASSDCharacter::OnStopSlide);
 
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASSDCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("MoveUp", this, &ASSDCharacter::MoveUp);
@@ -78,7 +85,7 @@ void ASSDCharacter::MoveRight(float Value) {
 		GetPlayerMovement()->MoveRightInput(Value);
 	}
 }
-void ASSDCharacter::MoveRight(float Value) {
+void ASSDCharacter::MoveUp(float Value) {
 	if (PlayerMovement && (PlayerMovement->UpdatedComponent == RootComponent)) {
 		GetPlayerMovement()->MoveUpInput(Value);
 	}
@@ -90,19 +97,20 @@ void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActo
 void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
 
 	// Check for Wall Movement
-	if(OtherActor != nullptr && OtherActor->ActorHasTag(ECustomTags::WallTag) && FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.2f) 
-		&& PlayerMovement->MovementMode == MOVE_Falling){ // Angle Tolerance
+	if(OtherActor && OtherActor->ActorHasTag(ECustomTags::ClimbTag) && FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.2f) 
+		&& GetPlayerMovement()->MovementMode == MOVE_Falling){ // Angle Tolerance
 		if (GetPlayerMovement()) {
-			GetPlayerMovement()->TriggerWallMovement(Hit);
+			GetPlayerMovement()->InitiateClimbMovement(Hit);
 		}
 	} 
 	// Check for Rail Movement
 	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::RailTag)) {
-		if (GetPlayerMovement()->CheckCustomMovementMode(ECustomMovementMode::MOVE_Rail)) return;
+		if (GetPlayerMovement()->CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) return;
 
 		ARail* Rail = Cast<ARail>(OtherActor);
 		if (Rail) {
-			GetPlayerMovement()->AttachToRail(Rail->GetRailSpline());
+			//GetPlayerMovement()->AttachToRail(Rail->GetRailSpline());
+			GetPlayerMovement()->TriggerGrindMovement();
 		}
 	}
 }
@@ -119,7 +127,7 @@ void ASSDCharacter::Jump() {
 void ASSDCharacter::StopJumping() {
 	Super::StopJumping();
 	if (GetPlayerMovement()->MovementMode == MOVE_Falling) {
-		GetPlayerMovement()->SetGravity(GetPlayerMovement()->FallingGravityScalar);
+		GetPlayerMovement()->SetCharacterGravity(GetPlayerMovement()->FallingGravityScalar); 
 		GetPlayerMovement()->isJumping = false;
 	}
 }
@@ -131,7 +139,7 @@ void ASSDCharacter::NotifyJumpApex()
 
 	// So here I would Like to clean up what I have. Setting Gravity is important but 
 	// I may want to have a ton of different gravitys based on situation
-	GetPlayerMovement()->SetGravity(GetPlayerMovement()->FallingGravityScalar);
+	GetPlayerMovement()->SetCharacterGravity(GetPlayerMovement()->FallingGravityScalar);
 	//JumpActual();
 }
 
@@ -161,12 +169,14 @@ void ASSDCharacter::InflictDamage(AActor* ImpactActor){
 	}
 }
 
-void ASSDCharacter::TakeDamage_Implementation(float Damage, struct FPointDamageEvent const & PointDamageEvent, class AController *EventInstigator, AActor *DamageCauser){
+float ASSDCharacter::ReceiveDamage_Implementation(float Damage, struct FPointDamageEvent const & PointDamageEvent, class AController *EventInstigator, AActor *DamageCauser){
 	FDamageEvent DamageEvent = PointDamageEvent;
-	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+	//const float ActualDamage = t
+	const float ActualDamage = this->TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+	//Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
 	// This ensures the player won't get hit repeatedly by the same creature
-	if (!immuneDamage && CharacterState == ECharacterState::ACTIVE) {
+	if (!immuneToDamage && CharacterState == ECharacterState::ACTIVE) {
 		GetPlayerMovement()->KnockBack(PointDamageEvent.HitInfo);
 
 		if (ActualDamage > 0.f) {
@@ -176,16 +186,16 @@ void ASSDCharacter::TakeDamage_Implementation(float Damage, struct FPointDamageE
 				SetCharacterState(ECharacterState::DEAD);
 			}
 		}
-		immuneDamage = true;
+		immuneToDamage = true;
 	}
 
 	return ActualDamage;
 }
 void ASSDCharacter::PostDamageImmunity(float DeltaTime){
-	currentDaamgeFrame++;
+	currentDamageFrame++;
 	if (currentDamageFrame >= frameImmunity) {
 		currentDamageFrame = 0.f;
-		immuneDamage = false;
+		immuneToDamage = false;
 	}
 }
 void ASSDCharacter::Respawn(FVector LastCheckPoint){
@@ -200,6 +210,12 @@ void ASSDCharacter::Respawn(FVector LastCheckPoint){
 // This slide implementation isn't finished and is based off the 
 // slide from Epic Games "PlatformerGame" I think it is worth 
 // Looking into how they instantiate the effect to draw out what I want
+bool ASSDCharacter::IsGrinding() const {
+	return GetPlayerMovement() && GetPlayerMovement()->IsGrinding();
+}
+bool ASSDCharacter::IsClimbing() const {
+	return GetPlayerMovement() && GetPlayerMovement()->IsClimbing();
+}
 
 bool ASSDCharacter::IsSliding() const {
 	return GetPlayerMovement() && GetPlayerMovement()->IsSliding();

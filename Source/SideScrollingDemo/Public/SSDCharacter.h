@@ -21,7 +21,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	// Custom Movement to make game unique
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	class USSDPlayerMovementComponent* PlayerMovement;
 	
 	// What status is the character? Active, Dead, Cutscene
@@ -29,11 +29,9 @@ protected:
 	TEnumAsByte<enum ECharacterState> CharacterState;
 
 	// Might make this a Camera Manager component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
 	class UCameraBoundingBoxComponent* CameraBounds;
 
-	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = Direction)
-	class UArrowComponent* ArrowComponent;
 	// Handle Axis Input
 	void MoveRight(float Value);
 	void MoveUp(float Value);
@@ -92,7 +90,7 @@ public:
 
 	// Handle Character Damage Taken
 	UFUNCTION(BlueprintNativeEvent, Category = "Damage")
-	float TakeDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser);
+	float ReceiveDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Anim")
 	void TriggerDeathAnim();
@@ -115,13 +113,13 @@ public:
 
 
 	// BACK DASH - needs button delay
-	UFUNCTION(BlueprintCallable, Category = "MalePlayer")
-	void BackDash();
+	//UFUNCTION(BlueprintCallable, Category = "MalePlayer")
+	//void BackDash();
 	
-	UFUNCTION(BlueprintImplementableEvent, Category = "MalePlayer")
-	void BackDashTrigger();
+	//UFUNCTION(BlueprintImplementableEvent, Category = "MalePlayer")
+	//void BackDashTrigger();
 
-	FORCEINLINE class USSDPlayerMovementComponent* GetPlayerMovement; () const { return PlayerMovement; }
+	FORCEINLINE class USSDPlayerMovementComponent* GetPlayerMovement() const { return PlayerMovement; }
 
 	// SLIDE MOVEMENT
 
@@ -134,9 +132,6 @@ public:
 	void OnStartSlide();
 	// Event called when player releases slide button
 	void OnStopSlide();
-
-	FORCEINLINE class UArrowComponent* GetArrowComponent const { return ArrowComponent; }
-
 
 private:
 	uint32 bPressedSlide:1;

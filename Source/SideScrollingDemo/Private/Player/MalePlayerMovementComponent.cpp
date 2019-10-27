@@ -530,7 +530,6 @@ void UMalePlayerMovementComponent::BackDash(){
 bool UMalePlayerMovementComponent::CheckCustomMovementMode(uint8 CustomMode)
 {
 	if (MovementMode == MOVE_Custom && CustomMovementMode == CustomMode) return true;
-
 	return false;
 }
 void UMalePlayerMovementComponent::SetFacingDirection(FVector Value) {
