@@ -29,7 +29,7 @@ protected:
 	TEnumAsByte<enum ECharacterState> CharacterState;
 
 	// Might make this a Camera Manager component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
 	class UCameraBoundingBoxComponent* CameraBounds;
 
 	// Handle Axis Input

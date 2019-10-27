@@ -18,12 +18,13 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	BoundingBox->InitBoxExtent(BoxSize);
 	BoundingBox->SetRelativeLocation(FVector(0.f, 0.f,0.f));
 	BoundingBox->bVisible = true;
-	//BoundingBox->bHiddenInGame = false;
+	BoundingBox->bHiddenInGame = false;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 
 	CameraComponent->SetupAttachment(BoundingBox);
-	CameraComponent->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+	// Have a Camera Transform in the blueprints its not necessary
+	//CameraComponent->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 
 }
 

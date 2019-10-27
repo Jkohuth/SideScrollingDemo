@@ -36,6 +36,8 @@ namespace ECustomTags {
 	const FName RailTag = FName("rail");
 	const FName WallTag = FName("wall");
 	const FName PathTag = FName("path");
+	const FName ClimbTag = FName("climb");
+	const FName GrindTag = FName("grind");
 	
 	// Later I may seperate the enemies from the movement modes
 	const FName PlayerTag = FName("player");

@@ -8,15 +8,17 @@
 #include "Components/SplineComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "SSDCharacter.h"
+#include "DrawDebugHelpers.h"
 
 
 
 DEFINE_LOG_CATEGORY_STATIC(LogCharacterMovement, Log, All);
 
-void USSDPlayerMovementComponent::InitializeComponent() {
-    Super::InitializeComponent();
 
-    // Lock Movement on X Plane
+USSDPlayerMovementComponent::USSDPlayerMovementComponent(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+   // Lock Movement on X Plane
     bConstrainToPlane = true;
     SetPlaneConstraintAxisSetting(LockXAxis);
     bOrientRotationToMovement = true;
@@ -30,10 +32,22 @@ void USSDPlayerMovementComponent::InitializeComponent() {
 	bNotifyApex = true;
 	MaxAcceleration = 3500.0f;
 	WallSlideFriction = 30.0f;
+	RotationRate = FRotator(0.f, 2160.f, 0.f); // Want snappy turn arounds
+
 
 	MaxMovementSpeeds = FVector(0.f, MaxWalkSpeed, JumpZVelocity);
 	//RailSpeed = FVector(0.f, -500.0f, 0.f);
 	KnockBackVelocity = FVector(0.f, 1000.f, 700.f);
+
+}
+void USSDPlayerMovementComponent::InitializeComponent() {
+    Super::InitializeComponent();
+	if (CharacterOwner) {
+		capsuleHalfHeight = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		capsuleRadius = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius();
+		wallLinesCount = 10.0f; // 30 Lines will be drawn
+		wallLinesSpace = (2 * capsuleHalfHeight )/ wallLinesCount;
+	}
 
 }
 
@@ -185,6 +199,59 @@ void USSDPlayerMovementComponent::PhysClimb(float DeltaTime, int32 Iterations){
 		}
 	}
 }
+void USSDPlayerMovementComponent::InitiateClimbMovement(FHitResult ClimbTrigger){
+
+	FHitResult Hit;
+
+	float climbOffset = capsuleRadius + 10.f; //Radius plus some buffer region
+	FVector StartTrace = GetActorLocation();
+	FVector EndTrace = StartTrace;
+	//EndTrace.Y += climbOffset*GetCharacterOwner()->GetActorForwardVector().Y * ClimbTrigger.ImpactNormal.Y;
+	EndTrace.Y += -1.f * 100.f * Hit.ImpactNormal.Y;
+
+	EndTrace.Z += capsuleHalfHeight;
+	StartTrace.Z += capsuleHalfHeight; 
+
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(CharacterOwner);
+	for(int i = 0; i < wallLinesCount; i++){
+		if (GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams)) {
+			wallRayCheck.Emplace(true);
+		} else
+		{
+			wallRayCheck.Emplace(false);
+		}
+		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Red, true, 1.0f);
+
+		EndTrace.Z -= wallLinesSpace;
+		StartTrace.Z -= wallLinesSpace;
+	}
+	ClimbCollisionHandler();
+}
+void USSDPlayerMovementComponent::ClimbCollisionHandler(){
+	// We use the array of booleans as a top to bottom list of is there a wall
+	// If more than half of the player hit the wall then we can trigger it
+	// If the bottom half hit but not the top half "roll"
+	Velocity = FVector::ZeroVector;
+	SetCustomMovementMode(ECustomMovementMode::MOVE_Climb);
+	/*float truePercent = 0.f;
+	float falsePercent = 0.f;
+	int midpoint = wallLinesSpace /2 ;
+	for(int i = 0; i < wallLinesCount; i++){
+		wallRayCheck[i] ? (truePercent++) : (falsePercent++);
+	}
+	truePercent = truePercent / wallLinesCount; // Actually make this a percent
+	falsePercent = falsePercent / wallLinesCount;
+
+	if(truePercent >= 0.6f){
+		Velocity = FVector::ZeroVector;
+		SetCustomMovementMode(ECustomMovementMode::MOVE_Climb);
+	} else if(!wallRayCheck[0] && !wallRayCheck[midpoint]){
+		// Do Roll
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "You're trying to roll");
+	}*/
+	wallRayCheck.Empty();
+}
 void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 
 }
@@ -201,9 +268,6 @@ void USSDPlayerMovementComponent::KnockBack(const FHitResult& Hit){
 
 }
 
-void USSDPlayerMovementComponent::TriggerClimbMovmement(){
-
-}
 void USSDPlayerMovementComponent::TriggerGrindMovement(){
 
 }

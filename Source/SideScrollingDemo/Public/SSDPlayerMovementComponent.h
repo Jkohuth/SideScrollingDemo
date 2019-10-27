@@ -20,6 +20,8 @@ protected:
 	float wallLinesCount;
 	float wallLinesSpace;
 
+	USSDPlayerMovementComponent(const FObjectInitializer& ObjectInitializer);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rail)
 		class USplineComponent* RailSplineReference;
 
@@ -85,7 +87,8 @@ public:
 	// Climb
 	void PhysClimb(float DeltaTime, int32 Iterations);
 	bool IsClimbing() const;
-	void TriggerClimbMovmement();
+	void InitiateClimbMovement(FHitResult ClimbTrigger);
+	void ClimbCollisionHandler();
 
 
 	// Grind

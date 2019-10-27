@@ -22,16 +22,18 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	RootComponent = GetCapsuleComponent();
 
 	GetCapsuleComponent()->InitCapsuleSize(24.5, 94.5);
-	GetCapsuleComponent()->SetWorldRotation(FRotator(0.0f, 0.0f, 90.f));
+	//GetCapsuleComponent()->SetWorldRotation(FRotator(0.0f, 0.0f, 90.f));
+
+	RootComponent = GetCapsuleComponent();
 
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &ASSDCharacter::OnHit);
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ASSDCharacter::OnActorOverlapBegin);
 	GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &ASSDCharacter::OnActorOverlapEnd);
 
 	CameraBounds = CreateDefaultSubobject<UCameraBoundingBoxComponent>(TEXT("CameraBounds"));
+	//CameraBounds->GetCameraComponent()->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 
 	PlayerMovement = Cast<USSDPlayerMovementComponent>(GetCharacterMovement());
 
@@ -70,8 +72,8 @@ void ASSDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	//PlayerInputComponent->BindAction("Focus", IE_Pressed, this, &ASSDCharacter::ActivateFocus);
 	//PlayerInputComponent->BindAction("Focus", IE_Released, this, &ASSDCharacter::DeactivateFocus);
 	//PlayerInputComponent->BindAction("BackDash", IE_Pressed, this, &ASSDCharacter::BackDash);
-	PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &ASSDCharacter::OnStartSlide);
-	PlayerInputComponent->BindAction("Slide", IE_Released, this, &ASSDCharacter::OnStopSlide);
+	//PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &ASSDCharacter::OnStartSlide);
+	//PlayerInputComponent->BindAction("Slide", IE_Released, this, &ASSDCharacter::OnStopSlide);
 
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASSDCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("MoveUp", this, &ASSDCharacter::MoveUp);
@@ -95,10 +97,10 @@ void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActo
 void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
 
 	// Check for Wall Movement
-	if(OtherActor != nullptr && OtherActor->ActorHasTag(ECustomTags::WallTag) && FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.2f) 
+	if(OtherActor && OtherActor->ActorHasTag(ECustomTags::ClimbTag) && FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.2f) 
 		&& GetPlayerMovement()->MovementMode == MOVE_Falling){ // Angle Tolerance
 		if (GetPlayerMovement()) {
-		//	GetPlayerMovement()->TriggerWallMovement(Hit);
+			GetPlayerMovement()->InitiateClimbMovement(Hit);
 		}
 	} 
 	// Check for Rail Movement
