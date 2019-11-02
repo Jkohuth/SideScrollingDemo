@@ -68,6 +68,9 @@ public:
 	float JumpVelocity = 1750.f;
 	UFUNCTION(BlueprintCallable)
 	void OnJumpInput();
+	void JumpOffWall();
+	UPROPERTY(EditAnywhere)
+	FVector jumpWallVelocity;
 	
 	UFUNCTION(BlueprintCallable)
 	void BackDash();
@@ -89,7 +92,11 @@ public:
 	bool IsClimbing() const;
 	void InitiateClimbMovement(FHitResult ClimbTrigger);
 	void ClimbCollisionHandler();
-
+	float towardWall = 0.f;
+	float climbCheckPadding = 10.f;
+	
+	UPROPERTY(EditAnywhere)
+	FVector wallSlideVelocity;
 
 	// Grind
 	void PhysGrind(float DeltaTime, int32 Iterations);

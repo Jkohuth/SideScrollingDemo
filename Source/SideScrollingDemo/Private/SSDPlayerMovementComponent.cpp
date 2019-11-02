@@ -31,14 +31,15 @@ USSDPlayerMovementComponent::USSDPlayerMovementComponent(const FObjectInitialize
 	GravityScale = RisingGravityScalar;
 	bNotifyApex = true;
 	MaxAcceleration = 3500.0f;
-	WallSlideFriction = 30.0f;
+	WallSlideFriction = 3.0f;
 	RotationRate = FRotator(0.f, 2160.f, 0.f); // Want snappy turn arounds
 
 
 	MaxMovementSpeeds = FVector(0.f, MaxWalkSpeed, JumpZVelocity);
 	//RailSpeed = FVector(0.f, -500.0f, 0.f);
 	KnockBackVelocity = FVector(0.f, 1000.f, 700.f);
-
+	wallSlideVelocity = FVector(0.f, 0.f, -400.f); // Can be changed to be material specific
+	jumpWallVelocity = FVector(0.f, 750.f, 1500.f);
 }
 void USSDPlayerMovementComponent::InitializeComponent() {
     Super::InitializeComponent();
@@ -56,6 +57,7 @@ void USSDPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick
 }
 
 void USSDPlayerMovementComponent::BeginPlay() {
+	Super::BeginPlay();
     // Store these locally instead of calling a big function however if they change during a game there coudl be problems
     if (CharacterOwner) {
 		capsuleHalfHeight = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
@@ -67,9 +69,24 @@ void USSDPlayerMovementComponent::BeginPlay() {
 }
 
 void USSDPlayerMovementComponent::MoveRightInput(float Value){
-    AddInputVector(FVector(0.0f, -Value, 0.0f));
+		
+	switch (MovementMode) {
+		case MOVE_Custom:
+			switch (CustomMovementMode) {
+				case ECustomMovementMode::MOVE_Climb:
+					break;
+			}
+			break;
+		default:
+			AddInputVector(FVector(0.0f, -Value, 0.0f));
+			break;
+	}
 }
 void USSDPlayerMovementComponent::MoveUpInput(float Value){
+	/*if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Climb)) {
+		if (Value == -1.f)
+			AddInputVector(FVector(0.f, 0.f, Value));
+	}*/
 
 }
 void USSDPlayerMovementComponent::SetCustomMovementMode(uint8 CustomMovement) {
@@ -153,8 +170,8 @@ void USSDPlayerMovementComponent::PhysClimb(float DeltaTime, int32 Iterations){
 
 		// Ensure velocity is vertical
 		const FVector OldVelocity = Velocity;
-		Acceleration.X = 0.f;
-		Acceleration.Y = 0.f;
+		
+		Velocity = wallSlideVelocity;
 
 		// Apply acceleration
 		if (!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity()) {
@@ -185,13 +202,15 @@ void USSDPlayerMovementComponent::PhysClimb(float DeltaTime, int32 Iterations){
 		FVector Start = CharacterOwner->GetActorLocation();
 		FVector End = Start;
 
+
         // ARROW COMPONENT
-		//End.Y += (-1*wallDirection.Y * (capsuleRadius + 10.f));
+
+		End.Y += (towardWall * (capsuleRadius + climbCheckPadding));
 
 		FCollisionQueryParams CollisionParams;
 		CollisionParams.AddIgnoredActor(CharacterOwner);
 		bool isHit = GetWorld()->LineTraceSingleByChannel(WallHit, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionParams);
-		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, 1.f);
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, true, 5.f, 0, 5.0f);
 		if (!isHit) {
 			SetMovementMode(MOVE_Falling);
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
@@ -207,10 +226,30 @@ void USSDPlayerMovementComponent::InitiateClimbMovement(FHitResult ClimbTrigger)
 	FVector StartTrace = GetActorLocation();
 	FVector EndTrace = StartTrace;
 	//EndTrace.Y += climbOffset*GetCharacterOwner()->GetActorForwardVector().Y * ClimbTrigger.ImpactNormal.Y;
-	EndTrace.Y += -1.f * 100.f * Hit.ImpactNormal.Y;
+	towardWall = -1.f*ClimbTrigger.ImpactNormal.Y;// Normal Points away from wall we want towards
+	FVector forward = CharacterOwner->GetActorForwardVector();
+	FString tmp = "The forward vector" + forward.ToCompactString() + " towardwall" + FString::SanitizeFloat(towardWall);
+	if (FMath::IsNearlyEqual(forward.Y,towardWall), 0.2f) {
 
+
+
+
+		FRotator rot = CharacterOwner->GetActorRotation();
+		tmp = rot.ToCompactString();
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *tmp);
+
+		rot.Yaw += 180.0f;
+		tmp = rot.ToCompactString();
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *tmp);
+
+		CharacterOwner->SetActorRotation(rot);
+	}
+	EndTrace.Y += (capsuleRadius + climbCheckPadding) * towardWall; 
+	
 	EndTrace.Z += capsuleHalfHeight;
 	StartTrace.Z += capsuleHalfHeight; 
+
 
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(CharacterOwner);
@@ -221,7 +260,7 @@ void USSDPlayerMovementComponent::InitiateClimbMovement(FHitResult ClimbTrigger)
 		{
 			wallRayCheck.Emplace(false);
 		}
-		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Red, true, 1.0f);
+		//DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Red, true, 1.0f);
 
 		EndTrace.Z -= wallLinesSpace;
 		StartTrace.Z -= wallLinesSpace;
@@ -273,14 +312,20 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(){
 }
 void USSDPlayerMovementComponent::OnJumpInput(){
     if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Climb)) {
-//		JumpOffWall();
-		UE_LOG(LogCharacterMovement, Log, TEXT("Jump off the wall"));
+		JumpOffWall();
 	}
 	else if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) {
 //		bJumpOffRail = true;
 		UE_LOG(LogCharacterMovement, Log, TEXT("Jump off the rail"));
 	
 	}
+}
+void USSDPlayerMovementComponent::JumpOffWall() {
+	SetMovementMode(MOVE_Falling);
+	Velocity = FVector::ZeroVector;
+	Velocity = jumpWallVelocity;
+	Velocity.Y *= -1*towardWall;
+
 }
 bool USSDPlayerMovementComponent::IsSliding() const {
 	return bInSlide;
