@@ -253,3 +253,12 @@ Wrenched on Trigger Climb Movement
 
 TODO: Import custom scythe asset/Attach to player
 	  Perhaps don't use rama melee component instead spawn a an asset that occupies an area
+
+
+2 - 11 - 2019
+
+[Polish] - Character Direction is facing when lands on wall
+[Polish] - Added Character Rotation to face away from wall
+
+TODO:
+	[Polish] - Hide character mesh when respawning
