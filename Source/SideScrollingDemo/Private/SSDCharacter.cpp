@@ -43,13 +43,15 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
+	SetCharacterState(ECharacterState::ACTIVE);
+
 }
 
 // Called when the game starts or when spawned
 void ASSDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	SetCharacterState(ECharacterState::ACTIVE);
+	//SetCharacterState(ECharacterState::ACTIVE);
 	
 }
 
@@ -117,11 +119,11 @@ void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 
 // JUMP
 void ASSDCharacter::Jump() {
-
-	GetPlayerMovement()->OnJumpInput();
-	//SetupJumpCalculations();
-	GetPlayerMovement()->isJumping = true;
-
+	if (GetPlayerMovement()) {
+		GetPlayerMovement()->OnJumpInput();
+		GetPlayerMovement()->isJumping = true;
+	}
+	
 	Super::Jump();
 }
 void ASSDCharacter::StopJumping() {
@@ -134,12 +136,16 @@ void ASSDCharacter::StopJumping() {
 void ASSDCharacter::NotifyJumpApex()
 {
 	Super::NotifyJumpApex();
-	GetPlayerMovement()->isJumping = false;
+	if (GetPlayerMovement()) {
+		GetPlayerMovement()->isJumping = false;
+		GetPlayerMovement()->SetCharacterGravity(GetPlayerMovement()->FallingGravityScalar);
+
+	}
 	// Think of a better way to do this
 
 	// So here I would Like to clean up what I have. Setting Gravity is important but 
 	// I may want to have a ton of different gravitys based on situation
-	GetPlayerMovement()->SetCharacterGravity(GetPlayerMovement()->FallingGravityScalar);
+
 	//JumpActual();
 }
 
@@ -174,9 +180,10 @@ float ASSDCharacter::ReceiveDamage_Implementation(float Damage, struct FPointDam
 	//const float ActualDamage = t
 	const float ActualDamage = this->TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	//Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "ReceiveDamage Called");
 
 	// This ensures the player won't get hit repeatedly by the same creature
-	if (!immuneToDamage && CharacterState == ECharacterState::ACTIVE) {
+	if (CharacterState == ECharacterState::ACTIVE) {
 		GetPlayerMovement()->KnockBack(PointDamageEvent.HitInfo);
 
 		if (ActualDamage > 0.f) {
@@ -186,7 +193,7 @@ float ASSDCharacter::ReceiveDamage_Implementation(float Damage, struct FPointDam
 				SetCharacterState(ECharacterState::DEAD);
 			}
 		}
-		immuneToDamage = true;
+		//immuneToDamage = true;
 	}
 
 	return ActualDamage;

@@ -76,7 +76,7 @@ public:
 	bool immuneToDamage = false;		// Keeps track if immune to damage
 	
 	UPROPERTY(EditAnywhere)
-	float Health = 3.0f;
+	float Health = 1.0f;
 	
 	UPROPERTY(EditAnywhere)
 	float FullHealth = 3.0;
@@ -95,13 +95,13 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Anim")
 	void TriggerDeathAnim();
 
-	UFUNCTION(BlueprintCallable, Category = "MalePlayer")
+	UFUNCTION(BlueprintCallable, Category = "Player")
 	void Respawn(FVector LastCheckPoint);
 
 	// CHARACTER STATE
-	UFUNCTION(BlueprintCallable, Category = "MalePlayer")
+	UFUNCTION(BlueprintCallable, Category = "Player")
 	virtual void SetCharacterState(ECharacterState NewCharacterState);
-	UFUNCTION(BlueprintCallable, Category = "MalePlayer")
+	UFUNCTION(BlueprintCallable, Category = "Player")
 	virtual ECharacterState GetCharacterState();
 	
 	UFUNCTION(BlueprintCallable, Category = "Pawn|Character")

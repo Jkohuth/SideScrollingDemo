@@ -3,7 +3,7 @@
 #include "EnemyCharacter.h"
 #include "Perception/PawnSensingComponent.h"
 #include "Engine.h"
-#include "MalePlayer.h"
+#include "SSDCharacter.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogEnemy, Log, All);
 
@@ -77,9 +77,10 @@ void AEnemyCharacter::TurnAround() {
 
 void AEnemyCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpluse, const FHitResult& Hit) {
 	//UE_LOG(LogEnemy, Log, TEXT("Enemy Hit %s"), *OtherActor->GetName());
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "OnHit was called");
 	TurnAround();
 	if (OtherActor != nullptr && OtherActor->ActorHasTag(ECustomTags::PlayerTag)) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "OnHit was called");
+
 		InflictDamage(OtherActor, Hit);
 	}
 
@@ -104,9 +105,9 @@ void AEnemyCharacter::InflictDamage(AActor* ImpactActor, const FHitResult& Hit) 
 
 			FPointDamageEvent DamageEvent(DamageAmount, Hit, GetActorForwardVector(), ValidDamageTypeClass);
 
-			AMalePlayer* player = Cast<AMalePlayer>(ImpactActor);
+			ASSDCharacter* player = Cast<ASSDCharacter>(ImpactActor);
 			if (player) {
-				player->TakeDamage(DamageAmount, DamageEvent, EnemyController, this);
+				player->ReceiveDamage(DamageAmount, DamageEvent, EnemyController, this);
 			}
 	}
 }
@@ -119,7 +120,7 @@ void AEnemyCharacter::OnHearNoise(APawn *OtherActor, const FVector &Location, fl
 void AEnemyCharacter::OnSeePawn(APawn* OtherPawn) {
 	//FString message = TEXT("Saw Actor ") + OtherPawn->GetName();
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, message);
-	AMalePlayer* player = Cast<AMalePlayer>(OtherPawn);
+	ASSDCharacter* player = Cast<ASSDCharacter>(OtherPawn);
 	if (player && player->GetCharacterState() == ECharacterState::ACTIVE) {
 		Jump();
 		GetCharacterMovement()->Velocity.Y += GetActorForwardVector().Y * lungeVelocity;
