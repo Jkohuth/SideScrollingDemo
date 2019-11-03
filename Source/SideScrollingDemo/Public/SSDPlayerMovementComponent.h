@@ -90,7 +90,7 @@ public:
 	// Climb
 	void PhysClimb(float DeltaTime, int32 Iterations);
 	bool IsClimbing() const;
-	void InitiateClimbMovement(FHitResult ClimbTrigger);
+	void TriggerClimbMovement(FHitResult ClimbTrigger);
 	void ClimbCollisionHandler();
 	float towardWall = 0.f;
 	float climbCheckPadding = 10.f;
@@ -101,7 +101,7 @@ public:
 	// Grind
 	void PhysGrind(float DeltaTime, int32 Iterations);
 	bool IsGrinding() const;
-	void TriggerGrindMovement();
+	void TriggerGrindMovement(USplineComponent* RailSpline);
 	float distanceAlongSpline;
 private:
 	uint32 bInSlide:1;

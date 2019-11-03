@@ -102,17 +102,17 @@ void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	if(OtherActor && OtherActor->ActorHasTag(ECustomTags::ClimbTag) && FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.2f) 
 		&& GetPlayerMovement()->MovementMode == MOVE_Falling){ // Angle Tolerance
 		if (GetPlayerMovement()) {
-			GetPlayerMovement()->InitiateClimbMovement(Hit);
+			GetPlayerMovement()->TriggerClimbMovement(Hit);
 		}
 	} 
 	// Check for Rail Movement
-	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::RailTag)) {
+	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::GrindTag)) {
 		if (GetPlayerMovement()->CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) return;
 
 		ARail* Rail = Cast<ARail>(OtherActor);
 		if (Rail) {
 			//GetPlayerMovement()->AttachToRail(Rail->GetRailSpline());
-			GetPlayerMovement()->TriggerGrindMovement();
+			GetPlayerMovement()->TriggerGrindMovement(Rail->GetRailSpline());
 		}
 	}
 }
