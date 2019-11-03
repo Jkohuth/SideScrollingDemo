@@ -214,7 +214,7 @@ void USSDPlayerMovementComponent::PhysClimb(float DeltaTime, int32 Iterations){
 		}
 	}
 }
-void USSDPlayerMovementComponent::InitiateClimbMovement(FHitResult ClimbTrigger){
+void USSDPlayerMovementComponent::TriggerClimbMovement(FHitResult ClimbTrigger){
 
 	FHitResult Hit;
 
@@ -282,7 +282,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 	if(DeltaTime < MIN_TICK_TIME) return;
 	if(!RailSplineReference->IsValidLowLevel()) return;
 
-	if(!CharacterOwner || (!CharacerOwner->Controller && !bRunPhysicsWithNoController)){
+	if(!CharacterOwner || (!CharacterOwner->Controller && !bRunPhysicsWithNoController)){
 		Acceleration = FVector::ZeroVector;
 		Velocity = FVector::ZeroVector;
 		return;
@@ -304,7 +304,9 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		RestorePreAdditiveRootMotionVelocity();
 
 		FVector OldVelocity = Velocity;
-
+		if(CurrentFloor.HitResult.GetActor())
+			FString tmp = CurrentFloor.HitResult.GetActor()->GetName();
+	
 		FVector Forward = CharacterOwner->GetActorForwardVector();
 		FVector RailSplineDirection = RailSplineReference->GetWorldDirectionAtDistanceAlongSpline(distanceAlongSpline);
 		float GravityDir = FVector::DotProduct(FVector(0.f, 0.f, GetGravityZ()), RailSplineDirection);
@@ -324,11 +326,32 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		distanceAlongSpline += Adjusted.SizeSquared() * timeTick;
 
 		SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit);
+		
+		
 		if(Hit.IsValidBlockingHit()){
 			FVector location = GetActorLocation();
 			location.Z += 5.f;
 			CharacterOwner->SetActorLocation(location);
 		}
+
+		FHitResult RailHit;
+		FVector Start = GetActorFeetLocation();
+		FVector End = Start;
+		float tolerance = -10.f;
+		End.Z += tolerance;
+		FCollisionQueryParams CollisionParams;
+		CollisionParams.AddIgnoredActor(CharacterOwner);
+
+		bool isHit = GetWorld()->LineTraceSingleByChannel(RailHit, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionParams);
+		if (isHit && RailHit.GetActor() && !RailHit.GetActor()->ActorHasTag(ECustomTags::GrindTag)) {
+			SetMovementMode(MOVE_Walking);
+			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+			return;
+		}
+		RailSplineDirection = RailSplineReference->GetWorldDirectionAtDistanceAlongSpline(distanceAlongSpline);
+		
+
+
 	}
 
 }
@@ -345,8 +368,35 @@ void USSDPlayerMovementComponent::KnockBack(const FHitResult& Hit){
 
 }
 
-void USSDPlayerMovementComponent::TriggerGrindMovement(){
+void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpline){
+	if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) { return; }
+	else {
+		SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Grind);
+		// Potentially dangerous to store the rail spline locally, reference or shared pointer?
+		RailSplineReference = RailSpline;
+		FVector WorldClosest = RailSpline->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
+		FVector OldVelocity = Velocity;
+		Velocity = FVector::ZeroVector;
+		for (int32 i = 0; i, RailSpline->GetNumberOfSplinePoints(); ++i) {
+			int32 j = i + 1;
+			if (RailSpline->GetNumberOfSplinePoints() < j) {
+				UE_LOG(LogCharacterMovement, Log, TEXT("Trigger Grind Movement ran out of points"));
+				return;
+			}
 
+			FVector splinePt1 = RailSpline->GetWorldLocationAtSplinePoint(i);
+			FVector splinePt2 = RailSpline->GetWorldLocationAtSplinePoint(j);
+			FVector beginSpline = RailSpline->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
+			FVector endSpline = RailSpline->GetLocationAtSplinePoint(RailSpline->GetNumberOfSplinePoints(), ESplineCoordinateSpace::Local);
+			FVector LocalClosest = RailSpline->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
+
+			FString grindString = "LocalClosest:  " + LocalClosest.ToCompactString() + " WorldClosest: " + WorldClosest.ToCompactString() + " beginSpline Local: " + beginSpline.ToCompactString() + " endspline local: " + endSpline.ToCompactString();
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "You're trying to roll");
+			UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
+
+		}
+
+	}
 }
 void USSDPlayerMovementComponent::OnJumpInput(){
     if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Climb)) {
