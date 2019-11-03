@@ -64,7 +64,6 @@ void USSDPlayerMovementComponent::BeginPlay() {
 		capsuleRadius = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius();
 		wallLinesCount = 10.0f; // 30 Lines will be drawn
 		wallLinesSpace = (2 * capsuleHalfHeight )/ wallLinesCount;
-		//wallRayCheck.Init(false, wallLinesCount);
 	}
 }
 
@@ -83,10 +82,7 @@ void USSDPlayerMovementComponent::MoveRightInput(float Value){
 	}
 }
 void USSDPlayerMovementComponent::MoveUpInput(float Value){
-	/*if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Climb)) {
-		if (Value == -1.f)
-			AddInputVector(FVector(0.f, 0.f, Value));
-	}*/
+
 
 }
 void USSDPlayerMovementComponent::SetCustomMovementMode(uint8 CustomMovement) {
@@ -231,19 +227,9 @@ void USSDPlayerMovementComponent::InitiateClimbMovement(FHitResult ClimbTrigger)
 	FString tmp = "The forward vector" + forward.ToCompactString() + " towardwall" + FString::SanitizeFloat(towardWall);
 	if (FMath::IsNearlyEqual(forward.Y,towardWall), 0.2f) {
 
-
-
-
-		FRotator rot = CharacterOwner->GetActorRotation();
-		tmp = rot.ToCompactString();
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *tmp);
-
-		rot.Yaw += 180.0f;
-		tmp = rot.ToCompactString();
-
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, *tmp);
-
-		CharacterOwner->SetActorRotation(rot);
+		FRotator turnAround = CharacterOwner->GetActorRotation();
+		turnAround.Yaw += 180.0f;
+		CharacterOwner->SetActorRotation(turnAround);
 	}
 	EndTrace.Y += (capsuleRadius + climbCheckPadding) * towardWall; 
 	
@@ -292,6 +278,58 @@ void USSDPlayerMovementComponent::ClimbCollisionHandler(){
 	wallRayCheck.Empty();
 }
 void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
+	
+	if(DeltaTime < MIN_TICK_TIME) return;
+	if(!RailSplineReference->IsValidLowLevel()) return;
+
+	if(!CharacterOwner || (!CharacerOwner->Controller && !bRunPhysicsWithNoController)){
+		Acceleration = FVector::ZeroVector;
+		Velocity = FVector::ZeroVector;
+		return;
+	}
+	if(!UpdatedComponent->IsQueryCollisionEnabled()) { SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Grind); return; }
+
+	float remainingTime = DeltaTime;
+
+	while((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations) && CharacterOwner && (CharacterOwner->Controller || bRunPhysicsWithNoController || HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity() || (CharacterOwner->Role))){
+		Iterations++;
+		const float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
+		remainingTime -= timeTick;
+
+		// Store Current Values
+		UPrimitiveComponent* const OldBase = GetMovementBase();
+		const FVector PreviousBaseLocation = (OldBase != NULL) ? OldBase->GetComponentLocation() : FVector::ZeroVector;
+		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
+
+		RestorePreAdditiveRootMotionVelocity();
+
+		FVector OldVelocity = Velocity;
+
+		FVector Forward = CharacterOwner->GetActorForwardVector();
+		FVector RailSplineDirection = RailSplineReference->GetWorldDirectionAtDistanceAlongSpline(distanceAlongSpline);
+		float GravityDir = FVector::DotProduct(FVector(0.f, 0.f, GetGravityZ()), RailSplineDirection);
+		FVector GravityAccel = GravityDir * RailSplineDirection;
+		GravityAccel = FVector(0.f, GravityAccel.Y, GravityAccel.Z);
+		
+		if (GravityAccel.Y == 0.f) {
+			GravityAccel.Y = Forward.Y * 20.0f;
+		}
+		Velocity += GravityAccel * timeTick;
+
+		//Apply Gravity
+		FRotator splineRotater = RailSplineReference->FindRotationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
+		FHitResult Hit(1.f);
+		FVector Adjusted = 0.5f*(Velocity + OldVelocity)*timeTick;
+
+		distanceAlongSpline += Adjusted.SizeSquared() * timeTick;
+
+		SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit);
+		if(Hit.IsValidBlockingHit()){
+			FVector location = GetActorLocation();
+			location.Z += 5.f;
+			CharacterOwner->SetActorLocation(location);
+		}
+	}
 
 }
 bool USSDPlayerMovementComponent::IsClimbing() const {

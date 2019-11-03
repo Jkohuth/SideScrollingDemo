@@ -102,6 +102,7 @@ public:
 	void PhysGrind(float DeltaTime, int32 Iterations);
 	bool IsGrinding() const;
 	void TriggerGrindMovement();
+	float distanceAlongSpline;
 private:
 	uint32 bInSlide:1;
 };
