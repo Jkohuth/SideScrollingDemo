@@ -394,6 +394,11 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpl
 			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "You're trying to roll");
 			UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
 
+			if(LocalClosest.X < beginSpline.X ||  LocalClosest.X > endSpline.X){
+				SetMovementMode(MOVE_Walking);
+				return;
+			}
+
 		}
 
 	}
