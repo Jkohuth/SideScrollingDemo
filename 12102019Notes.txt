@@ -262,3 +262,19 @@ TODO: Import custom scythe asset/Attach to player
 
 TODO:
 	[Polish] - Hide character mesh when respawning
+
+https://imgur.com/a/6NJYEgr
+
+I would like a character sketch of medieval farmer peasant taking up arms. Main features include the hair shaved on both sides and slicked back at the top, as depicted in the first picture. Gaunt, hollow, cheek bones and a bit of dark circles under the eyes. No beard though.
+
+In the second picture is the under shirt of the tunic, with a neck on the clothing. Although the picture shows the cloth around the neck as being tight I would like it more loose fitting, not gripping the neck, lying loosely on the shoulders revealing the top half of the neck, with the application of stretching it over the mouth.
+
+The third image is the weapon he is wielding. A scythe with a handle and a slight bend at the top. It was a render I did myself so its not the best example, but I think I got the basic idea down.
+
+Finally the clothes hes wearing is a traditional style tunic, pants, and boots like the last picture. The tunic rests on top of the neck shirt, however I would prefer the tunic be slimmer and more fitted to the character. With the left sleeve of the tunic torn off and missing, only showing the sleeve of the undershirt on that side.
+
+The characters has a muscular yet skinny build. Someone who has worked doing manual labor his whole life and is fit, as a result, but never had a chance to eat his fill. More akin to a skeleton with muscles.
+
+I'm trying to go for a person who in the middle of the night if spotted from a distance would bare a slight resemblance to the Grim reaper. The hollow cheek bones, dark circle, and defeated expression in the eyes being the giveaway.
+
+If you would like more information or reference images please let me know!
