@@ -262,3 +262,25 @@ TODO: Import custom scythe asset/Attach to player
 
 TODO:
 	[Polish] - Hide character mesh when respawning
+
+9 - 11 - 2019
+
+After taking a week off for a mental break I am back on the grind trying to create something meaningful for myself
+
+Wrenched on TriggerGrindMovement
+
+I commissioned a piece of art by artist Faukk of the main character "Grimm"
+	Pretty satisfied with his work on of my description.
+
+Created an account on PolyCount.com - Looking for a 3D Modeler to create the character based on the commissioned artwork
+	Rigged to UE4 Skeleton - Can use animations from the Grim Reaper set and save money on commissioning tons of customs anim
+	Find Polycount - How detailed do I want the model to be
+	Stylized - Similar to polycount find an example of level of fidelity you're looking for
+	Animations - Find out if games like Bloodstained animations (attack) are generated via the engine or the artist
+	List of Animations - Currently I have a vague idea of how many unique animations I will need
+
+Need to breakdown PhysWalking (or all the phys movements) until I understand it completely
+
+Keep track of money spent!
+	$15 - Commissioned Artwork
+	$60 - Grim Reaper Anim set

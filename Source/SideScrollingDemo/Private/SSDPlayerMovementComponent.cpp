@@ -379,24 +379,61 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpl
 		Velocity = FVector::ZeroVector;
 		for (int32 i = 0; i, RailSpline->GetNumberOfSplinePoints(); ++i) {
 			int32 j = i + 1;
+			// If there are only "i" points we want to make sure we are not trying to reach something that doesn't exist
 			if (RailSpline->GetNumberOfSplinePoints() < j) {
 				UE_LOG(LogCharacterMovement, Log, TEXT("Trigger Grind Movement ran out of points"));
 				return;
 			}
 
-			FVector splinePt1 = RailSpline->GetWorldLocationAtSplinePoint(i);
-			FVector splinePt2 = RailSpline->GetWorldLocationAtSplinePoint(j);
+			//FVector splinePt1 = RailSpline->GetWorldLocationAtSplinePoint(i);
+			//FVector splinePt2 = RailSpline->GetWorldLocationAtSplinePoint(j);
+			FVector splinePt1 = RailSpline->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local);
+			FVector splinePt2 = RailSpline->GetLocationAtSplinePoint(j, ESplineCoordinateSpace::Local);
 			FVector beginSpline = RailSpline->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
 			FVector endSpline = RailSpline->GetLocationAtSplinePoint(RailSpline->GetNumberOfSplinePoints(), ESplineCoordinateSpace::Local);
 			FVector LocalClosest = RailSpline->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
 
 			FString grindString = "LocalClosest:  " + LocalClosest.ToCompactString() + " WorldClosest: " + WorldClosest.ToCompactString() + " beginSpline Local: " + beginSpline.ToCompactString() + " endspline local: " + endSpline.ToCompactString();
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "You're trying to roll");
 			UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
 
-			if(LocalClosest.X < beginSpline.X ||  LocalClosest.X > endSpline.X){
+			// Using local coordinate space instead of world 
+			if(LocalClosest.X == beginSpline.X ||  LocalClosest.X == endSpline.X){
+
+				// They walked onto the edge of the spline
+				// Depending on the direction and momentum they could immediately fall off 
 				SetMovementMode(MOVE_Walking);
 				return;
+			} else if( (splinePt1.X <= LocalClosest.X && LocalClosest.X <= splinePt2.X ) ||
+					   (splinePt2.X <= LocalClosest.X && LocalClosest.X <= splinePt1.X ) ){
+				// Using local coordinates may bit me here, does scaling effect distance?
+
+				float DistPt1ToActor = FVector::Dist(LocalClosest, splinePt1);
+				float DistPt1ToPt2   = FVector::Dist(splinePt2, splinePt1);
+				distanceAlongSpline = RailSpline->GetDistanceAlongSplineAtSplinePoint(i);
+				
+				grindString = "Dist From Pt1 to Actor Local: " + FString::SanitizeFloat(DistPt1ToActor) + " Distance Along Spline: " + FString::SanitizeFloat(distanceAlongSpline) + 
+								" ";
+	
+				UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
+
+				distanceAlongSpline += DistPt1ToActor;
+				FVector worldDistAlongSpline  = RailSpline->GetLocationAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
+				FVector worldDirAtDist = RailSpline->GetWorldDirectionAtDistanceAlongSpline(distanceAlongSpline);
+
+				worldDistAlongSpline.Z += capsuleHalfHeight;
+				CharacterOwner->SetActorLocation(worldDistAlongSpline);
+
+				// Only Velocity in the direction of the spline counts as movement
+				grindSpeed = FVector::DotProduct(OldVelocity, worldDirAtDist);
+				Velocity = grindSpeed * worldDirAtDist;
+
+				grindString = "Velocity: " + Velocity.ToCompactString() + " SplineSpeed: " + FString::SanitizeFloat(grindSpeed) +
+								" worldDirAtDist: " + worldDirAtDist.ToCompactString();
+
+				UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
+				
+				return;
+
 			}
 
 		}

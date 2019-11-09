@@ -710,7 +710,6 @@ float UMalePlayerMovementComponent::DistanceBetweenTwoVectors(FVector one, FVect
 	float x = FMath::Square(one.X - two.X);
 	float y = FMath::Square(one.Y - two.Y);
 	float z = FMath::Square(one.Z - two.Z);
-
 	return FMath::Sqrt(x + y + z);
 }
 

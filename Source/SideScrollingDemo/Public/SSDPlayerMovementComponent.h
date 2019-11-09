@@ -103,6 +103,7 @@ public:
 	bool IsGrinding() const;
 	void TriggerGrindMovement(USplineComponent* RailSpline);
 	float distanceAlongSpline;
+	float grindSpeed; // Speed not velocity it's only 2Dimensional 
 private:
 	uint32 bInSlide:1;
 };

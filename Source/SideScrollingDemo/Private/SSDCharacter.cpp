@@ -111,7 +111,6 @@ void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 
 		ARail* Rail = Cast<ARail>(OtherActor);
 		if (Rail) {
-			//GetPlayerMovement()->AttachToRail(Rail->GetRailSpline());
 			GetPlayerMovement()->TriggerGrindMovement(Rail->GetRailSpline());
 		}
 	}
