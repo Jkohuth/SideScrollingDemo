@@ -83,8 +83,8 @@ void USSDPlayerMovementComponent::MoveRightInput(float Value){
 }
 void USSDPlayerMovementComponent::MoveUpInput(float Value){
 
-
 }
+
 void USSDPlayerMovementComponent::SetCustomMovementMode(uint8 CustomMovement) {
 	SetMovementMode(MOVE_Custom, CustomMovement);
 }
@@ -312,12 +312,14 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		float GravityDir = FVector::DotProduct(FVector(0.f, 0.f, GetGravityZ()), RailSplineDirection);
 		FVector GravityAccel = GravityDir * RailSplineDirection;
 		GravityAccel = FVector(0.f, GravityAccel.Y, GravityAccel.Z);
-		
+
 		if (GravityAccel.Y == 0.f) {
 			GravityAccel.Y = Forward.Y * 20.0f;
 		}
 		Velocity += GravityAccel * timeTick;
-
+		
+		FVector gravityTime = GravityAccel * timeTick;
+		
 		//Apply Gravity
 		FRotator splineRotater = RailSplineReference->FindRotationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
 		FHitResult Hit(1.f);
@@ -327,7 +329,16 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 
 		SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit);
 		
+		FString grindString = "Adjusted SafeMoveUpdate " + Adjusted.ToCompactString();
+								+ " GravityAcceleration: " + gravityTime.ToCompactString();
+		UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
 		
+		// Check if the player Jumped here
+
+		// Make sure the player is still grinding on the rail underneath
+
+		// Set Base to make sure you are not overlapping with the rail
+
 		if(Hit.IsValidBlockingHit()){
 			FVector location = GetActorLocation();
 			location.Z += 5.f;
@@ -348,9 +359,21 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 			return;
 		}
-		RailSplineDirection = RailSplineReference->GetWorldDirectionAtDistanceAlongSpline(distanceAlongSpline);
-		
+		// Need to check the player has slid off the rail into the air
 
+		int32 NumSplinePts = RailSplineReference->GetNumberOfSplinePoints();
+		FVector beginSpline = RailSplineReference->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
+		FVector endSpline = RailSplineReference->GetLocationAtSplinePoint(NumSplinePts, ESplineCoordinateSpace::Local);
+		FVector LocalCloset = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
+
+		grindString = "Local: " + LocalCloset.ToCompactString() + " endsplinelocal " + endSpline.ToCompactString();
+		UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
+
+		if(LocalCloset.X == beginSpline.X || LocalCloset.X == endSpline.X){
+			SetMovementMode(MOVE_Falling);
+			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+			return;
+		}
 
 	}
 
@@ -372,6 +395,7 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpl
 	if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) { return; }
 	else {
 		SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Grind);
+		MaxCustomMovementSpeed = MaxGrindSpeed;
 		// Potentially dangerous to store the rail spline locally, reference or shared pointer?
 		RailSplineReference = RailSpline;
 		FVector WorldClosest = RailSpline->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);

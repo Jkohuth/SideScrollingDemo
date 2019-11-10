@@ -284,3 +284,9 @@ Need to breakdown PhysWalking (or all the phys movements) until I understand it 
 Keep track of money spent!
 	$15 - Commissioned Artwork
 	$60 - Grim Reaper Anim set
+
+10 -11 -2019
+
+	Reviewed the Phys Grind
+		Added TODO notes
+		Made it to adjust to MOVE_Falling if its suspended in midair

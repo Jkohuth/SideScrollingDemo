@@ -102,6 +102,7 @@ public:
 	void PhysGrind(float DeltaTime, int32 Iterations);
 	bool IsGrinding() const;
 	void TriggerGrindMovement(USplineComponent* RailSpline);
+	float MaxGrindSpeed;
 	float distanceAlongSpline;
 	float grindSpeed; // Speed not velocity it's only 2Dimensional 
 private:
