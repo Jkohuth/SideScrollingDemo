@@ -1,0 +1,113 @@
+Game Story Draft
+
+A dark night blankets the plateau. The granites bleached rock hidden from everything in sight. At that moment the sun peaked over the horizon. Illuminating the world for all to see. The valley that is intertwined between the fjords to the trees nearly as ancient as the rock itself. On its apex sleeps a young man. Outfitted with clothes clearly not made for him. Hand me downs from a much more wealthy generation. 
+	The man was young, barely reached adulthood however he was fully grown in stature. His dirty blonde hair swept to one side and lightly covering his left eye. His pale face displaying the climate of the small northern village of his origin. As the sun began to kiss his face he winced and opened an eye to greet the day. Standing and walking toward the cliffs edge nearly subdued by the call of the abyss down below he stared out into the distance as the fog blanketed the landscape mere meters from where he stood. His eye vacant and empty, incapable of hiding the loss that plagues him. After a brief moment of peace, reality begins to weigh heavy on his mind and he remembers why he is here.
+	As he approached the tree that supplied his lodging for the night he recollected of the struggles that lay out before him. A steep valley harshly littered with numerous beast and dangerous creatures. Not the most ideal path to travel, however the easiest one to limit encounters with his fellow countrymen. He glances to the side of the tree as the sunlight glimmered off a piece of old farm equipment. Its age did not betray its quality, however, supplying a reddish hue around the blade. The hue giving off an aura not of another world but a distilled embodiment of his own. He gripped the weapon, feeling a his heartbeat travel down the handle to the blade and synchronize with not only the farm equipment but the world around him. Not commonly a tool of war or protection the farm equipment was a scythe. An heirloom used by countless ancestors for their trade of tending the fields and growing the crop.
+	With the new day approaching the young man leaped off the fjord expressing the conviction of a hungry wolf about to get its pray. Landing on a tree trunk that hung off the side of the fjord and extended to the base, he glided down feeling the wind sweep his hair back. At the bottom standing tall engulfed by the fjord and river that cut through. He began his journey.
+
+Character description: Tall and lean looking as someone who never ate his fill, coupled with a gaunt face, pale skin, and sunken eyes appearing nearly dead. Hair shaved at the sides and slicked back at the top as is traditional. Covered in dark grey tunic worn out and faded. His neck covered in a deep red scarf. Wielding a scythe, a piece of garden equipment, well used but maintained.
+Main Theme: 
+•	Being a brooding anti-hero isn’t enjoyable
+•	The Powerful do not own the individual
+•	Rebellion
+
+Exposition: Protagonist lives with grandparent at the end of northern territory, in Scandinavian inspired country, raised in a family of famers. Exclusively raised by grandparent, due to plague and war. The country is currently being invaded at the port towns by a neighboring Romanic army. Grandparent is a former veteran and friend of current King.
+
+Eventually a ceasefire was agreed upon by both parties as immigration was allotted between territories. The prince, 2nd in line for throne delivers three foreigners into town. Ensures this is part of the piece and will be staying momentarily to ensure they get accepted. They harass and trouble the citizens leading our protagonist to intervene. Despite being stronger they levy threats against him directed his family ensuring the prince’s would here about the mistreatment. Stubbornly character ignores the threat and removes them with force. Later that same week guards put out a wanted posted for his arrest of disturbing the piece stopping at his farm immediately. The prince was accompanying the declaration. As part of the misunderstanding the grandfather demands an audience with the king in order to pardon the son but also reverse the decision. Allowing it to pass.
+	The prince in order to smooth the transition, supposedly removes the bounty and the wanted poster of the protagonist. Taking the grandfather to the southern capital. A few weeks pass, word hasn’t returned as to the grandfathers condition. Rumors have been spread as more and more people get arrested in town. News of the King passing alerted everyone about who was next in line for the throne. Skepticism worry and intrigue follow the protagonist beginning to invest in rumors about the potential whereabouts of his grandfather.
+As the main character continues to live out his day to he’s found be a wanted man again as word spreads embargos are placed against him and the townsfolk reject him under strict Marshall law and patrol. Then his land is burned by the three foreigners would now are made soldiers. With the only weapon available to him being his Scythe he sets out to free his grandfather. Suspecting him to be imprison (perhaps taunted by the foreigners or maybe that’s where the intel came from).
+Small prison level in dream sequence. Upon arrival he fights the three foreigners defeating them with the blunt side of the Scythe. Making his way to the chamber he finds his grandfather. Murdered, starved and mildly tortured barely making further than outside of town. Frustrated and overflowing with guilt the out pour of emotions begins to consume him. Murdered for his transgression. The entire scene goes silent as the jeers and taunts from the previously defeated foreigners send him into a spiral, the taunts remind him that this was setup by the prince. Sitting on the floor (scene similar to Gon transforming). His eyes fading with the life and energy they once were into something defeated and empty. Whispering “Ruhig” repeatedly increasing volume each time. Hearing only a dull ring and the laughs of the foreigners as though he was submerged, everything went red and slowed down. He picked himself up gripping the scythe as if it were a life-line, steadying himself on its hilt before carrying his own weight. Only allowing the player to do set commands at this point but mandating he press them. Perhaps timer before he has to repeat the level. Walking slowly toward the three and slashing each one. Their slowed down animations devolving into stillness face still alive with glee under the harsh crimson glow.  Finishing his limp across the room the red recedes and the silent foreigners 
+
+Their lifeless body slam into the ground with the faint shadow and echo of head moving across the floor. The protagonist stumbles forward a bit more before vomiting off camera. (Maybe not vomiting some other way of showing he’s disgusted by his own actions but he doesn’t know how to feel about anything right now). 
+He opens the cell picks up the corpse of his grandfather and carries it out. He is later scene burying it on a hill into a deep mound. 
+This is where the game actually starts with the character starting his day sleeping next to a mound. Completely collapsed and mildly filthy. Optional bath side quest! Invoking imagery of Caspar David Fredrichs boy sleeping next to grave. 
+
+Game Opens with the character standing up wearily, numb from the previous trauma endured. Not yet caught up with fatigue yet. Staring blankly into the horizon before picking up his scythe and a small bag and then the game begins.
+First level will be the demo. 
+Require 4 enemies minimum. 
+Wall Worm – Pops out when character is in range. Small horn protrudes from wall. 
+	Can only be hit when popped out of the wall
+Bird – Waits till it is within viewport and dives at the character, knocking back and damaging his health.
+	Birds – one hit KO regardless but have quick reflexes 
+Mammal frogs – Dog sized frog built harry monsters resembling the orange ben10 monster with fangs and long tongue. Will lunge at player, after it has taken a bite it will retreat to its burrow.
+	Frogs – slide under them when they leap at you and attack their back for 1 hit ko
+Other themes for levels
+I know nothing of art style lol
+COLORS – Over all shade of the level in terms of what art assets to work on
+First level fjord – rail-grinding on tree roots, large stone wall lush vegetation. Color WHITE and bright potentially bloom
+GREEN Forests with tall trees to add the verticality element. Think Redwoods with thick trunks. Character can climb vertically up them instead of just being able to slide down.
+Lava level
+•	Strong reds and yellows and brunt molten brown
+•	Inside/near volcanic area
+•	Geysers to propel platforms up
+•	Hot updrafts of winds to carry player higher when jumping
+Ice level 
+•	Character sliding – less friction
+•	Drag from waste deep snow effects quick movement
+•	
+ORANGE/YELLOW harsh glow in the style of incandescent bulbs, unpleasant surroundings with bits of darkness Metroidvannia small scale style dungeon. Freeing other trapped prisoners in the caverns of a deep dungeon. Prison Break
+•	Potentially start as prisoner 
+•	Unarmed / No standard attack no resonant effect
+•	Stealth game mode or murder to escape this sections
+o	Ramifications for killing people on mental state
+o	Simpler to move about the dungeon if everyone is killed
+o	Perhaps Prison break section
+		
+Perhaps the main characters color of grey and red? Final battle area providing added flare for character movement allowing them to show more with the environment
+For post processing shader have the resonate effect start from dim to brighter and brighter ie uncomfortable for people in a dark room to abuse
+Capital City under siege/castle – This will be where the final battle takes place between the protagonist and the king. Player will have option to execute the king at the end.
+
+Resonate Effect: I’ve been calling it focus but we can move past that. Slow time for moving/destroyed platforms and enemies. Attacks also do more damage. While every other character is slowed down. Za Wurldo. Make a game from the perspective of “Teleports behind you, nothing personnel kid”. Will simplify the “Impluse effect”. Perhaps different physics for player since they are “Accelerating” Different wall jump/climbing?
+Perhaps finite number of non-respawn able enemies in the game. However make them slightly more difficult.
+Pause menu – maybe the screen turns into parchment (I don’t like this idea but the point comes across)
+28-9-2019 Look up plugins and fix the memory access
+
+Games Magic Explanation: There are rare and valuable metals buried in the earth. These are mined and forged to be pure. Rocks akin the movie Castle in the Sky. However collecting enough of it is difficult and valuable and necessary to the war effort. There is a mandate that the majority of it is for government consumption. And forging into the purest substance is expensive. The more pure the substance the more powerful is is and the easier it is to resonant with it. Resonating with a weapon takes years of experience and practice with the same exact weapon. Grants user magical abilities. The element exist is all the earth so the scythe forged had trace amounts. Years of working with it daily and the stress helped him strengthen his need and importance of it. Other enemies will have made their way to mastery of their weapons faster since they are more pure. The main character is disadvantaged because it is a scythe and not a tool for war. Sticks with it due to the importance he places in it. 
+
+Perhaps make killing people optional, including the three foreigners at the beginning and the king at the end. Was already going to stress that kill other people has side effects on our protagonist. 
+
+Goal: Incorporate environmental detailed oriented moments/set-pieces (Shinkai/Berserk using German aesthetic of Caspar David Fredrich) to have the hidden level set pieces. 
+
+
+I’m going to cringe the rest of my life over this but I love it. Pretty sure this is a story about how suicidal white man picks himself up in order to overthrough the government........
+
+Have entire game be solely focused on platforming challenges and gameplay. Story is explored through each and every major side quest only having main stroy beats happen to the player
+
+How to express to the player without breaking gameplay that your only purpose is to kill the king. Express clear teritary loop. By the end of the second level at the latest you need to know your motivation is killing the king
+
+Super Mario Bros: World 1-4 "Your Princess is in another castle" -Asserts what the goal of the game is
+Legend of Zelda Wind Waker: ~20 minutes in when you leave the island to save your sister
+
+
+Ways to express the motivation
+
+Have player make an attempt on his life in the opening (forcibly make all inputs the attack ones)
+	-Rewinds are poor story telling
+	-Lacks conviction if he doesn't kill him and runs away
+	-Potentially good chance to introduce side character
+
+Have a town with dialogue 
+	-When the character over hears people talking about the king change animation to be more aggressive add rumble
+		Con: Lots of added effect without asserting the point enough
+Mandatory dream sequence
+	Use stressful atmosphere and visual imagry to express how desperately the protagonist desires to slay the abusive king
+
+		Movement violent aggressive diffcult
+		Angry earn the nickname Grimm (Wrath)
+
+Want him to be refered to as Grimm 
+
+Main themes:
+	Not quitting
+	Power of the individual to rebel
+	Pride/Intergrity
+	People have a right to protect what's theirs
+	Whats important to you is worth protecting
+
+Mental note: These scenes can be finite (maybe) and found through quests. In very difficult weird mechanic side scroller challenges that aren’t limited by consistency because they’re dreams. Beating all of them will give the character a much less dead expression by the end of the game.
+
+
+As an incentive to get involved with other people and strengthen your connection through your hobbies I am willing to fund your hobby based on effort and time put in. Going to social events for feedback will also count and provide additional funding. 
+Major Expenses:
+	LLC Filing / Colorado Business License
+	Lawyer fee for free lance contract
