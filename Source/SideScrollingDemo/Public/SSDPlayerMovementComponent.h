@@ -22,7 +22,7 @@ protected:
 
 	USSDPlayerMovementComponent(const FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rail)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grind)
 		class USplineComponent* RailSplineReference;
 
 	

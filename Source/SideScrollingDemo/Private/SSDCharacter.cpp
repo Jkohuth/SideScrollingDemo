@@ -51,6 +51,7 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 void ASSDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	CameraBounds->ResetCamera(this);
 	//SetCharacterState(ECharacterState::ACTIVE);
 	
 }
@@ -61,6 +62,7 @@ void ASSDCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	
 	// Keep Player within Camera Bounds
+
 	CameraBounds->UpdatePosition(GetCapsuleComponent());
 }
 

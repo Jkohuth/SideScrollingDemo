@@ -29,8 +29,16 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	UFUNCTION()
+		virtual void InitializeComponent();
+	UFUNCTION()
+	void OnBoundingBoxOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnBoundingBoxOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	UPROPERTY(EditAnywhere)
-	FVector BoxSize = FVector(50.f, 300.f, 300.f);
+	FVector BoxSize = FVector(50.f, 300.f, 325.f);
 
 	FVector Origin; // This is just origin
 	FVector BoxExtent; // This should exist somewhere in here
@@ -41,6 +49,17 @@ public:
 	float halfHeight, radius;
 
 	float targetLeft, targetRight, targetTop, targetBottom;
+	FVector shift;
+
+	FVector CameraFollowLocation;
+	FVector CameraFollowExtents;
+	
+	FVector CameraFollowLocationNext;
+	FVector CameraFollowExtentsNext;
+	FVector CameraFollowLocationPrevious;
+	FVector CameraFollowExtentsPrevious;
+	
+	bool CheckLevelBounds();
 
 	UFUNCTION(BlueprintCallable)
 		void InitializePosition(UCapsuleComponent* targetCapsule);
