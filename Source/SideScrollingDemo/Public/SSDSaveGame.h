@@ -33,14 +33,20 @@ class SIDESCROLLINGDEMO_API USSDSaveGame : public USaveGame
 
 	*/
 public:
-	USSDSaveGame()
-	{
-		SavedDataVersion = ESSDSaveGameVersion::LatestVersion;
-	}
+	USSDSaveGame();
 protected:
 
 	UPROPERTY()
 	int32 SavedDataVersion = 0;
+
+	UPROPERTY(VisibleAnywhere)
+		FVector PlayerLocation;
+	UPROPERTY(VisibleAnywhere, Category = Basic)
+		FString PlayerName;
+	UPROPERTY(VisibleAnywhere, Category = Basic)
+		FString SaveSlotName;
+	UPROPERTY(VisibleAnywhere, Category = Basic)
+		uint32 UserIndex;
 
 	/* Overridden */
 	virtual void Serialize(FArchive& Ar) override;
