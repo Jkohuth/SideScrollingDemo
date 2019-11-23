@@ -32,7 +32,7 @@ void ALevelCameraFollowBounds::BeginPlay()
 	Super::BeginPlay();
 
 	FString sizeString = FString::FromInt(LevelBounds.Num()) + " " + Bounds0->GetScaledBoxExtent().ToCompactString();
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, sizeString);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, sizeString);
 
 	
 }
