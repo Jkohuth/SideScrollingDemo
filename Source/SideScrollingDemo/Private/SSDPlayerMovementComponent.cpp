@@ -392,7 +392,7 @@ void USSDPlayerMovementComponent::KnockBack(const FHitResult& Hit){
 }
 
 void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpline){
-	if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) { return; }
+ 	if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) { return; }
 	else {
 		SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Grind);
 		MaxCustomMovementSpeed = MaxGrindSpeed;
