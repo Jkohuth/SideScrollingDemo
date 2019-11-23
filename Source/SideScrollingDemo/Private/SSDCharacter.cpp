@@ -9,6 +9,7 @@
 #include "CameraBoundingBoxComponent.h"
 #include "Rail.h"
 #include "Components/SplineComponent.h"
+#include "Components/PostProcessComponent.h"
 
 
 // Sets default values
@@ -34,6 +35,13 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 
 	CameraBounds = CreateDefaultSubobject<UCameraBoundingBoxComponent>(TEXT("CameraBounds"));
 	//CameraBounds->GetCameraComponent()->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+
+	CharacterEffects = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcess"));
+	CharacterEffects->SetupAttachment(RootComponent);
+	// Don't change brightness when going into the shade
+	CharacterEffects->Settings.AutoExposureMinBrightness = 1.f;
+	CharacterEffects->Settings.AutoExposureMaxBrightness = 1.f;
+	CharacterEffects->bEnabled = false;
 
 	PlayerMovement = Cast<USSDPlayerMovementComponent>(GetCharacterMovement());
 

@@ -26,6 +26,9 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 
 	CameraComponent->SetupAttachment(BoundingBox);
+	CameraComponent->PostProcessSettings.AutoExposureMinBrightness = 1.f;
+	CameraComponent->PostProcessSettings.AutoExposureMaxBrightness = 1.f;
+
 	// Have a Camera Transform in the blueprints its not necessary
 	//CameraComponent->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 	BoundingBox->OnComponentBeginOverlap.AddDynamic(this, &UCameraBoundingBoxComponent::OnBoundingBoxOverlapBegin);
@@ -57,7 +60,6 @@ void UCameraBoundingBoxComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	// ...
 }
 void UCameraBoundingBoxComponent::OnBoundingBoxOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Everytime this is called");
 
 	// Maybe using tags for everything isn't idea but before I start effecting performance you need to have something made
 	if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::LevelBoundsTag)) {
@@ -98,16 +100,11 @@ void UCameraBoundingBoxComponent::OnBoundingBoxOverlapEnd(UPrimitiveComponent* O
 				CameraFollowExtents = CameraFollowExtentsPrevious;
 			}
 		}
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Overlap End has been called");
-		
 	}
 }
 void UCameraBoundingBoxComponent::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Hit the level bounds");
-
 	if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::LevelBoundsTag)) {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Hit the level bounds");
-
 	}
 }
 void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsule){

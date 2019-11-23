@@ -32,6 +32,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
 	class UCameraBoundingBoxComponent* CameraBounds;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UPostProcessComponent* CharacterEffects;
+
 	// Handle Axis Input
 	void MoveRight(float Value);
 	void MoveUp(float Value);
