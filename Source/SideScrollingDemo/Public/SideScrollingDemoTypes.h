@@ -39,6 +39,8 @@ namespace ECustomTags {
 	const FName ClimbTag = FName("climb");
 	const FName GrindTag = FName("grind");
 	
+	const FName BottomlessTag = FName("bottomless");
+	
 	// Later I may seperate the enemies from the movement modes
 	const FName PlayerTag = FName("player");
 	const FName LevelBoundsTag = FName("levelbounds");

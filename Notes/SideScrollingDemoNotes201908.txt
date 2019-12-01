@@ -1,0 +1,27 @@
+Side Scrolling Demo notes
+
+Falling off rail and not hitting rail not done yet - Completed 25-8-2019
+
+figure out how to make the focus effect more interesting 
+
+String together combos? - Completed 4 - 9 -2019
+
+Player and enemy hp
+	perhaps learn materials with variable information or swap out between materials based on player variables keep hud limited
+
+Download cel shaded water
+
+bird enemy
+
+wall caterpillar enemy
+
+directional path for save points
+
+particle effects when walking through grass
+grass
+
+paths 
+floor texture that isnt basic af
+
+Character Knockback and cool down for damage 3-9-2019
+

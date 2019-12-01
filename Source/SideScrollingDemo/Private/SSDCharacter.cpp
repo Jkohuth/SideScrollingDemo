@@ -11,7 +11,6 @@
 #include "Components/SplineComponent.h"
 #include "Components/PostProcessComponent.h"
 
-
 // Sets default values
 ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<USSDPlayerMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -60,6 +59,7 @@ void ASSDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	CameraBounds->ResetCamera(this);
+	
 	//SetCharacterState(ECharacterState::ACTIVE);
 	
 }
