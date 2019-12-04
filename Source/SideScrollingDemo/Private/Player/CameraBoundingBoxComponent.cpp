@@ -7,6 +7,8 @@
 #include "Components/BoxComponent.h"
 #include "SideScrollingDemoTypes.h"
 #include "LevelCameraFollowBounds.h"
+#include "Camera/PlayerCameraManager.h"
+#include "GameFramework/PlayerController.h"
 
 // Sets default values for this component's properties
 UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
@@ -20,7 +22,7 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	BoundingBox->InitBoxExtent(BoxSize);
 	BoundingBox->SetRelativeLocation(FVector(0.f, 0.f,0.f));
 	BoundingBox->bVisible = true;
-	BoundingBox->bHiddenInGame = false;
+	BoundingBox->bHiddenInGame = true;
 
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -28,7 +30,12 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	CameraComponent->SetupAttachment(BoundingBox);
 	CameraComponent->PostProcessSettings.AutoExposureMinBrightness = 1.f;
 	CameraComponent->PostProcessSettings.AutoExposureMaxBrightness = 1.f;
+	
+	CameraTransform.SetLocation(FVector(1000.f, -250.f, 0.f));
+	CameraTransform.SetRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, -180.f)));
+	CameraTransform.SetScale3D(FVector(1.f));
 
+	BlendFunc = (uint8)EViewTargetBlendFunction::VTBlend_Linear;
 	// Have a Camera Transform in the blueprints its not necessary
 	//CameraComponent->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 	BoundingBox->OnComponentBeginOverlap.AddDynamic(this, &UCameraBoundingBoxComponent::OnBoundingBoxOverlapBegin);
@@ -37,10 +44,16 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 
 	BoxExtent = BoundingBox->GetUnscaledBoxExtent();
 }
+void UCameraBoundingBoxComponent::OnConstructionComponent() {
+	CameraComponent->SetRelativeTransform(CameraTransform);
+	CameraComponent->SetFieldOfView(FoV);
+	UE_LOG(LogClass, Log, TEXT("OnConstructionComponent"));
+
+}
 
 void UCameraBoundingBoxComponent::InitializeComponent() {
 	Super::InitializeComponent();
-
+	UE_LOG(LogClass, Log, TEXT("Initialized COmponent"));
 }
 // Called when the game starts
 void UCameraBoundingBoxComponent::BeginPlay()
@@ -112,8 +125,8 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 		return;
 	}
 	TargetLocation = targetCapsule->GetComponentLocation();
-	halfHeight = targetCapsule->GetUnscaledCapsuleHalfHeight();
-	radius = targetCapsule->GetUnscaledCapsuleRadius();
+	halfHeight = targetCapsule->GetScaledCapsuleHalfHeight();
+	radius = targetCapsule->GetScaledCapsuleRadius();
 
 
 	targetLeft = TargetLocation.Y + radius;
@@ -140,8 +153,8 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 
 
 
-	float shiftY = 0;
-	float shiftZ = 0;
+	//float shiftY = 0;
+	//float shiftZ = 0;
 	shift.Y = 0;
 	shift.Z = 0;
 
@@ -149,7 +162,7 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 	if (targetRight > levelBoundsRight && targetRight < right) {
 		shift.Y = targetRight - right;
 	}
-	else if (targetLeft < levelBoundsLeft &&targetLeft > left) {
+	else if (targetLeft < levelBoundsLeft && targetLeft > left) {
 		shift.Y = targetLeft - left;
 	}
 	left += shift.Y;
@@ -160,6 +173,7 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 	}
 	else if (targetTop < levelBoundsTop && targetTop > top) {
 		shift.Z = targetTop - top;
+
 	}
 
 	//this->SetActorLocation(FVector(Origin.X, Origin.Y + shiftY, Origin.Z + shiftZ));
@@ -180,8 +194,10 @@ bool UCameraBoundingBoxComponent::CheckLevelBounds() {
 	}
 	return true;
 }
-void UCameraBoundingBoxComponent::InitializePosition(UCapsuleComponent* targetCapsule) {
+void UCameraBoundingBoxComponent::InitializePosition(APlayerController*  PlayerController, AActor* ActorInFocus, UCapsuleComponent* targetCapsule) {
 	BoundingBox->SetWorldLocation(targetCapsule->GetComponentLocation());
+	PlayerController->SetViewTargetWithBlend(ActorInFocus, BlendTime, (EViewTargetBlendFunction)BlendFunc, BlendExp);
+
 }
 void UCameraBoundingBoxComponent::ResetCamera(AActor* targetActor) {
 

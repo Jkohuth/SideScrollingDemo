@@ -10,10 +10,11 @@
 #include "Rail.h"
 #include "Components/SplineComponent.h"
 #include "Components/PostProcessComponent.h"
+#include "GameFramework/PlayerController.h"
 
 // Sets default values
 ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer.SetDefaultSubobjectClass<USSDPlayerMovementComponent>(ACharacter::CharacterMovementComponentName))
+	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<USSDPlayerMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -47,19 +48,30 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 	if (PlayerMovement) {
 		PlayerMovement->UpdatedComponent = RootComponent;
 	}
+	else {
+		UE_LOG(LogClass, Log, TEXT("PlayerMovement failed to load"));
+	}
 
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
 	SetCharacterState(ECharacterState::ACTIVE);
 
 }
-
+void ASSDCharacter::OnConstruction() {
+}
 // Called when the game starts or when spawned
 void ASSDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	CameraBounds->OnConstructionComponent();
+
+	if (GetPlayerMovement()) {
+		GetPlayerMovement()->SetMovementMode(MOVE_Walking);
+	}
+	else {
+		UE_LOG(LogClass, Log, TEXT("PlayerMovement failed to load"));
+	}
 	CameraBounds->ResetCamera(this);
-	
 	//SetCharacterState(ECharacterState::ACTIVE);
 	
 }
@@ -68,9 +80,8 @@ void ASSDCharacter::BeginPlay()
 void ASSDCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	// Keep Player within Camera Bounds
 
+	// Keep Player within Camera Bounds
 	CameraBounds->UpdatePosition(GetCapsuleComponent());
 }
 
@@ -93,12 +104,12 @@ void ASSDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 }
 
 void ASSDCharacter::MoveRight(float Value) {
-	if (PlayerMovement && (PlayerMovement->UpdatedComponent == RootComponent)) {
+	if (GetPlayerMovement() && (GetPlayerMovement()->UpdatedComponent == RootComponent)) {
 		GetPlayerMovement()->MoveRightInput(Value);
 	}
 }
 void ASSDCharacter::MoveUp(float Value) {
-	if (PlayerMovement && (PlayerMovement->UpdatedComponent == RootComponent)) {
+	if (GetPlayerMovement() && (GetPlayerMovement()->UpdatedComponent == RootComponent)) {
 		GetPlayerMovement()->MoveUpInput(Value);
 	}
 }
@@ -118,10 +129,11 @@ void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	// Check for Rail Movement
 	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::GrindTag)) {
 		if (GetPlayerMovement()->CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) return;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Grind Called");
 
 		ARail* Rail = Cast<ARail>(OtherActor);
 		if (Rail) {
-			GetPlayerMovement()->TriggerGrindMovement(Rail->GetRailSpline());
+			GetPlayerMovement()->TriggerGrindMovement(Rail->GetRailSpline(), Hit);
 		}
 	}
 }
@@ -137,7 +149,7 @@ void ASSDCharacter::Jump() {
 }
 void ASSDCharacter::StopJumping() {
 	Super::StopJumping();
-	if (GetPlayerMovement()->MovementMode == MOVE_Falling) {
+	if (GetPlayerMovement() && GetPlayerMovement()->MovementMode == MOVE_Falling) {
 		GetPlayerMovement()->SetCharacterGravity(GetPlayerMovement()->FallingGravityScalar); 
 		GetPlayerMovement()->isJumping = false;
 	}

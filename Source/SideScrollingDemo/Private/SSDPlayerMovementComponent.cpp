@@ -16,7 +16,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogCharacterMovement, Log, All);
 
 
 USSDPlayerMovementComponent::USSDPlayerMovementComponent(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+	: UCharacterMovementComponent(ObjectInitializer)
 {
    // Lock Movement on X Plane
     bConstrainToPlane = true;
@@ -303,7 +303,44 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 
 		RestorePreAdditiveRootMotionVelocity();
 
-		FVector OldVelocity = Velocity;
+
+		FVector worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
+		
+		float oldDistanceAlongSpline = distanceAlongSpline;
+
+		grindSpeed = FVector::DotProduct(Velocity, worldDirAtDist);
+
+		FString grindString = " PhysGrind grindSpeed " + FString::SanitizeFloat(grindSpeed) + " Old distance along spline " + FString::SanitizeFloat(oldDistanceAlongSpline);
+
+		UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
+
+		
+		FVector beginSpline = RailSplineReference->GetWorldLocationAtSplinePoint(0);
+		FVector localBeginSpline = RailSplineReference->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
+		FVector endSpline = RailSplineReference->GetWorldLocationAtSplinePoint(RailSplineReference->GetNumberOfSplinePoints());
+		FVector localEndSpline = RailSplineReference->GetLocationAtSplinePoint(RailSplineReference->GetNumberOfSplinePoints(), ESplineCoordinateSpace::Local);
+
+		distanceAlongSpline += (grindSpeed * timeTick);
+		//FVector UpdateLocation;
+
+		if (distanceAlongSpline < (localEndSpline.X)) {
+			FVector UpdateLocation = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
+			UpdateLocation.Z += capsuleHalfHeight;
+
+			CharacterOwner->SetActorLocation(UpdateLocation);
+		}
+		else if(distanceAlongSpline == localEndSpline.X && UpdateLocation.Y > (endSpline.Y - capsuleRadius)){
+			UpdateLocation.Y += (grindSpeed * timeTick);
+		}
+		else {
+			SetMovementMode(MOVE_Falling);
+			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+			return;
+		}
+
+
+		
+		/*FVector OldVelocity = Velocity;
 		if(CurrentFloor.HitResult.GetActor())
 			FString tmp = CurrentFloor.HitResult.GetActor()->GetName();
 	
@@ -373,10 +410,8 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 			SetMovementMode(MOVE_Falling);
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 			return;
-		}
-
+		}*/
 	}
-
 }
 bool USSDPlayerMovementComponent::IsClimbing() const {
 	return (MovementMode == MOVE_Climb) && UpdatedComponent;
@@ -391,7 +426,7 @@ void USSDPlayerMovementComponent::KnockBack(const FHitResult& Hit){
 
 }
 
-void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpline){
+void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpline, const FHitResult& RailCollision){
  	if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) { return; }
 	else {
 		SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Grind);
@@ -399,8 +434,15 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpl
 		// Potentially dangerous to store the rail spline locally, reference or shared pointer?
 		RailSplineReference = RailSpline;
 		FVector WorldClosest = RailSpline->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
+		FVector HitClosest = RailSpline->FindLocationClosestToWorldLocation(RailCollision.ImpactPoint, ESplineCoordinateSpace::Local);
 		FVector OldVelocity = Velocity;
 		Velocity = FVector::ZeroVector;
+		
+		FVector beginSpline = RailSpline->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
+		FVector endSpline = RailSpline->GetLocationAtSplinePoint(RailSpline->GetNumberOfSplinePoints(), ESplineCoordinateSpace::Local);
+		FVector LocalClosest = RailSpline->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
+
+
 		for (int32 i = 0; i, RailSpline->GetNumberOfSplinePoints(); ++i) {
 			int32 j = i + 1;
 			// If there are only "i" points we want to make sure we are not trying to reach something that doesn't exist
@@ -413,22 +455,13 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpl
 			//FVector splinePt2 = RailSpline->GetWorldLocationAtSplinePoint(j);
 			FVector splinePt1 = RailSpline->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local);
 			FVector splinePt2 = RailSpline->GetLocationAtSplinePoint(j, ESplineCoordinateSpace::Local);
-			FVector beginSpline = RailSpline->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
-			FVector endSpline = RailSpline->GetLocationAtSplinePoint(RailSpline->GetNumberOfSplinePoints(), ESplineCoordinateSpace::Local);
-			FVector LocalClosest = RailSpline->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
 
-			FString grindString = "LocalClosest:  " + LocalClosest.ToCompactString() + " WorldClosest: " + WorldClosest.ToCompactString() + " beginSpline Local: " + beginSpline.ToCompactString() + " endspline local: " + endSpline.ToCompactString();
+			FString grindString = "LocalClosest:  " + LocalClosest.ToCompactString() + " WorldClosest: " + WorldClosest.ToCompactString() + " CollisionPointLocal: " + HitClosest.ToCompactString() + " endspline local: " + endSpline.ToCompactString();
 			UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
 
 			// Using local coordinate space instead of world 
-			if(LocalClosest.X == beginSpline.X ||  LocalClosest.X == endSpline.X){
-
-				// They walked onto the edge of the spline
-				// Depending on the direction and momentum they could immediately fall off 
-				SetMovementMode(MOVE_Walking);
-				return;
-			} else if( (splinePt1.X <= LocalClosest.X && LocalClosest.X <= splinePt2.X ) ||
-					   (splinePt2.X <= LocalClosest.X && LocalClosest.X <= splinePt1.X ) ){
+			if( (splinePt1.X <= LocalClosest.X && LocalClosest.X <= splinePt2.X ) ||
+				(splinePt2.X <= LocalClosest.X && LocalClosest.X <= splinePt1.X ) ){
 				// Using local coordinates may bit me here, does scaling effect distance?
 
 				float DistPt1ToActor = FVector::Dist(LocalClosest, splinePt1);
@@ -449,6 +482,14 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpl
 
 				// Only Velocity in the direction of the spline counts as movement
 				grindSpeed = FVector::DotProduct(OldVelocity, worldDirAtDist);
+
+				float velSizeSq = OldVelocity.SizeSquared();
+				velSizeSq = FMath::Sqrt(velSizeSq);
+				grindString = "Velocity " + OldVelocity.ToCompactString() + " OldVelocity Magnitude "+ FString::SanitizeFloat(velSizeSq) + "grind speed " + FString::SanitizeFloat(grindSpeed)
+					+ " worldDirection at rail: " + worldDirAtDist.ToCompactString();
+
+				UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
+
 				Velocity = grindSpeed * worldDirAtDist;
 
 				grindString = "Velocity: " + Velocity.ToCompactString() + " SplineSpeed: " + FString::SanitizeFloat(grindSpeed) +
@@ -461,7 +502,6 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpl
 			}
 
 		}
-
 	}
 }
 void USSDPlayerMovementComponent::OnJumpInput(){
@@ -483,4 +523,35 @@ void USSDPlayerMovementComponent::JumpOffWall() {
 }
 bool USSDPlayerMovementComponent::IsSliding() const {
 	return bInSlide;
+}
+FString USSDPlayerMovementComponent::GetMovementModeString() {
+	FString mode;
+	switch (MovementMode) {
+	case EMovementMode::MOVE_Custom:
+		switch (CustomMovementMode) {
+		case ECustomMovementMode::MOVE_Climb:
+			mode = "MOVE_Climb";
+			//			bSlidingDownWall = false;
+			break;
+		case ECustomMovementMode::MOVE_Grind:
+			mode = "MOVE_Grind";
+			break;
+		}
+		break;
+	case EMovementMode::MOVE_Falling:
+		mode = "MOVE_Falling";
+		break;
+	case EMovementMode::MOVE_MAX:
+		break;
+	case EMovementMode::MOVE_None:
+		mode = "MOVE_None";
+		break;
+	case EMovementMode::MOVE_Walking:
+		mode = "MOVE_Walking";
+		break;
+	default:
+		mode = "Other";
+			break;
+	}
+	return mode;
 }
