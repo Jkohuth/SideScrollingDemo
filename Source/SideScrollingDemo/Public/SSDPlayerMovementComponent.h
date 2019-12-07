@@ -55,6 +55,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	float WallSlideFriction;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float MaxAccel = 3500.f;
 	// JUMP
 
 	UPROPERTY(EditAnywhere)
@@ -71,6 +74,9 @@ public:
 	void JumpOffWall();
 	UPROPERTY(EditAnywhere)
 	FVector jumpWallVelocity;
+
+	UFUNCTION(BlueprintCallable)
+	FString GetMovementModeString();
 	
 	UFUNCTION(BlueprintCallable)
 	void BackDash();
@@ -88,6 +94,7 @@ public:
 	bool IsSliding() const;
 
 	// Climb
+	UFUNCTION()
 	void PhysClimb(float DeltaTime, int32 Iterations);
 	bool IsClimbing() const;
 	void TriggerClimbMovement(FHitResult ClimbTrigger);
@@ -101,10 +108,13 @@ public:
 	// Grind
 	void PhysGrind(float DeltaTime, int32 Iterations);
 	bool IsGrinding() const;
-	void TriggerGrindMovement(USplineComponent* RailSpline);
+	void TriggerGrindMovement(USplineComponent* RailSpline, const FHitResult& RailCollision);
 	float MaxGrindSpeed;
+	float grindFriction = 1.f;
 	float distanceAlongSpline;
+	float MaxGrindAccel = 1000.f;
 	float grindSpeed; // Speed not velocity it's only 2Dimensional 
+	FVector UpdateLocation;
 private:
 	uint32 bInSlide:1;
 };

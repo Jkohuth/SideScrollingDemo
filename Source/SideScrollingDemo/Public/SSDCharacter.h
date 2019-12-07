@@ -14,11 +14,13 @@ class SIDESCROLLINGDEMO_API ASSDCharacter : public ACharacter
 
 public:
 	// Sets default values for this character's properties
-	ASSDCharacter(const FObjectInitializer& ObjectInitializer);
+	ASSDCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void OnConstruction();
 
 	// Custom Movement to make game unique
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
@@ -34,7 +36,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UPostProcessComponent* CharacterEffects;
-
 	// Handle Axis Input
 	void MoveRight(float Value);
 	void MoveUp(float Value);
@@ -78,7 +79,7 @@ public:
 	float currentDamageFrame = 0.f; // Counts frames
 	bool immuneToDamage = false;		// Keeps track if immune to damage
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Health = 1.0f;
 	
 	UPROPERTY(EditAnywhere)
@@ -114,7 +115,8 @@ public:
 	bool IsClimbing() const;
 
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float effectRadius = 0.f;
 	// BACK DASH - needs button delay
 	//UFUNCTION(BlueprintCallable, Category = "MalePlayer")
 	//void BackDash();

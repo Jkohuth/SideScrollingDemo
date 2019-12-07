@@ -39,7 +39,20 @@ public:
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	UPROPERTY(EditAnywhere)
 	FVector BoxSize = FVector(50.f, 300.f, 325.f);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FTransform CameraTransform;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float FoV = 90.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BlendTime = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BlendExp = 0.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	uint8 BlendFunc;
 
+	void OnConstructionComponent();
+	
 	FVector Origin; // This is just origin
 	FVector BoxExtent; // This should exist somewhere in here
 
@@ -62,7 +75,7 @@ public:
 	bool CheckLevelBounds();
 
 	UFUNCTION(BlueprintCallable)
-		void InitializePosition(UCapsuleComponent* targetCapsule);
+		void InitializePosition(APlayerController*  PlayerController, AActor* ActorInFocus, UCapsuleComponent* targetCapsule);
 	UFUNCTION(BlueprintCallable)
 		void UpdatePosition(UCapsuleComponent* targetCapsule);
 	UFUNCTION(BlueprintCallable)
