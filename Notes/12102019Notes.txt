@@ -302,3 +302,18 @@ I'm trying to go for a person who in the middle of the night if spotted from a d
 
 If you would like more information or reference images please let me know!
 
+
+
+6 - 12 - 2019
+
+Game Task:
+
+	After moving a lot of the functionality from the camera to the c++ class I can fret less about having to rebuild the blueprint if need be
+
+	Currently reimplementing the Rail mechanic
+		Need Jump off Rail
+			With Velocity based on current movement
+		GrindFriction - How much does the character get impeded grinding on a rail
+		Clamp Max Grind Speed - Cannot have the character grind past a maximum speed 
+		Reduce Gravity on Rail - Heavy gravity makes it move to fast, try setting vertical gravity when on rail
+		Handle curves - Eventually I'll need it to handle curves and bends but that is a study in quaterions and not vital to the project

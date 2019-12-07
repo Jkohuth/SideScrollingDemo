@@ -38,7 +38,7 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 
 	CharacterEffects = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcess"));
 	CharacterEffects->SetupAttachment(RootComponent);
-	// Don't change brightness when going into the shade
+	// Don't change brightness when `ing into the shade
 	CharacterEffects->Settings.AutoExposureMinBrightness = 1.f;
 	CharacterEffects->Settings.AutoExposureMaxBrightness = 1.f;
 	CharacterEffects->bEnabled = false;
@@ -129,7 +129,9 @@ void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	// Check for Rail Movement
 	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::GrindTag)) {
 		if (GetPlayerMovement()->CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) return;
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Grind Called");
+		FString tmp = "Impact Normal " +  Hit.ImpactNormal.ToCompactString();
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, tmp);
+		if (Hit.ImpactNormal.Y > 0.8f) return;
 
 		ARail* Rail = Cast<ARail>(OtherActor);
 		if (Rail) {
