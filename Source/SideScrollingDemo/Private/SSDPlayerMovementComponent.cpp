@@ -303,16 +303,13 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
 		FVector OldVelocity = Velocity;
 
-
 		RestorePreAdditiveRootMotionVelocity();
 
 		//FVector worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
-		FVector worldDirAtFeetLoc = RailSplineReference->FindDirectionClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
-		FVector slope1 = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
+		//FVector worldDirAtFeetLoc = RailSplineReference->FindDirectionClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
+		//FVector slope1 = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
 		//distanceAlongSpline = RailSplineReference->location
-		
-		FVector slope2 = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
-
+		//FVector slope2 = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
 		
 		float oldDistanceAlongSpline = distanceAlongSpline;
 
@@ -320,25 +317,21 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		// Cosine of the angle the player makes with the rail is the y velocity 
 		// Look up NewFallVelocity() for rail calcualtions
 
-		//FString grindString = " PhysGrind grindSpeed " + FString::SanitizeFloat(grindSpeed) + " Old distance along spline " + FString::SanitizeFloat(oldDistanceAlongSpline);
-
-		//UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
-
 		// Lets Calculate gravity along the rail
 		// Current the heavy gravity I have may not work well with rail grinding I'm after
-
+		FVector worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
 		FVector Gravity = FVector(0.f, 0.f, GetGravityZ());
-		float GravityMagInDir = FVector::DotProduct(Gravity, worldDirAtFeetLoc);
-		FVector GravityAlongRail = GravityMagInDir * worldDirAtFeetLoc;
+		float GravityMagInDir = FVector::DotProduct(Gravity, worldDirAtDist);
+		FVector GravityAlongRail = GravityMagInDir * worldDirAtDist;
 		
 		//Acceleration = GravityDirAlongRail * worldDirAtDist;
 		Velocity += GravityAlongRail * timeTick;
 		Velocity.GetClampedToMaxSize(250.f);
 
-		grindSpeed = FVector::DotProduct(Velocity, worldDirAtFeetLoc);
+		grindSpeed = FVector::DotProduct(Velocity, worldDirAtDist);
 
-
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, grindString);
+		FString grindString = "The grind speed " + FString::SanitizeFloat(grindSpeed);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, grindString);
 		//CalcVelocity(DeltaTime, grindFriction, false, GetMaxBrakingDeceleration());
 
 
@@ -348,22 +341,21 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		FVector localEndSpline = RailSplineReference->GetLocationAtSplinePoint(RailSplineReference->GetNumberOfSplinePoints(), ESplineCoordinateSpace::Local);
 
 		distanceAlongSpline += (grindSpeed * timeTick);
-		//FVector UpdateLocation;
-		//UpdateLocation = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
-		//UpdateLocation.Z += capsuleHalfHeight;
 		FHitResult Hit(1.f);
-		//const FVector Adjusted = worldDirAtDist * grindSpeed * timeTick;
 		const FVector Adjusted = Velocity * timeTick;
-		//Adjusted = Adjusted * timeTick;
 		SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit);
+		
 		if (Hit.IsValidBlockingHit()) {
-
+			
+			if(Hit.GetActor() && !Hit.GetActor()->ActorHasTag(ECustomTags::GrindTag)){
+				SetMovementMode(MOVE_Walking);
+				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+				return;
+			}
 			const FVector RequestedAdjustment = GetPenetrationAdjustment(Hit);
 			FVector correctionRail = CharacterOwner->GetActorLocation();
 			correctionRail.Z += Hit.PenetrationDepth; // Despite being stuck this returns 0
 			correctionRail.Z += 2.f;
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Hit is valid");
-
 
 			CharacterOwner->SetActorLocation(correctionRail);
 		}
@@ -480,102 +472,25 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpl
 		MaxAcceleration = MaxGrindAccel;
 		SetCharacterGravity(RisingGravityScalar);
 		MaxCustomMovementSpeed = MaxGrindSpeed;
-
-		// Potentially dangerous to store the rail spline locally, reference or shared pointer?
 		RailSplineReference = RailSpline;
-		FVector WorldClosest = RailSpline->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
-		FVector HitClosest = RailSpline->FindLocationClosestToWorldLocation(RailCollision.ImpactPoint, ESplineCoordinateSpace::Local);
-		FVector OldVelocity = Velocity;
-		Velocity = FVector::ZeroVector;
 		
-		FVector beginSpline = RailSpline->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
-		FVector endSpline = RailSpline->GetLocationAtSplinePoint(RailSpline->GetNumberOfSplinePoints(), ESplineCoordinateSpace::Local);
-		FVector LocalClosest = RailSpline->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
+		float playerDistInSplinePt = RailSpline->FindInputKeyClosestToWorldLocation(GetActorFeetLocation());
+		float splinePtBeforePlayer = FMath::TruncToFloat(playerDistInSplinePt);
+		float splinePtAfterPlayer = splinePtBeforePlayer +1;
 
+		float distanceToSplinePt1 = RailSpline->GetDistanceAlongSplineAtSplinePoint(splinePtBeforePlayer);
+		float distanceToSplinePt2 = RailSpline->GetDistanceAlongSplineAtSplinePoint(splinePtAfterPlayer);
+		distanceAlongSpline = (playerDistInSplinePt - splinePtBeforePlayer) * (distanceToSplinePt2 - distanceToSplinePt1);
+		distanceAlongSpline += distanceToSplinePt1;
 
-		for (int32 i = 0; i, RailSpline->GetNumberOfSplinePoints(); ++i) {
-			int32 j = i + 1;
-			// If there are only "i" points we want to make sure we are not trying to reach something that doesn't exist
-			if (RailSpline->GetNumberOfSplinePoints() < j) {
-				UE_LOG(LogCharacterMovement, Log, TEXT("Trigger Grind Movement ran out of points"));
-				return;
-			}
-
-			//FVector splinePt1 = RailSpline->GetWorldLocationAtSplinePoint(i);
-			//FVector splinePt2 = RailSpline->GetWorldLocationAtSplinePoint(j);
-			FVector splinePt1 = RailSpline->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local);
-			FVector splinePt2 = RailSpline->GetLocationAtSplinePoint(j, ESplineCoordinateSpace::Local);
-			FString grindString = "LocalClosest:  " + LocalClosest.ToCompactString() + " WorldClosest: " + WorldClosest.ToCompactString() + " CollisionPointLocal: " + HitClosest.ToCompactString() + " endspline local: " + endSpline.ToCompactString();
-			grindString = "Pt1 Local: " + splinePt1.ToCompactString() + " Pt2 Local: " + splinePt2.ToCompactString();
-
-			//UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
-			FVector ClosetWorldLoc = RailSpline->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
-			FVector ClosetLocalLoc = RailSpline->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
-
-			//grindString = "Pt1 Local: " + splinePt1.ToCompactString() + " Pt2 Local: " + splinePt2.ToCompactString() + " Closest Local " + ClosetLocalLoc.ToCompactString();
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, grindString);
-			//distanceAlongSpline = FVector::Dist(ClosetLocalLoc, splinePt1);
-			FVector dir = RailSpline->FindDirectionClosestToWorldLocation(ClosetWorldLoc, ESplineCoordinateSpace::World);
-			grindString = "Pt1 Local: " + splinePt1.ToCompactString() + " Pt2 Local: " + splinePt2.ToCompactString() + " Closest Local " + ClosetLocalLoc.ToCompactString() + " Dir " + dir.ToCompactString();
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, grindString);
-
-			float DistPt1ToPt2 = FVector::Dist(splinePt2, splinePt1);
-			//distanceAlongSpline = RailSpline->GetDistanceAlongSplineAtSplinePoint(i);
-
-			//distanceAlongSpline = RailSpline->FindLocationClosestToWorldLocation(locationClose, ESplineCoordinateSpace::Local);
-			ClosetWorldLoc.Z += capsuleHalfHeight;
-			FVector worldDirAtDist = RailSpline->GetWorldDirectionAtDistanceAlongSpline(distanceAlongSpline);
-
-			grindSpeed = FVector::DotProduct(OldVelocity, worldDirAtDist);
-			Velocity = grindSpeed * worldDirAtDist;
-			CharacterOwner->SetActorLocation(ClosetWorldLoc);
-			return;
-			// Using local coordinate space instead of world 
-			/*if( (splinePt1.X <= LocalClosest.X && LocalClosest.X <= splinePt2.X ) ||
-				(splinePt2.X <= LocalClosest.X && LocalClosest.X <= splinePt1.X ) ){
-				// Using local coordinates may bit me here, does scaling effect distance?
-
-				float DistPt1ToActor = FVector::Dist(LocalClosest, splinePt1);
-				float DistPt1ToPt2   = FVector::Dist(splinePt2, splinePt1);
-				distanceAlongSpline = RailSpline->GetDistanceAlongSplineAtSplinePoint(i);
-				
-				grindString = "Dist From Pt1 to Actor Local: " + FString::SanitizeFloat(DistPt1ToActor) + " Distance Along Spline: " + FString::SanitizeFloat(distanceAlongSpline) + 
-								" ";
-	
-				UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
-
-				distanceAlongSpline += DistPt1ToActor;
-				FVector worldDistAlongSpline  = RailSpline->GetLocationAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
-
-				worldDistAlongSpline.Z += capsuleHalfHeight;
-				FVector loc1 = CharacterOwner->GetActorLocation();
-				CharacterOwner->SetActorLocation(worldDistAlongSpline);
-				grindString = "Set character Location " + worldDistAlongSpline.ToCompactString() + " before the update " + loc1.ToCompactString();
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, grindString);
-
-				// Only Velocity in the direction of the spline counts as movement
-				grindSpeed = FVector::DotProduct(OldVelocity, worldDirAtDist);
-				Velocity = grindSpeed * worldDirAtDist;
-
-				float velSizeSq = OldVelocity.SizeSquared();
-				velSizeSq = FMath::Sqrt(velSizeSq);
-				grindString = "Velocity " + OldVelocity.ToCompactString() + " OldVelocity Magnitude "+ FString::SanitizeFloat(velSizeSq) + "grind speed " + FString::SanitizeFloat(grindSpeed)
-					+ " worldDirection at rail: " + worldDirAtDist.ToCompactString();
-
-			//	UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
-
-				Velocity = grindSpeed * worldDirAtDist;
-
-				grindString = "Velocity: " + Velocity.ToCompactString() + " SplineSpeed: " + FString::SanitizeFloat(grindSpeed) +
-								" worldDirAtDist: " + worldDirAtDist.ToCompactString();
-
-			//	UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
-				
-				return;
-
-			}*/
-
-		}
+		FVector worldLocAtDist = RailSpline->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
+		FVector worldDirAtDist = RailSpline->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
+		
+		grindSpeed = FVector::DotProduct(Velocity, worldDirAtDist);
+		Velocity = grindSpeed * worldDirAtDist;
+		worldLocAtDist.Z += capsuleHalfHeight;
+		CharacterOwner->SetActorLocation(worldLocAtDist);
+		return;
 	}
 }
 void USSDPlayerMovementComponent::OnJumpInput(){
