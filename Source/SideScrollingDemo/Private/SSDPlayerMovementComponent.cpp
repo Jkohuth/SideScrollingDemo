@@ -348,12 +348,22 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		FVector localEndSpline = RailSplineReference->GetLocationAtSplinePoint(RailSplineReference->GetNumberOfSplinePoints(), ESplineCoordinateSpace::Local);
 
 		distanceAlongSpline += (grindSpeed * timeTick);
+		FVector worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
+		
+		/*FVector updatePosition = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
+		updatePosition.Z += capsuleHalfHeight;
+		CharacterOwner->SetActorLocation(updatePosition);
+
+		FVector oldDistWorldLoc = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(oldDistanceAlongSpline);
+		FVector newDistWorldLoc = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
+		FHitResult Hit(1.f);*/
+
 		//FVector UpdateLocation;
 		//UpdateLocation = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
 		//UpdateLocation.Z += capsuleHalfHeight;
 		FHitResult Hit(1.f);
-		//const FVector Adjusted = worldDirAtDist * grindSpeed * timeTick;
-		const FVector Adjusted = Velocity * timeTick;
+		const FVector Adjusted = worldDirAtDist * grindSpeed * timeTick;
+		//const FVector Adjusted = Velocity * timeTick;
 		//Adjusted = Adjusted * timeTick;
 		SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit);
 		if (Hit.IsValidBlockingHit()) {

@@ -317,3 +317,24 @@ Game Task:
 		Clamp Max Grind Speed - Cannot have the character grind past a maximum speed 
 		Reduce Gravity on Rail - Heavy gravity makes it move to fast, try setting vertical gravity when on rail
 		Handle curves - Eventually I'll need it to handle curves and bends but that is a study in quaterions and not vital to the project
+
+
+8 - 12 - 2019
+
+	Using the ratio of distance between individual spline points I was successfully able to find the exact distance along the spline which is useful for finding the direction
+
+	TASKS:
+		More level design
+			Add different types of platforming challenges, off rail onto wall onto platform
+
+		Enemies
+			Implement wall enemy
+		HUD
+			Health Bar?
+
+	ACCOMPLISHMENTS:
+		Added a singluar platforming challenge
+		Implement the teleport where things matter system
+		Found out Current implementation of grinding doesn't work on large meshes=
+			Not sure why yet
+		
