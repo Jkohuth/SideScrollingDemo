@@ -115,10 +115,21 @@ void ASSDCharacter::MoveUp(float Value) {
 }
 
 // EVENT TRIGGERS
-void ASSDCharacter::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) { }
+void ASSDCharacter::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult){
+
+	if (OtherActor && OtherActor->ActorHasTag(ECustomTags::GrindTag)) {
+		ARail* Rail = Cast<ARail>(OtherActor);
+		if (Rail) {
+			GetPlayerMovement()->TriggerGrindMovement(Rail->GetRailSpline(), SweepResult);
+		}
+	}
+
+
+}
 void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) { }
 void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
-
+	FString tmp = "hit something";
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, tmp);
 	// Check for Wall Movement
 	if(OtherActor && OtherActor->ActorHasTag(ECustomTags::ClimbTag) && FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.2f) 
 		&& GetPlayerMovement()->MovementMode == MOVE_Falling){ // Angle Tolerance
@@ -129,8 +140,7 @@ void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	// Check for Rail Movement
 	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::GrindTag)) {
 		if (GetPlayerMovement()->CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) return;
-		FString tmp = "Impact Normal " +  Hit.ImpactNormal.ToCompactString();
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, tmp);
+
 		if (Hit.ImpactNormal.Y > 0.8f) return;
 
 		ARail* Rail = Cast<ARail>(OtherActor);
