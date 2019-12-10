@@ -114,6 +114,8 @@ public:
 	float distanceAlongSpline;
 	float MaxGrindAccel = 1000.f;
 	float grindSpeed; // Speed not velocity it's only 2Dimensional 
+	float slopeNormal;
+	bool bJumpOffGrind = false;
 	FVector UpdateLocation;
 private:
 	uint32 bInSlide:1;

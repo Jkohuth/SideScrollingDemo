@@ -308,11 +308,6 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 
 		//FVector worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
 		FVector worldDirAtFeetLoc = RailSplineReference->FindDirectionClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
-		FVector slope1 = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
-		//distanceAlongSpline = RailSplineReference->location
-		
-		FVector slope2 = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
-
 		
 		float oldDistanceAlongSpline = distanceAlongSpline;
 
@@ -350,6 +345,14 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		distanceAlongSpline += (grindSpeed * timeTick);
 		FVector worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
 		
+		FVector ptA = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(oldDistanceAlongSpline);
+		FVector ptB = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
+		float slope = (ptB.Z - ptA.Z) / (ptB.Y - ptA.Y);
+		slopeNormal = -1 / slope;
+
+		FString grindString = "This is the slope normal: " + FString::SanitizeFloat(slopeNormal);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, grindString);
+
 		/*FVector updatePosition = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
 		updatePosition.Z += capsuleHalfHeight;
 		CharacterOwner->SetActorLocation(updatePosition);
@@ -593,7 +596,7 @@ void USSDPlayerMovementComponent::OnJumpInput(){
 		JumpOffWall();
 	}
 	else if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) {
-//		bJumpOffRail = true;
+		bJumpOffGrind = true;
 		UE_LOG(LogCharacterMovement, Log, TEXT("Jump off the rail"));
 	
 	}
