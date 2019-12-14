@@ -88,6 +88,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void PostDamageImmunity(float DeltaTime); // Triggers Immunity
 
+	UFUNCTION()
+		void Attack();
+
 	// Handle Character Damage Inflicted
 	UFUNCTION(BlueprintCallable)
 	void InflictDamage(AActor* ImpactActor);

@@ -11,6 +11,7 @@
 #include "Components/SplineComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
@@ -97,7 +98,7 @@ void ASSDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	//PlayerInputComponent->BindAction("BackDash", IE_Pressed, this, &ASSDCharacter::BackDash);
 	//PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &ASSDCharacter::OnStartSlide);
 	//PlayerInputComponent->BindAction("Slide", IE_Released, this, &ASSDCharacter::OnStopSlide);
-
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ASSDCharacter::Attack);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASSDCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("MoveUp", this, &ASSDCharacter::MoveUp);
 
@@ -191,6 +192,118 @@ ECharacterState ASSDCharacter::GetCharacterState(){
 	return CharacterState;
 }
 
+void ASSDCharacter::Attack() {
+
+	float capsuleRadius = GetCapsuleComponent()->GetScaledCapsuleRadius();
+	float capsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+
+
+	FCollisionQueryParams CollisionParams(FName(TEXT("Attack")), true, this);
+	CollisionParams.AddIgnoredActor(this);
+	CollisionParams.AddIgnoredComponent(GetCapsuleComponent());
+
+
+	if (GetPlayerMovement()->IsClimbing()) {
+		float weaponLengthAboveBelow = 30.f;
+		FVector hitBoxSizeAboveBelow = FVector(30.f, 40.f, 20.f);
+		float weaponLengthForward = 40.f;
+		FVector hitBoxSize = FVector(30.f, 30.f, 90.f);
+		
+		FVector StartAboveBelow = GetActorLocation();
+		StartAboveBelow.Z += capsuleHalfHeight + weaponLengthAboveBelow;
+		FVector EndAboveBelow = StartAboveBelow;
+		EndAboveBelow.Z += 1.f;
+		FCollisionShape weaponVolume = FCollisionShape::MakeBox(hitBoxSizeAboveBelow);
+		TArray<FHitResult> HitArrayAbove;
+		
+		bool isHitAbove = GetWorld()->SweepMultiByChannel(HitArrayAbove, StartAboveBelow, EndAboveBelow, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
+		DrawDebugBox(GetWorld(), StartAboveBelow, hitBoxSizeAboveBelow, FColor::Red, false, 2.f);
+		
+		StartAboveBelow = GetActorLocation();
+		StartAboveBelow.Z -= capsuleHalfHeight + weaponLengthAboveBelow;
+		EndAboveBelow = StartAboveBelow;
+		EndAboveBelow.Z -= 1.f;
+		TArray<FHitResult> HitArrayBelow;
+
+		bool isHitBelow = GetWorld()->SweepMultiByChannel(HitArrayBelow, StartAboveBelow, EndAboveBelow, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
+		DrawDebugBox(GetWorld(), StartAboveBelow, hitBoxSizeAboveBelow, FColor::Red, false, 2.f);
+
+		FVector StartForward = GetActorLocation();
+		StartForward.Y += GetActorForwardVector().Y * (weaponLengthForward + capsuleRadius);
+		FVector EndForward = StartForward;
+		EndForward.Y += GetActorForwardVector().Y;
+		weaponVolume = FCollisionShape::MakeBox(hitBoxSize);
+		TArray<FHitResult> HitArrayForward;
+		
+		bool isHitForward = GetWorld()->SweepMultiByChannel(HitArrayForward, StartForward, EndForward, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
+		DrawDebugBox(GetWorld(), StartForward, hitBoxSize, FColor::Red, false, 2.f);
+	}
+	else if (GetPlayerMovement()->IsFalling()) {
+		float weaponLengthAboveBelow = 30.f;
+		FVector hitBoxSizeAboveBelow = FVector(30.f, 40.f, 20.f);
+		float weaponLengthForwardBehind = 40.f;
+		FVector hitBoxSize = FVector(30.f, 30.f, 90.f);
+
+		FVector StartAboveBelow = GetActorLocation();
+		StartAboveBelow.Z += capsuleHalfHeight + weaponLengthAboveBelow;
+		FVector EndAboveBelow = StartAboveBelow;
+		EndAboveBelow.Z += 1.f;
+		FCollisionShape weaponVolume = FCollisionShape::MakeBox(hitBoxSizeAboveBelow);
+		TArray<FHitResult> HitArrayAbove;
+
+		bool isHitAbove = GetWorld()->SweepMultiByChannel(HitArrayAbove, StartAboveBelow, EndAboveBelow, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
+		DrawDebugBox(GetWorld(), StartAboveBelow, hitBoxSizeAboveBelow, FColor::Red, false, 2.f);
+
+		StartAboveBelow = GetActorLocation();
+		StartAboveBelow.Z -= capsuleHalfHeight + weaponLengthAboveBelow;
+		EndAboveBelow = StartAboveBelow;
+		EndAboveBelow.Z -= 1.f;
+		TArray<FHitResult> HitArrayBelow;
+
+		bool isHitBelow = GetWorld()->SweepMultiByChannel(HitArrayBelow, StartAboveBelow, EndAboveBelow, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
+		DrawDebugBox(GetWorld(), StartAboveBelow, hitBoxSizeAboveBelow, FColor::Red, false, 2.f);
+
+		FVector StartForwardBehind = GetActorLocation();
+		StartForwardBehind.Y += GetActorForwardVector().Y * (weaponLengthForwardBehind + capsuleRadius);
+		FVector EndForwardBehind = StartForwardBehind;
+		EndForwardBehind.Y += GetActorForwardVector().Y;
+		weaponVolume = FCollisionShape::MakeBox(hitBoxSize);
+		TArray<FHitResult> HitArrayForward;
+
+		bool isHitForward = GetWorld()->SweepMultiByChannel(HitArrayForward, StartForwardBehind, EndForwardBehind, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
+		DrawDebugBox(GetWorld(), StartForwardBehind, hitBoxSize, FColor::Red, false, 2.f);
+
+		StartForwardBehind = GetActorLocation();
+		StartForwardBehind.Y -= GetActorForwardVector().Y * (weaponLengthForwardBehind + capsuleRadius);
+		EndForwardBehind = StartForwardBehind;
+		TArray<FHitResult> HitArrayBehind;
+
+		bool isHitBehind = GetWorld()->SweepMultiByChannel(HitArrayBehind, StartForwardBehind, EndForwardBehind, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
+		DrawDebugBox(GetWorld(), StartForwardBehind, hitBoxSize, FColor::Red, false, 2.f);
+
+	}
+	else {
+		float weaponLength = 90.f;
+		FVector hitBoxSize = FVector(30.f, 70.f, 50.f);
+		FVector Start = GetActorLocation();
+		Start.Y += GetActorForwardVector().Y * (GetCapsuleComponent()->GetScaledCapsuleRadius() + weaponLength);
+		FVector End = Start;
+		End.Y += 1.f;
+		FCollisionShape weaponVolume = FCollisionShape::MakeBox(hitBoxSize);
+		TArray<FHitResult> HitArray;
+		bool isHit = GetWorld()->SweepMultiByChannel(HitArray, Start, End, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
+		DrawDebugBox(GetWorld(), Start, hitBoxSize, FColor::Red, false, 2.f);
+		//bool isHit = GetWorld()->SweepMultiByChannel(FocusSphereZone, Start, End, FQuat::Identity, ECollisionChannel::ECC_WorldDynamic, Sphere, CollisionParams);
+		if (isHit) {
+			for (FHitResult Hit : HitArray) {
+				if (Hit.GetActor())
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Hit.GetActor()->GetName());
+
+			}
+		}
+	}
+
+}
 
 // DAMAGE
 
