@@ -329,7 +329,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		grindSpeed = FVector::DotProduct(Velocity, worldDirAtDist);
 
 		FString grindString = "The grind speed " + FString::SanitizeFloat(grindSpeed);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, grindString);
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, grindString);
 		//CalcVelocity(DeltaTime, grindFriction, false, GetMaxBrakingDeceleration());
 
 
@@ -342,14 +342,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 
 		worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
 		
-		FVector ptA = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(oldDistanceAlongSpline);
-		FVector ptB = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
-		float slope = (ptB.Z - ptA.Z) / (ptB.Y - ptA.Y);
-		slopeNormal = -1 / slope;
-
-		grindString = "This is the slope normal: " + FString::SanitizeFloat(slopeNormal);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, grindString);
-
+		
 		/*FVector updatePosition = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
 		updatePosition.Z += capsuleHalfHeight;
 		CharacterOwner->SetActorLocation(updatePosition);
@@ -381,6 +374,17 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 			correctionRail.Z += 2.f;
 
 			CharacterOwner->SetActorLocation(correctionRail);
+		}
+		if(bJumpOffGrind){
+			FVector upVector  = RailSplineReference->GetUpVectorAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
+			Velocity.Z += JumpZVelocity;
+			float jumpMagnitude = FVector::DotProduct(Velocity, upVector);
+			Velocity = jumpMagnitude * upVector;
+
+			bJumpOffGrind = false;
+			SetMovementMode(MOVE_Falling);
+			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+			return;
 		}
 		if (GetActorFeetLocation().Y > (beginSpline.Y + capsuleRadius) ||
 			GetActorFeetLocation().Y < (endSpline.Y - capsuleRadius)) {
@@ -522,8 +526,6 @@ void USSDPlayerMovementComponent::OnJumpInput(){
 	}
 	else if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) {
 		bJumpOffGrind = true;
-		UE_LOG(LogCharacterMovement, Log, TEXT("Jump off the rail"));
-	
 	}
 }
 void USSDPlayerMovementComponent::JumpOffWall() {
