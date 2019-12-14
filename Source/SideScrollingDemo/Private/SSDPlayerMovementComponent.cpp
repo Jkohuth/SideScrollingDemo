@@ -340,14 +340,14 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 
 		distanceAlongSpline += (grindSpeed * timeTick);
 
-		FVector worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
+		worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
 		
 		FVector ptA = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(oldDistanceAlongSpline);
 		FVector ptB = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
 		float slope = (ptB.Z - ptA.Z) / (ptB.Y - ptA.Y);
 		slopeNormal = -1 / slope;
 
-		FString grindString = "This is the slope normal: " + FString::SanitizeFloat(slopeNormal);
+		grindString = "This is the slope normal: " + FString::SanitizeFloat(slopeNormal);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, grindString);
 
 		/*FVector updatePosition = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
@@ -476,10 +476,10 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 	}
 }
 bool USSDPlayerMovementComponent::IsClimbing() const {
-	return (MovementMode == MOVE_Climb) && UpdatedComponent;
+	return (MovementMode == MOVE_Custom) && (CustomMovementMode == MOVE_Climb) && UpdatedComponent;
 }
 bool USSDPlayerMovementComponent::IsGrinding() const {
-	return (MovementMode == MOVE_Grind) && UpdatedComponent;
+	return (MovementMode == MOVE_Custom) && (CustomMovementMode == MOVE_Grind) && UpdatedComponent;
 }
 void USSDPlayerMovementComponent::BackDash(){
 
