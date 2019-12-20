@@ -26,7 +26,7 @@ AMalePlayer::AMalePlayer(const FObjectInitializer& ObjectInitializer)
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
-
+ 
 	GetCapsuleComponent()->InitCapsuleSize(24.5, 94.5);
 	GetCapsuleComponent()->SetWorldRotation(FRotator(0.0f, 0.0f, 90.f));
 	
