@@ -150,7 +150,7 @@ void USSDPlayerMovementComponent::PhysClimb(float DeltaTime, int32 Iterations){
 	}
 	if (!UpdatedComponent->IsQueryCollisionEnabled()) { SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Climb); return; }
 
-
+	// This wall sliding mechanic can be simplified to reflect other movement modes such as move flying
 	float remainingTime = DeltaTime;
 	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations)) {
 		Iterations++;
@@ -204,6 +204,10 @@ void USSDPlayerMovementComponent::PhysClimb(float DeltaTime, int32 Iterations){
 
 		End.Y += (towardWall * (capsuleRadius + climbCheckPadding));
 
+		Start.Z += capsuleHalfHeight;
+		End.Z += capsuleHalfHeight;
+
+
 		FCollisionQueryParams CollisionParams;
 		CollisionParams.AddIgnoredActor(CharacterOwner);
 		bool isHit = GetWorld()->LineTraceSingleByChannel(WallHit, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionParams);
@@ -237,7 +241,7 @@ void USSDPlayerMovementComponent::TriggerClimbMovement(FHitResult ClimbTrigger){
 	EndTrace.Z += capsuleHalfHeight;
 	StartTrace.Z += capsuleHalfHeight; 
 
-
+	
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(CharacterOwner);
 	for(int i = 0; i < wallLinesCount; i++){
@@ -324,7 +328,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		
 		//Acceleration = GravityDirAlongRail * worldDirAtDist;
 		Velocity += GravityAlongRail * timeTick;
-		Velocity.GetClampedToMaxSize(250.f);
+		//Velocity.GetClampedToMaxSize(250.f);
 
 		grindSpeed = FVector::DotProduct(Velocity, worldDirAtDist);
 
@@ -386,12 +390,12 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 			return;
 		}
-		if (GetActorFeetLocation().Y > (beginSpline.Y + capsuleRadius) ||
+		/*if (GetActorFeetLocation().Y > (beginSpline.Y + capsuleRadius) ||
 			GetActorFeetLocation().Y < (endSpline.Y - capsuleRadius)) {
 			SetMovementMode(MOVE_Falling);
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 			return;
-		}
+		}*/
 		/*if(distanceAlongSpline >= localEndSpline.X){
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Got To the end of the rail");
 			FVector Forward = CharacterOwner->GetActorForwardVector();
