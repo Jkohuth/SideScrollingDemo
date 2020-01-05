@@ -79,7 +79,7 @@ void AEnemyCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	//UE_LOG(LogEnemy, Log, TEXT("Enemy Hit %s"), *OtherActor->GetName());
 	TurnAround();
 	if (OtherActor != nullptr && OtherActor->ActorHasTag(ECustomTags::PlayerTag)) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "OnHit was called");
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "OnHit was called");
 
 		InflictDamage(OtherActor, Hit);
 	}

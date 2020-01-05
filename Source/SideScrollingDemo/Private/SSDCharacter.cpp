@@ -324,7 +324,7 @@ float ASSDCharacter::ReceiveDamage_Implementation(float Damage, struct FPointDam
 	//const float ActualDamage = t
 	const float ActualDamage = this->TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	//Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "ReceiveDamage Called");
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "ReceiveDamage Called");
 
 	// This ensures the player won't get hit repeatedly by the same creature
 	if (CharacterState == ECharacterState::ACTIVE) {
