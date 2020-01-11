@@ -6,6 +6,7 @@
 #include "Components/ArrowComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SplineComponent.h"
+#include "Components/BoxComponent.h"
 #include "GameFramework/Controller.h"
 #include "SSDCharacter.h"
 
@@ -26,8 +27,12 @@ AEnemyWall::AEnemyWall()
 	MeshComponent->OnComponentHit.AddDynamic(this, &AEnemyWall::OnHit);
 
 	SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
-	SplineComponent->SetupAttachment(RootComponent);
-	SplineComponent->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+	//SplineComponent->SetupAttachment(RootComponent);
+	//SplineComponent->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+
+	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
+	BoxComponent->SetupAttachment(RootComponent);
+	BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &AEnemyWall::OnActorOverlapBegin);
 }
 
 // Called when the game starts or when spawned
@@ -62,22 +67,28 @@ void AEnemyWall::InflictDamage(AActor* ImpactActor, const FHitResult& Hit) {
 		//FDamageEvent DamageEvent(ValidDamageTypeClass);
 		const float DamageAmount = 1.0f;
 
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Calling from INSIDE the inflict damage");
 		FPointDamageEvent DamageEvent(DamageAmount, Hit, GetActorForwardVector(), ValidDamageTypeClass);
 
 		ASSDCharacter* player = Cast<ASSDCharacter>(ImpactActor);
 		if (player) {
-			player->TakeDamage(DamageAmount, DamageEvent, EnemyController, this);
+			player->ReceiveDamage(DamageAmount, DamageEvent, EnemyController, this);
 		}
 	}/*	*/
 }
 
 void AEnemyWall::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Enemy Pawn on Hit was called");
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Enemy Pawn on Hit was called");
 	if (OtherActor != nullptr && OtherActor->ActorHasTag(ECustomTags::PlayerTag)) {
 		InflictDamage(OtherActor, Hit);
 	}
 }
 void AEnemyWall::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
+	if (OtherActor != nullptr && OtherActor->ActorHasTag(ECustomTags::PlayerTag)) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "OverLapped with the player");
+
+	}
+
+}
+void AEnemyWall::LaunchAlongSpline() {
 
 }

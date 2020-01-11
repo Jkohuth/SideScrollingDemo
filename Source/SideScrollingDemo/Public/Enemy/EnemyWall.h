@@ -23,6 +23,9 @@ public:
 		class UArrowComponent* ArrowComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Spline)
 		class USplineComponent* SplineComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Box)
+		class UBoxComponent* BoxComponent;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -36,6 +39,11 @@ public:
 		float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser);
 	UFUNCTION(BlueprintCallable)
 		void InflictDamage(AActor* ImpactActor, const FHitResult& Hit);
+
+	UFUNCTION(BlueprintCallable)
+		void LaunchAlongSpline();
+	FTimerHandle RetractTimer;
+
 
 
 	FTimerHandle SenseTimer;
@@ -58,4 +66,5 @@ public:
 	FORCEINLINE class UStaticMeshComponent* GetMeshComponent() const { return MeshComponent; }
 	FORCEINLINE class UCapsuleComponent* GetCapsuleComponent() const { return CapsuleComponent; }
 	FORCEINLINE class USplineComponent* GetSplineComponent() const { return SplineComponent; }
+	FORCEINLINE class UBoxComponent* GetBoxComponent() const { return BoxComponent;  }
 };
