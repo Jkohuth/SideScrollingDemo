@@ -32,6 +32,7 @@ UENUM(BlueprintType)
 enum ENavigationType {
 	MainLeft, MainRight
 };
+
 namespace ECustomTags {
 	const FName RailTag = FName("rail");
 	const FName WallTag = FName("wall");
