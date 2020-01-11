@@ -354,7 +354,13 @@ void ASSDCharacter::Respawn(FVector LastCheckPoint){
 	SetCharacterState(ECharacterState::ACTIVE);
 	SetActorLocation(LastCheckPoint); // May need to use a different method
 }
-
+bool ASSDCharacter::IsDead(){
+	if(GetCharacterState() == ECharacterState::DEAD)
+		return true;
+	else {
+		return false;
+	}
+}
 
 // SLIDE 
 

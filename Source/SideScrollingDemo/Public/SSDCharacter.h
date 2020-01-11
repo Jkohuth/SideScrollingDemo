@@ -91,6 +91,8 @@ public:
 	UFUNCTION()
 		void Attack();
 
+	UFUNCTION(BlueprintCallable)
+		bool IsDead();
 	// Handle Character Damage Inflicted
 	UFUNCTION(BlueprintCallable)
 	void InflictDamage(AActor* ImpactActor);
