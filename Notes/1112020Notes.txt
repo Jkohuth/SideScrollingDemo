@@ -1,0 +1,13 @@
+My lack of clearly defined class structure is becoming a problem as a struggle to trigger the proper events as I keep making different types of enemies. I want to have a base enemy class or controller that contains all the necessary interactions with the player of with other types of objects.
+
+I learned a bit about timelines which is a SIGNIFICANT upgrade to trying to come up with some magic inside a Tick function. Need to finialize enemy designs and translate them all to C++ since I find blueprint dangerous and prone to failure. If I have to recompile blueprints and they get corrupted it really kills my mood.
+
+My game is coming together to an extent, the wall enemy is too intrusive than original anticipated, perhaps I can make it thinner in order to avoid making it an extreme obstacle. 
+
+Still haven't spent the time to learn the underpinnings of UE4, kinda doing a learning as I go type of situation which isn't bad but clearly has some serious flaws which is why I am on the third redesign of this game. But progress is progress and I am very satisfyed with what i have accomplished so far.
+
+I still need to work on a game design document as illustrating my goals and aspirations for other people can keep me focused and know where to go next.
+
+Editting the "Focus" mode is the next step I want the player movements to be extreme and exaggerated. However that needs to be stored in a USTRUCT and I still haven't properly learned those et
+
+I keep attempting to use mr mannequin but honestly I should just use shapetraces in order to get the gameplay across of what I want to accomplish, there are no proper attack animations that fit with the feel and style I am attempting to convey. Those collisions need to ignore the player though

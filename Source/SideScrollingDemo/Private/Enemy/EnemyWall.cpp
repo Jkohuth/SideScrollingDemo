@@ -5,7 +5,6 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "Components/SplineComponent.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/Controller.h"
 #include "SSDCharacter.h"
@@ -20,13 +19,15 @@ AEnemyWall::AEnemyWall()
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AEnemyWall::OnActorOverlapBegin);
 
 	ArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
-	ArrowComponent->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+	//ArrowComponent->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+	ArrowComponent->SetupAttachment(RootComponent);
+	ArrowComponent->SetRelativeLocation(FVector::ZeroVector);
 
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	MeshComponent->SetupAttachment(RootComponent);
 	MeshComponent->OnComponentHit.AddDynamic(this, &AEnemyWall::OnHit);
 
-	SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
+	//SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
 	//SplineComponent->SetupAttachment(RootComponent);
 	//SplineComponent->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 
@@ -84,7 +85,7 @@ void AEnemyWall::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UP
 }
 void AEnemyWall::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
 	if (OtherActor != nullptr && OtherActor->ActorHasTag(ECustomTags::PlayerTag)) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "OverLapped with the player");
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "OverLapped with the player");
 
 	}
 

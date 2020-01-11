@@ -21,8 +21,8 @@ public:
 		class UCapsuleComponent* CapsuleComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Direction)
 		class UArrowComponent* ArrowComponent;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Spline)
-		class USplineComponent* SplineComponent;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Spline)
+	//	class USplineComponent* SplineComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Box)
 		class UBoxComponent* BoxComponent;
 
@@ -65,6 +65,5 @@ public:
 
 	FORCEINLINE class UStaticMeshComponent* GetMeshComponent() const { return MeshComponent; }
 	FORCEINLINE class UCapsuleComponent* GetCapsuleComponent() const { return CapsuleComponent; }
-	FORCEINLINE class USplineComponent* GetSplineComponent() const { return SplineComponent; }
 	FORCEINLINE class UBoxComponent* GetBoxComponent() const { return BoxComponent;  }
 };
