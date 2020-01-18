@@ -13,6 +13,10 @@
 #include "GameFramework/PlayerController.h"
 #include "DrawDebugHelpers.h"
 
+// Definition of tech debt
+#include "EnemyCharacter.h"
+#include "EnemyWall.h"
+
 // Sets default values
 ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<USSDPlayerMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -93,8 +97,8 @@ void ASSDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	//PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &ASSDCharacter::DebugString);
-	//PlayerInputComponent->BindAction("Focus", IE_Pressed, this, &ASSDCharacter::ActivateFocus);
-	//PlayerInputComponent->BindAction("Focus", IE_Released, this, &ASSDCharacter::DeactivateFocus);
+	PlayerInputComponent->BindAction("Focus", IE_Pressed, this, &ASSDCharacter::TriggerFocus);
+	PlayerInputComponent->BindAction("Focus", IE_Released, this, &ASSDCharacter::HaltFocus);
 	//PlayerInputComponent->BindAction("BackDash", IE_Pressed, this, &ASSDCharacter::BackDash);
 	//PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &ASSDCharacter::OnStartSlide);
 	//PlayerInputComponent->BindAction("Slide", IE_Released, this, &ASSDCharacter::OnStopSlide);
@@ -190,6 +194,7 @@ ECharacterState ASSDCharacter::GetCharacterState(){
 	return CharacterState;
 }
 
+
 void ASSDCharacter::Attack() {
 
 	float capsuleRadius = GetCapsuleComponent()->GetScaledCapsuleRadius();
@@ -199,11 +204,11 @@ void ASSDCharacter::Attack() {
 	FCollisionQueryParams CollisionParams(FName(TEXT("Attack")), true, this);
 	CollisionParams.AddIgnoredActor(this);
 	CollisionParams.AddIgnoredComponent(GetCapsuleComponent());
-
-
+	float weaponLengthAboveBelow = 40.f;
+	FVector hitBoxSizeAboveBelow = FVector(30.f, 60.f, 30.f);
+	
 	if (GetPlayerMovement()->IsClimbing()) {
-		float weaponLengthAboveBelow = 30.f;
-		FVector hitBoxSizeAboveBelow = FVector(30.f, 40.f, 20.f);
+
 		float weaponLengthForward = 40.f;
 		FVector hitBoxSize = FVector(30.f, 30.f, 90.f);
 		
@@ -216,7 +221,8 @@ void ASSDCharacter::Attack() {
 		
 		bool isHitAbove = GetWorld()->SweepMultiByChannel(HitArrayAbove, StartAboveBelow, EndAboveBelow, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
 		DrawDebugBox(GetWorld(), StartAboveBelow, hitBoxSizeAboveBelow, FColor::Red, false, 2.f);
-		
+		InflictDamageHandler(isHitAbove, HitArrayAbove);
+
 		StartAboveBelow = GetActorLocation();
 		StartAboveBelow.Z -= capsuleHalfHeight + weaponLengthAboveBelow;
 		EndAboveBelow = StartAboveBelow;
@@ -225,6 +231,7 @@ void ASSDCharacter::Attack() {
 
 		bool isHitBelow = GetWorld()->SweepMultiByChannel(HitArrayBelow, StartAboveBelow, EndAboveBelow, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
 		DrawDebugBox(GetWorld(), StartAboveBelow, hitBoxSizeAboveBelow, FColor::Red, false, 2.f);
+		InflictDamageHandler(isHitBelow, HitArrayBelow);
 
 		FVector StartForward = GetActorLocation();
 		StartForward.Y += GetActorForwardVector().Y * (weaponLengthForward + capsuleRadius);
@@ -235,10 +242,10 @@ void ASSDCharacter::Attack() {
 		
 		bool isHitForward = GetWorld()->SweepMultiByChannel(HitArrayForward, StartForward, EndForward, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
 		DrawDebugBox(GetWorld(), StartForward, hitBoxSize, FColor::Red, false, 2.f);
+		InflictDamageHandler(isHitForward, HitArrayForward);
+
 	}
 	else if (GetPlayerMovement()->IsFalling()) {
-		float weaponLengthAboveBelow = 30.f;
-		FVector hitBoxSizeAboveBelow = FVector(30.f, 40.f, 20.f);
 		float weaponLengthForwardBehind = 40.f;
 		FVector hitBoxSize = FVector(30.f, 30.f, 90.f);
 
@@ -251,6 +258,7 @@ void ASSDCharacter::Attack() {
 
 		bool isHitAbove = GetWorld()->SweepMultiByChannel(HitArrayAbove, StartAboveBelow, EndAboveBelow, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
 		DrawDebugBox(GetWorld(), StartAboveBelow, hitBoxSizeAboveBelow, FColor::Red, false, 2.f);
+		InflictDamageHandler(isHitAbove, HitArrayAbove);
 
 		StartAboveBelow = GetActorLocation();
 		StartAboveBelow.Z -= capsuleHalfHeight + weaponLengthAboveBelow;
@@ -260,6 +268,7 @@ void ASSDCharacter::Attack() {
 
 		bool isHitBelow = GetWorld()->SweepMultiByChannel(HitArrayBelow, StartAboveBelow, EndAboveBelow, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
 		DrawDebugBox(GetWorld(), StartAboveBelow, hitBoxSizeAboveBelow, FColor::Red, false, 2.f);
+		InflictDamageHandler(isHitBelow, HitArrayBelow);
 
 		FVector StartForwardBehind = GetActorLocation();
 		StartForwardBehind.Y += GetActorForwardVector().Y * (weaponLengthForwardBehind + capsuleRadius);
@@ -270,6 +279,7 @@ void ASSDCharacter::Attack() {
 
 		bool isHitForward = GetWorld()->SweepMultiByChannel(HitArrayForward, StartForwardBehind, EndForwardBehind, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
 		DrawDebugBox(GetWorld(), StartForwardBehind, hitBoxSize, FColor::Red, false, 2.f);
+		InflictDamageHandler(isHitForward, HitArrayForward);
 
 		StartForwardBehind = GetActorLocation();
 		StartForwardBehind.Y -= GetActorForwardVector().Y * (weaponLengthForwardBehind + capsuleRadius);
@@ -278,6 +288,7 @@ void ASSDCharacter::Attack() {
 
 		bool isHitBehind = GetWorld()->SweepMultiByChannel(HitArrayBehind, StartForwardBehind, EndForwardBehind, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
 		DrawDebugBox(GetWorld(), StartForwardBehind, hitBoxSize, FColor::Red, false, 2.f);
+		InflictDamageHandler(isHitBehind, HitArrayBehind);
 
 	}
 	else {
@@ -291,18 +302,22 @@ void ASSDCharacter::Attack() {
 		TArray<FHitResult> HitArray;
 		bool isHit = GetWorld()->SweepMultiByChannel(HitArray, Start, End, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
 		DrawDebugBox(GetWorld(), Start, hitBoxSize, FColor::Red, false, 2.f);
-		//bool isHit = GetWorld()->SweepMultiByChannel(FocusSphereZone, Start, End, FQuat::Identity, ECollisionChannel::ECC_WorldDynamic, Sphere, CollisionParams);
-		if (isHit) {
-			for (FHitResult Hit : HitArray) {
-				if (Hit.GetActor())
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, Hit.GetActor()->GetName());
 
+		InflictDamageHandler(isHit, HitArray);
+	}
+		//bool isHit = GetWorld()->SweepMultiByChannel(FocusSphereZone, Start, End, FQuat::Identity, ECollisionChannel::ECC_WorldDynamic, Sphere, CollisionParams);
+
+}
+void ASSDCharacter::InflictDamageHandler(bool isHit, TArray<FHitResult> HitArray) {
+	if (isHit) {
+		for (FHitResult Hit : HitArray) {
+			if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(ECustomTags::EnemyTag)) {
+				// I know I need to make an enemy parent class but I don't feel like refactoring shit right now so this is tech debt
+				InflictDamage(Hit.GetActor());
 			}
 		}
 	}
-
 }
-
 // DAMAGE
 
 void ASSDCharacter::InflictDamage(AActor* ImpactActor){
@@ -361,6 +376,20 @@ bool ASSDCharacter::IsDead(){
 		return false;
 	}
 }
+
+// Focus
+bool ASSDCharacter::IsFocused() const {
+	return bFocused;
+}
+void ASSDCharacter::TriggerFocus() {
+	GetPlayerMovement()->TriggerFocusMovement();
+	TriggerFocus_BP();
+}
+void ASSDCharacter::HaltFocus() {
+	GetPlayerMovement()->HaltFocusMovement();
+	HaltFocus_BP();
+}
+
 
 // SLIDE 
 

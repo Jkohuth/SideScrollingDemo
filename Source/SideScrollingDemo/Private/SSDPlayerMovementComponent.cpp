@@ -23,15 +23,16 @@ USSDPlayerMovementComponent::USSDPlayerMovementComponent(const FObjectInitialize
     SetPlaneConstraintAxisSetting(LockXAxis);
     bOrientRotationToMovement = true;
 
-    AirControl = 0.6f;
-    JumpZVelocity = 1750.f;
-    GroundFriction = 3.f;
-    MaxWalkSpeed = 1300.f;
-    MaxFlySpeed = 600.f;
+    AirControl = NormAirControl;
+    JumpZVelocity = NormJumpZVelocity;
+    GroundFriction = NormGroundFriction;
+    MaxWalkSpeed = NormMaxWalkSpeed;
+    MaxFlySpeed = NormMaxFlySpeed; // Why is this here?
 	GravityScale = RisingGravityScalar;
+	MaxAcceleration = NormMaxAcceleration;
+	WallSlideFriction = NormWallSlideFriction; // Pretty Sure I made this variable
+
 	bNotifyApex = true;
-	MaxAcceleration = 3500.F;
-	WallSlideFriction = 3.0f;
 	RotationRate = FRotator(0.f, 2160.f, 0.f); // Want snappy turn arounds
 
 
@@ -489,6 +490,34 @@ bool USSDPlayerMovementComponent::IsClimbing() const {
 bool USSDPlayerMovementComponent::IsGrinding() const {
 	return (MovementMode == MOVE_Custom) && (CustomMovementMode == MOVE_Grind) && UpdatedComponent;
 }
+void USSDPlayerMovementComponent::TriggerFocusMovement() {
+	if (this) {
+		AirControl = FocusAirControl * NormAirControl;
+		JumpZVelocity = FocusJumpZVelocity * NormJumpZVelocity;
+		GroundFriction = FocusGroundFriction * NormGroundFriction;
+		MaxWalkSpeed = FocusMaxWalkSpeed * NormMaxWalkSpeed;
+		GravityScale = FocusGravityScale * RisingGravityScalar;
+		MaxAcceleration = FocusMaxAcceleration * NormMaxAcceleration;
+	}
+
+
+
+	// I spent this evening doing what I do all day cause I want to bring these ideas to life
+	// And I'm not even that good 14 - 1 - 2020
+}
+void USSDPlayerMovementComponent::HaltFocusMovement() {
+	if (this) {
+		AirControl = NormAirControl;
+		JumpZVelocity = NormJumpZVelocity;
+		GroundFriction = NormGroundFriction;
+		MaxWalkSpeed = NormMaxWalkSpeed;
+		GravityScale = RisingGravityScalar;
+		MaxAcceleration = NormMaxAcceleration;
+	}
+
+}
+
+
 void USSDPlayerMovementComponent::BackDash(){
 
 }

@@ -105,6 +105,28 @@ public:
 	UPROPERTY(EditAnywhere)
 	FVector wallSlideVelocity;
 
+	// Focus
+
+	// Brute force it for now does it really matter if you prematurly optimize?
+	float NormAirControl = 0.6f;
+	float NormJumpZVelocity = 1750.f;
+	float NormGroundFriction = 3.f;
+	float NormMaxWalkSpeed = 1300.f;
+	float NormMaxFlySpeed = 600.f;
+	float NormMaxAcceleration = 3500.f;
+	float NormWallSlideFriction = 3.0f;
+
+	// Should be within a struct but fuck you I'm tired
+	float FocusAirControl = 1.5;
+	float FocusJumpZVelocity = 2.0f;
+	float FocusGroundFriction = .01f;
+	float FocusMaxWalkSpeed = 2.0f;
+	float FocusMaxAcceleration = 3.f;
+	float FocusGravityScale = 2.0f;
+
+	void TriggerFocusMovement();
+	void HaltFocusMovement();
+
 	// Grind
 	void PhysGrind(float DeltaTime, int32 Iterations);
 	bool IsGrinding() const;

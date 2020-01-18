@@ -44,6 +44,7 @@ namespace ECustomTags {
 	
 	// Later I may seperate the enemies from the movement modes
 	const FName PlayerTag = FName("player");
+	const FName EnemyTag = FName("enemy");
 	const FName LevelBoundsTag = FName("levelbounds");
 
 

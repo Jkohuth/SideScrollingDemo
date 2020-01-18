@@ -72,6 +72,8 @@ public:
 	void SetupJumpCalculations();
 	/////////////////////////////
 
+	void InflictDamageHandler(bool isHit, TArray<FHitResult> HitArray);
+
 	// DAMAGE
 
 	UPROPERTY(EditAnywhere)
@@ -119,6 +121,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Pawn|Character")
 	bool IsClimbing() const;
 
+	// Focus - Think of a better name (Tranquil Fury, calm rage, ruhiger Grimm)
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bFocused = false;
+	
+	UFUNCTION(BlueprintCallable, Category = "Pawn|Character")
+	bool IsFocused() const;
+
+	UFUNCTION()
+	void TriggerFocus();
+
+	UFUNCTION()
+	void HaltFocus();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Focus")
+	void TriggerFocus_BP();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Focus")
+	void HaltFocus_BP();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float effectRadius = 0.f;
