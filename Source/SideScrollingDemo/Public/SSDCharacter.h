@@ -125,9 +125,20 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bFocused = false;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Focus")
+	float FocusBarPercentage = 1.f;
+
+	UFUNCTION(BlueprintCallable)
+		void AdjustFocusBarPercentage(float DeltaTime);
+
+
+
 	UFUNCTION(BlueprintCallable, Category = "Pawn|Character")
 	bool IsFocused() const;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Focus")
+		float FocusReductionRate = 3.0f;
 
 	UFUNCTION()
 	void TriggerFocus();

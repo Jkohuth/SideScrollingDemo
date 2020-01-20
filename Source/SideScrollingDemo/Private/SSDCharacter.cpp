@@ -59,7 +59,6 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
-	SetCharacterState(ECharacterState::ACTIVE);
 
 }
 void ASSDCharacter::OnConstruction() {
@@ -68,6 +67,8 @@ void ASSDCharacter::OnConstruction() {
 void ASSDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SetCharacterState(ECharacterState::ACTIVE);
 	CameraBounds->OnConstructionComponent();
 
 	if (GetPlayerMovement()) {
@@ -85,7 +86,7 @@ void ASSDCharacter::BeginPlay()
 void ASSDCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	AdjustFocusBarPercentage(DeltaTime);
 	// Keep Player within Camera Bounds
 	CameraBounds->UpdatePosition(GetCapsuleComponent());
 }
@@ -382,14 +383,35 @@ bool ASSDCharacter::IsFocused() const {
 	return bFocused;
 }
 void ASSDCharacter::TriggerFocus() {
+	bFocused = true;
 	GetPlayerMovement()->TriggerFocusMovement();
 	TriggerFocus_BP();
 }
 void ASSDCharacter::HaltFocus() {
+	bFocused = false;
 	GetPlayerMovement()->HaltFocusMovement();
 	HaltFocus_BP();
 }
+void ASSDCharacter::AdjustFocusBarPercentage(float DeltaTime) {
+	if (!bFocused) return;
+	if (FocusBarPercentage > 0.f) {
+		FocusBarPercentage -= DeltaTime / FocusReductionRate;
 
+
+	}
+	else
+	{
+		if (GetCharacterState() != ECharacterState::DEAD) {
+			float DamageAmount = 1.f;
+			FHitResult Hit(1.f);
+			TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+			FPointDamageEvent DamageEvent(DamageAmount, Hit, GetActorForwardVector(), ValidDamageTypeClass);
+			ReceiveDamage(1.f, DamageEvent, GetController(), this);
+			FocusBarPercentage = 1.f;
+		}
+	}
+	
+}
 
 // SLIDE 
 
