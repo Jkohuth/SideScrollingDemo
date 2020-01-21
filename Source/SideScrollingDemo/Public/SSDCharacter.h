@@ -84,7 +84,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Health = 1.0f;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float FullHealth = 3.0;
 
 	UFUNCTION(BlueprintCallable)
@@ -103,11 +103,17 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Damage")
 	float ReceiveDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser);
 
+	UFUNCTION(BlueprintCallable, Category = "Damage")
+		void DeathHandler();
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Anim")
 	void TriggerDeathAnim();
 
 	UFUNCTION(BlueprintCallable, Category = "Player")
 	void Respawn(FVector LastCheckPoint);
+
+	UPROPERTY(BlueprintReadWrite, Category = "Player")
+	FVector RespawnLocation;
 
 	// CHARACTER STATE
 	UFUNCTION(BlueprintCallable, Category = "Player")

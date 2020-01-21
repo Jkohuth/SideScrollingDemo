@@ -65,3 +65,18 @@ Falling Platforms require timeline - Current implementation of the platforms lea
 			NOTE: Hitting ground shouldn't be a cause for resetting immediately, still have the duration be set in a timeline or timer no clipping through the ground
 
 
+20 - 1 - 2020
+	Got quite alot accomplished today
+
+	Health Point - In lieu of a resting animation stop point for saving and healing there is now a box emitting particles that immediately heal and restore the player upon overlapping
+					Becomes the new spawn point as well
+					Saving for a game aimed at completeing a single level seems overkill
+	HUD - Player now has his health and focus displayed in the top right corner, in the most overkill brute force appoarch possible in order to display the health
+	Focus - Player now takes damage the longer they hold onto the focus effect
+				Custom depth shader is working as expected but its not what I want
+				Inidividaul values of the focus movement need to be heavily tweeked
+	Main Menu - Main menu now launches into the correct level
+	Asset discovery - I added a free village and cel shading asset
+	Wall Enemy - Fixed his overlap error, now only springing forward if the overlapped component is the capsule
+	Falling Platform - Now timeline based it functions as intended without hiccup
+

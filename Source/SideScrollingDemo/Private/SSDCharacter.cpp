@@ -70,6 +70,7 @@ void ASSDCharacter::BeginPlay()
 
 	SetCharacterState(ECharacterState::ACTIVE);
 	CameraBounds->OnConstructionComponent();
+	RespawnLocation = GetActorLocation();
 
 	if (GetPlayerMovement()) {
 		GetPlayerMovement()->SetMovementMode(MOVE_Walking);
@@ -128,6 +129,15 @@ void ASSDCharacter::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AAc
 		if (Rail) {
 			GetPlayerMovement()->TriggerGrindMovement(Rail->GetRailSpline(), SweepResult);
 		}
+	}
+	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::RestTag)) {
+		Health = FullHealth;
+		FocusBarPercentage = 1.f;
+		RespawnLocation = OtherActor->GetActorLocation();
+	}
+	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::BottomlessTag)) {
+		Health = 0.f;
+		DeathHandler();
 	}
 
 
@@ -348,15 +358,18 @@ float ASSDCharacter::ReceiveDamage_Implementation(float Damage, struct FPointDam
 
 		if (ActualDamage > 0.f) {
 			Health -= ActualDamage;
-			if (Health <= 0.f && GetCharacterState() != ECharacterState::DEAD) {
-				TriggerDeathAnim();
-				SetCharacterState(ECharacterState::DEAD);
-			}
+			DeathHandler();
 		}
 		//immuneToDamage = true;
 	}
 
 	return ActualDamage;
+}
+void ASSDCharacter::DeathHandler() {
+	if (Health <= 0.f && GetCharacterState() != ECharacterState::DEAD) {
+		TriggerDeathAnim();
+		SetCharacterState(ECharacterState::DEAD);
+	}
 }
 void ASSDCharacter::PostDamageImmunity(float DeltaTime){
 	currentDamageFrame++;
@@ -368,6 +381,7 @@ void ASSDCharacter::PostDamageImmunity(float DeltaTime){
 void ASSDCharacter::Respawn(FVector LastCheckPoint){
 	Health = FullHealth;
 	SetCharacterState(ECharacterState::ACTIVE);
+	FocusBarPercentage = 1.f;
 	SetActorLocation(LastCheckPoint); // May need to use a different method
 }
 bool ASSDCharacter::IsDead(){
@@ -407,7 +421,12 @@ void ASSDCharacter::AdjustFocusBarPercentage(float DeltaTime) {
 			TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
 			FPointDamageEvent DamageEvent(DamageAmount, Hit, GetActorForwardVector(), ValidDamageTypeClass);
 			ReceiveDamage(1.f, DamageEvent, GetController(), this);
-			FocusBarPercentage = 1.f;
+			if (Health > .0f) {
+				FocusBarPercentage = 1.f;
+			}
+		}
+		else if (GetCharacterState() == ECharacterState::DEAD) {
+			HaltFocus();
 		}
 	}
 	
