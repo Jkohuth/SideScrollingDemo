@@ -11,3 +11,72 @@ I still need to work on a game design document as illustrating my goals and aspi
 Editting the "Focus" mode is the next step I want the player movements to be extreme and exaggerated. However that needs to be stored in a USTRUCT and I still haven't properly learned those et
 
 I keep attempting to use mr mannequin but honestly I should just use shapetraces in order to get the gameplay across of what I want to accomplish, there are no proper attack animations that fit with the feel and style I am attempting to convey. Those collisions need to ignore the player though
+
+
+Cleaned the inflict damage portion inside SSDCharacter
+
+
+
+14 - 1 - 2020
+
+Character - Needs the "Focus mode" movements updated and edited along with the slow down of everything else slightly
+
+	What is the flow for activating the focus?
+
+	Player presses the focus button
+		Fuction is triggered enabling focus
+		Call function in movementcomponent to adjust movement values
+		slow down time for every entity in the game that isn't the player
+			Radius perhaps
+			Would desire the screen to adjust in color and radius 
+		call blueprint event - adjust the post processing shader
+
+	Player releases the focus button
+		Return everything to normal speed
+		revert player controls to be less "slippery"
+		revert screen post process shader
+
+ Basic implementation achieved, however its to useful without any extreme side effects yet need to add more features in order to make it a double edge sword
+ 	Perhaps make a UI with health and if the bar runs out take a Health? 
+
+	FUTURE:
+		Limit shader to a specific radius of the screen that grows and shrinks with command
+		Make player rebound if held to long Max duration
+			Create UI tell to determine when that is
+		Have screen revert slowly
+
+
+
+Falling Platforms require timeline - Current implementation of the platforms leaves a lot to be desired as they only fall when overlapped with
+
+	What is the flow of the falling platform
+
+	Player steps on platform
+		Perhaps it shakes a little and then begins to descend
+			(Sounds like polish with the shaking)
+
+		Player Overlaps box component
+			Bool is set to true
+		if(bool) start falling down 
+			Continues to fall whether a player is currently on top of the platform or not
+			Once it hits ground || enough time has passed
+				Reset Location
+
+			NOTE: Hitting ground shouldn't be a cause for resetting immediately, still have the duration be set in a timeline or timer no clipping through the ground
+
+
+20 - 1 - 2020
+	Got quite alot accomplished today
+
+	Health Point - In lieu of a resting animation stop point for saving and healing there is now a box emitting particles that immediately heal and restore the player upon overlapping
+					Becomes the new spawn point as well
+					Saving for a game aimed at completeing a single level seems overkill
+	HUD - Player now has his health and focus displayed in the top right corner, in the most overkill brute force appoarch possible in order to display the health
+	Focus - Player now takes damage the longer they hold onto the focus effect
+				Custom depth shader is working as expected but its not what I want
+				Inidividaul values of the focus movement need to be heavily tweeked
+	Main Menu - Main menu now launches into the correct level
+	Asset discovery - I added a free village and cel shading asset
+	Wall Enemy - Fixed his overlap error, now only springing forward if the overlapped component is the capsule
+	Falling Platform - Now timeline based it functions as intended without hiccup
+

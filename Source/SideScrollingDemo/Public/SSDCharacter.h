@@ -72,6 +72,8 @@ public:
 	void SetupJumpCalculations();
 	/////////////////////////////
 
+	void InflictDamageHandler(bool isHit, TArray<FHitResult> HitArray);
+
 	// DAMAGE
 
 	UPROPERTY(EditAnywhere)
@@ -82,7 +84,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Health = 1.0f;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float FullHealth = 3.0;
 
 	UFUNCTION(BlueprintCallable)
@@ -101,11 +103,17 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Damage")
 	float ReceiveDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser);
 
+	UFUNCTION(BlueprintCallable, Category = "Damage")
+		void DeathHandler();
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Anim")
 	void TriggerDeathAnim();
 
 	UFUNCTION(BlueprintCallable, Category = "Player")
 	void Respawn(FVector LastCheckPoint);
+
+	UPROPERTY(BlueprintReadWrite, Category = "Player")
+	FVector RespawnLocation;
 
 	// CHARACTER STATE
 	UFUNCTION(BlueprintCallable, Category = "Player")
@@ -119,6 +127,36 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Pawn|Character")
 	bool IsClimbing() const;
 
+	// Focus - Think of a better name (Tranquil Fury, calm rage, ruhiger Grimm)
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bFocused = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Focus")
+	float FocusBarPercentage = 1.f;
+
+	UFUNCTION(BlueprintCallable)
+		void AdjustFocusBarPercentage(float DeltaTime);
+
+
+
+	UFUNCTION(BlueprintCallable, Category = "Pawn|Character")
+	bool IsFocused() const;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Focus")
+		float FocusReductionRate = 3.0f;
+
+	UFUNCTION()
+	void TriggerFocus();
+
+	UFUNCTION()
+	void HaltFocus();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Focus")
+	void TriggerFocus_BP();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Focus")
+	void HaltFocus_BP();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float effectRadius = 0.f;

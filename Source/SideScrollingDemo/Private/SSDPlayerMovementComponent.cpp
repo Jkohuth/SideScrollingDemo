@@ -9,6 +9,7 @@
 #include "Components/CapsuleComponent.h"
 #include "SSDCharacter.h"
 #include "DrawDebugHelpers.h"
+#include "Updraft.h"
 
 
 
@@ -23,15 +24,16 @@ USSDPlayerMovementComponent::USSDPlayerMovementComponent(const FObjectInitialize
     SetPlaneConstraintAxisSetting(LockXAxis);
     bOrientRotationToMovement = true;
 
-    AirControl = 0.6f;
-    JumpZVelocity = 1750.f;
-    GroundFriction = 3.f;
-    MaxWalkSpeed = 1300.f;
-    MaxFlySpeed = 600.f;
+    AirControl = NormAirControl;
+    JumpZVelocity = NormJumpZVelocity;
+    GroundFriction = NormGroundFriction;
+    MaxWalkSpeed = NormMaxWalkSpeed;
+    MaxFlySpeed = NormMaxFlySpeed; // Why is this here?
 	GravityScale = RisingGravityScalar;
+	MaxAcceleration = NormMaxAcceleration;
+	WallSlideFriction = NormWallSlideFriction; // Pretty Sure I made this variable
+
 	bNotifyApex = true;
-	MaxAcceleration = 3500.F;
-	WallSlideFriction = 3.0f;
 	RotationRate = FRotator(0.f, 2160.f, 0.f); // Want snappy turn arounds
 
 
@@ -54,6 +56,8 @@ void USSDPlayerMovementComponent::InitializeComponent() {
 
 void USSDPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (IsUpdrafting()) UpdateUpdraftMovement();
 }
 
 void USSDPlayerMovementComponent::BeginPlay() {
@@ -390,98 +394,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 			return;
 		}
-		/*if (GetActorFeetLocation().Y > (beginSpline.Y + capsuleRadius) ||
-			GetActorFeetLocation().Y < (endSpline.Y - capsuleRadius)) {
-			SetMovementMode(MOVE_Falling);
-			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
-			return;
-		}*/
-		/*if(distanceAlongSpline >= localEndSpline.X){
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Got To the end of the rail");
-			FVector Forward = CharacterOwner->GetActorForwardVector();
-			UpdateLocation.Y += (grindSpeed * timeTick * Forward.Y);
-			CharacterOwner->SetActorLocation(UpdateLocation);
-			if (GetActorFeetLocation().Y < (endSpline.Y - capsuleRadius)) {
-				SetMovementMode(MOVE_Falling);
-				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
-				return;
-			}
-		}*/
-
-
-		
-		/*FVector OldVelocity = Velocity;
-		if(CurrentFloor.HitResult.GetActor())
-			FString tmp = CurrentFloor.HitResult.GetActor()->GetName();
-	
-		FVector Forward = CharacterOwner->GetActorForwardVector();
-		FVector RailSplineDirection = RailSplineReference->GetWorldDirectionAtDistanceAlongSpline(distanceAlongSpline);
-		float GravityDir = FVector::DotProduct(FVector(0.f, 0.f, GetGravityZ()), RailSplineDirection);
-		FVector GravityAccel = GravityDir * RailSplineDirection;
-		GravityAccel = FVector(0.f, GravityAccel.Y, GravityAccel.Z);
-
-		if (GravityAccel.Y == 0.f) {
-			GravityAccel.Y = Forward.Y * 20.0f;
-		}
-		Velocity += GravityAccel * timeTick;
-		
-		FVector gravityTime = GravityAccel * timeTick;
-		
-		//Apply Gravity
-		FRotator splineRotater = RailSplineReference->FindRotationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
-		FHitResult Hit(1.f);
-		FVector Adjusted = 0.5f*(Velocity + OldVelocity)*timeTick;
-
-		distanceAlongSpline += Adjusted.SizeSquared() * timeTick;
-
-		SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit);
-		
-		FString grindString = "Adjusted SafeMoveUpdate " + Adjusted.ToCompactString();
-								+ " GravityAcceleration: " + gravityTime.ToCompactString();
-		UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
-		
-		// Check if the player Jumped here
-
-		// Make sure the player is still grinding on the rail underneath
-
-		// Set Base to make sure you are not overlapping with the rail
-
-		if(Hit.IsValidBlockingHit()){
-			FVector location = GetActorLocation();
-			location.Z += 5.f;
-			CharacterOwner->SetActorLocation(location);
-		}
-
-		FHitResult RailHit;
-		FVector Start = GetActorFeetLocation();
-		FVector End = Start;
-		float tolerance = -10.f;
-		End.Z += tolerance;
-		FCollisionQueryParams CollisionParams;
-		CollisionParams.AddIgnoredActor(CharacterOwner);
-
-		bool isHit = GetWorld()->LineTraceSingleByChannel(RailHit, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionParams);
-		if (isHit && RailHit.GetActor() && !RailHit.GetActor()->ActorHasTag(ECustomTags::GrindTag)) {
-			SetMovementMode(MOVE_Walking);
-			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
-			return;
-		}
-		// Need to check the player has slid off the rail into the air
-
-		int32 NumSplinePts = RailSplineReference->GetNumberOfSplinePoints();
-		FVector beginSpline = RailSplineReference->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
-		FVector endSpline = RailSplineReference->GetLocationAtSplinePoint(NumSplinePts, ESplineCoordinateSpace::Local);
-		FVector LocalCloset = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
-
-		grindString = "Local: " + LocalCloset.ToCompactString() + " endsplinelocal " + endSpline.ToCompactString();
-		UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *grindString);
-
-		if(LocalCloset.X == beginSpline.X || LocalCloset.X == endSpline.X){
-			SetMovementMode(MOVE_Falling);
-			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
-			return;
-		}*/
-	}
+ 	}
 }
 bool USSDPlayerMovementComponent::IsClimbing() const {
 	return (MovementMode == MOVE_Custom) && (CustomMovementMode == MOVE_Climb) && UpdatedComponent;
@@ -489,6 +402,64 @@ bool USSDPlayerMovementComponent::IsClimbing() const {
 bool USSDPlayerMovementComponent::IsGrinding() const {
 	return (MovementMode == MOVE_Custom) && (CustomMovementMode == MOVE_Grind) && UpdatedComponent;
 }
+void USSDPlayerMovementComponent::TriggerFocusMovement() {
+	if (this) {
+		AirControl = FocusAirControl * NormAirControl;
+		JumpZVelocity = FocusJumpZVelocity * NormJumpZVelocity;
+		GroundFriction = FocusGroundFriction * NormGroundFriction;
+		MaxWalkSpeed = FocusMaxWalkSpeed * NormMaxWalkSpeed;
+		GravityScale = FocusGravityScale * RisingGravityScalar;
+		MaxAcceleration = FocusMaxAcceleration * NormMaxAcceleration;
+	}
+
+
+
+	// I spent this evening doing what I do all day cause I want to bring these ideas to life
+	// And I'm not even that good 14 - 1 - 2020
+}
+void USSDPlayerMovementComponent::TriggerUpdraftMovement(AUpdraft* updraft) {
+	bUpdraft = true;
+	SetMovementMode(MOVE_Falling);
+	updraftSpeed = updraft->GetDraftSpeed(GetActorFeetLocation());
+	UpdraftReference = updraft;
+	Velocity.Z += updraftSpeed;
+	// set bUpdraft to true
+	// set movementmode to falling
+	// Call the updraft component
+	// store the reference locally
+	// Add updraft velocity to the vertical component
+
+}
+void USSDPlayerMovementComponent::HaltUpdraftMovement() {
+	bUpdraft = false;
+	// Might be dangerous
+	//UpdraftReference = nullptr;
+	// called on overlap end
+	// set bUpdraft to false
+	// clear updraft component
+}
+void USSDPlayerMovementComponent::UpdateUpdraftMovement() {
+	updraftSpeed = UpdraftReference->GetDraftSpeed(GetActorFeetLocation());
+	if (Velocity.Z <= updraftSpeed) {
+		Velocity.Z = updraftSpeed;
+	}
+	// Don't let player velocity drop down below the threshold
+	// Check if the player has moved up to the less strong wind threshold
+}
+
+void USSDPlayerMovementComponent::HaltFocusMovement() {
+	if (this) {
+		AirControl = NormAirControl;
+		JumpZVelocity = NormJumpZVelocity;
+		GroundFriction = NormGroundFriction;
+		MaxWalkSpeed = NormMaxWalkSpeed;
+		GravityScale = RisingGravityScalar;
+		MaxAcceleration = NormMaxAcceleration;
+	}
+
+}
+
+
 void USSDPlayerMovementComponent::BackDash(){
 
 }
@@ -538,6 +509,9 @@ void USSDPlayerMovementComponent::JumpOffWall() {
 	Velocity = jumpWallVelocity;
 	Velocity.Y *= -1*towardWall;
 
+}
+bool USSDPlayerMovementComponent::IsUpdrafting() const {
+	return bUpdraft;
 }
 bool USSDPlayerMovementComponent::IsSliding() const {
 	return bInSlide;

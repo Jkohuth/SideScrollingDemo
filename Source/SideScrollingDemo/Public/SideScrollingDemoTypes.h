@@ -41,10 +41,13 @@ namespace ECustomTags {
 	const FName GrindTag = FName("grind");
 	
 	const FName BottomlessTag = FName("bottomless");
+	const FName WindTag = FName("wind");
 	
 	// Later I may seperate the enemies from the movement modes
 	const FName PlayerTag = FName("player");
+	const FName EnemyTag = FName("enemy");
 	const FName LevelBoundsTag = FName("levelbounds");
+	const FName RestTag = FName("rest");
 
 
 };
