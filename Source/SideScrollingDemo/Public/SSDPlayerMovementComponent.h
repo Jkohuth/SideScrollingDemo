@@ -22,9 +22,10 @@ protected:
 
 	USSDPlayerMovementComponent(const FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grind)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		class USplineComponent* RailSplineReference;
-
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+		class AUpdraft* UpdraftReference;
 	
 	TArray<bool> wallRayCheck;
 
@@ -104,6 +105,15 @@ public:
 	
 	UPROPERTY(EditAnywhere)
 	FVector wallSlideVelocity;
+
+	// Updraft
+
+	bool bUpdraft = false;
+	bool IsUpdrafting() const;
+	void TriggerUpdraftMovement(AUpdraft* updraft);
+	void HaltUpdraftMovement();
+	void UpdateUpdraftMovement();
+	float updraftSpeed;
 
 	// Focus
 

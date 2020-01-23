@@ -12,6 +12,7 @@
 #include "Components/PostProcessComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "DrawDebugHelpers.h"
+#include "Updraft.h"
 
 // Definition of tech debt
 #include "EnemyCharacter.h"
@@ -139,10 +140,20 @@ void ASSDCharacter::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AAc
 		Health = 0.f;
 		DeathHandler();
 	}
+	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::WindTag)) {
+		AUpdraft* updraft = Cast<AUpdraft>(OtherActor);
+		if (updraft) {
+			GetPlayerMovement()->TriggerUpdraftMovement(updraft);
+		}
+	}
 
 
 }
-void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) { }
+void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) { 
+	if (OtherActor && OtherActor->ActorHasTag(ECustomTags::WindTag)) {
+		GetPlayerMovement()->HaltUpdraftMovement();
+	}
+}
 void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
 	// Check for Wall Movement
 	if(OtherActor && OtherActor->ActorHasTag(ECustomTags::ClimbTag) && FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.2f) 
@@ -410,8 +421,6 @@ void ASSDCharacter::AdjustFocusBarPercentage(float DeltaTime) {
 	if (!bFocused) return;
 	if (FocusBarPercentage > 0.f) {
 		FocusBarPercentage -= DeltaTime / FocusReductionRate;
-
-
 	}
 	else
 	{
