@@ -152,6 +152,7 @@ void ASSDCharacter::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AAc
 void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) { 
 	if (OtherActor && OtherActor->ActorHasTag(ECustomTags::WindTag)) {
 		GetPlayerMovement()->HaltUpdraftMovement();
+
 	}
 }
 void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {

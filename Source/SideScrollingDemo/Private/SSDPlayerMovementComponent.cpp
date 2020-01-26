@@ -57,12 +57,18 @@ void USSDPlayerMovementComponent::InitializeComponent() {
 void USSDPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (IsUpdrafting()) UpdateUpdraftMovement();
+	if (IsUpdrafting()) UpdateUpdraftMovement(DeltaTime);
+	/*if (GravityScale == FallingGravityScalar) {
+		FString tmp = "Its falling gravity this time" + FString::SanitizeFloat(GetGravityZ());
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, tmp);
+
+	}*/
 }
 
 void USSDPlayerMovementComponent::BeginPlay() {
 	Super::BeginPlay();
     // Store these locally instead of calling a big function however if they change during a game there coudl be problems
+
     if (CharacterOwner) {
 		capsuleHalfHeight = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 		capsuleRadius = CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleRadius();
@@ -420,9 +426,12 @@ void USSDPlayerMovementComponent::TriggerFocusMovement() {
 void USSDPlayerMovementComponent::TriggerUpdraftMovement(AUpdraft* updraft) {
 	bUpdraft = true;
 	SetMovementMode(MOVE_Falling);
-	updraftSpeed = updraft->GetDraftSpeed(GetActorFeetLocation());
+	updraftSpeed = updraft->GetDraftSpeed(GetActorFeetLocation(), GravityScale);
+	FString tmp = "Updraft speed on trigger " + FString::SanitizeFloat(updraftSpeed);
+	tmp += " GravityScale " + FString::SanitizeFloat(GravityScale);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *tmp);
 	UpdraftReference = updraft;
-	Velocity.Z += updraftSpeed;
+
 	// set bUpdraft to true
 	// set movementmode to falling
 	// Call the updraft component
@@ -432,21 +441,31 @@ void USSDPlayerMovementComponent::TriggerUpdraftMovement(AUpdraft* updraft) {
 }
 void USSDPlayerMovementComponent::HaltUpdraftMovement() {
 	bUpdraft = false;
+
 	// Might be dangerous
 	//UpdraftReference = nullptr;
 	// called on overlap end
 	// set bUpdraft to false
 	// clear updraft component
 }
-void USSDPlayerMovementComponent::UpdateUpdraftMovement() {
-	updraftSpeed = UpdraftReference->GetDraftSpeed(GetActorFeetLocation());
-	if (Velocity.Z <= updraftSpeed) {
-		Velocity.Z = updraftSpeed;
+void USSDPlayerMovementComponent::UpdateUpdraftMovement(float DeltaTime) {
+
+	 updraftSpeed = UpdraftReference->GetDraftSpeed(GetActorFeetLocation(), GravityScale);
+
+
+	 if (Velocity.Z <= updraftSpeed) {
+		 Velocity.Z += updraftSpeed * DeltaTime;
+		 FString print = "GravityScalar " + FString::SanitizeFloat(GravityScale)
+			 + " UpdraftSpeed " + FString::SanitizeFloat(updraftSpeed) + " Gravity " + FString::SanitizeFloat(GetGravityZ());
+		 //PrintStringToScreen(print);
 	}
 	// Don't let player velocity drop down below the threshold
 	// Check if the player has moved up to the less strong wind threshold
 }
+void USSDPlayerMovementComponent::PrintStringToScreen(FString print) {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, print);
 
+}
 void USSDPlayerMovementComponent::HaltFocusMovement() {
 	if (this) {
 		AirControl = NormAirControl;

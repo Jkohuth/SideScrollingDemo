@@ -112,7 +112,7 @@ public:
 	bool IsUpdrafting() const;
 	void TriggerUpdraftMovement(AUpdraft* updraft);
 	void HaltUpdraftMovement();
-	void UpdateUpdraftMovement();
+	void UpdateUpdraftMovement(float DeltaTime);
 	float updraftSpeed;
 
 	// Focus
@@ -120,7 +120,7 @@ public:
 	// Brute force it for now does it really matter if you prematurly optimize?
 	float NormAirControl = 0.6f;
 	float NormJumpZVelocity = 1750.f;
-	float NormGroundFriction = 3.f;
+	float NormGroundFriction = 8.f;
 	float NormMaxWalkSpeed = 1300.f;
 	float NormMaxFlySpeed = 600.f;
 	float NormMaxAcceleration = 3500.f;
@@ -149,6 +149,8 @@ public:
 	float slopeNormal;
 	bool bJumpOffGrind = false;
 	FVector UpdateLocation;
+
+	void PrintStringToScreen(FString print);
 private:
 	uint32 bInSlide:1;
 };
