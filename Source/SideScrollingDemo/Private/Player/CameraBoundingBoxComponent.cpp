@@ -16,44 +16,68 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
+	
 
-	// ...
+	
 	BoundingBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Bounds"));
-	BoundingBox->InitBoxExtent(BoxSize);
-	BoundingBox->SetRelativeLocation(FVector(0.f, 0.f,0.f));
-	BoundingBox->bVisible = true;
-	BoundingBox->bHiddenInGame = true;
 
+	BoundingBox->SetRelativeLocation(FVector(0.f, 0.f,0.f));
+	BoundingBox->InitBoxExtent(MainBoxSize);
+	BoundingBox->bVisible = true;
+	BoundingBox->bHiddenInGame = false;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-
 	CameraComponent->SetupAttachment(BoundingBox);
 	CameraComponent->PostProcessSettings.AutoExposureMinBrightness = 1.f;
 	CameraComponent->PostProcessSettings.AutoExposureMaxBrightness = 1.f;
-	
-	CameraTransform.SetLocation(FVector(1000.f, -250.f, 0.f));
-	CameraTransform.SetRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, -180.f)));
-	CameraTransform.SetScale3D(FVector(1.f));
+
 
 	BlendFunc = (uint8)EViewTargetBlendFunction::VTBlend_Linear;
+	
 	// Have a Camera Transform in the blueprints its not necessary
 	//CameraComponent->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 	BoundingBox->OnComponentBeginOverlap.AddDynamic(this, &UCameraBoundingBoxComponent::OnBoundingBoxOverlapBegin);
 	BoundingBox->OnComponentEndOverlap.AddDynamic(this, &UCameraBoundingBoxComponent::OnBoundingBoxOverlapEnd);
 	BoundingBox->OnComponentHit.AddDynamic(this, &UCameraBoundingBoxComponent::OnHit);
 
-	BoxExtent = BoundingBox->GetUnscaledBoxExtent();
+	BoxExtent = BoundingBox->GetScaledBoxExtent();
+	
+	MainCameraTransform.SetLocation(FVector(1000.f, -250.f, 0.f));
+	MainCameraTransform.SetRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, -180.f)));
+	MainCameraTransform.SetScale3D(FVector(1.f));
+
+	CaveCameraTransform.SetLocation(FVector(750.f, -250.f, 0.f));
+	CaveCameraTransform.SetRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, -180.f)));
+	CaveCameraTransform.SetScale3D(FVector(1.f));
+
 }
 void UCameraBoundingBoxComponent::OnConstructionComponent() {
-	CameraComponent->SetRelativeTransform(CameraTransform);
+	//SetCameraMode(ECameraMode::MAIN);
+	//BoundingBox->SetBoxExtent(MainBoxSize);
+	CameraTransform = MainCameraTransform;
+	CameraComponent->SetRelativeTransform(MainCameraTransform);
 	CameraComponent->SetFieldOfView(FoV);
-	UE_LOG(LogClass, Log, TEXT("OnConstructionComponent"));
 
 }
 
 void UCameraBoundingBoxComponent::InitializeComponent() {
 	Super::InitializeComponent();
-	UE_LOG(LogClass, Log, TEXT("Initialized COmponent"));
+	UE_LOG(LogClass, Log, TEXT("Initialized Component"));
+}
+// This works but requires a smoother transition
+void UCameraBoundingBoxComponent::SetCameraMode(ECameraMode mode) {
+	switch (mode) {
+		case MAIN:
+			BoxSize = MainBoxSize;
+			CameraTransform = MainCameraTransform;
+			break;
+		case CAVE:
+			BoxSize = CaveBoxSize;
+			CameraTransform = CaveCameraTransform;
+			break;
+	}
+	BoundingBox->SetBoxExtent(BoxSize);
+	CameraComponent->SetRelativeTransform(CameraTransform);
 }
 // Called when the game starts
 void UCameraBoundingBoxComponent::BeginPlay()
@@ -136,7 +160,7 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 
 	//Origin = this->GetActorLocation();
 	Origin  = BoundingBox->GetComponentLocation();
-	//BoxExtent = BoundingBox->GetUnscaledBoxExtent();
+	BoxExtent = BoundingBox->GetScaledBoxExtent();
 	
 	right = Origin.Y - BoxExtent.Y; // The sign has to do with the way the screen is oriented
 	left = Origin.Y + BoxExtent.Y;

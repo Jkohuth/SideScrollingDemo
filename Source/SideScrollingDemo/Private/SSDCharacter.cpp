@@ -146,13 +146,20 @@ void ASSDCharacter::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AAc
 			GetPlayerMovement()->TriggerUpdraftMovement(updraft);
 		}
 	}
+	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::CaveTag)) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Cave Overlap");
+		CameraBounds->SetCameraMode(ECameraMode::CAVE);
+
+	}
 
 
 }
 void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) { 
 	if (OtherActor && OtherActor->ActorHasTag(ECustomTags::WindTag)) {
 		GetPlayerMovement()->HaltUpdraftMovement();
-
+	}
+	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::CaveTag)) {
+		CameraBounds->SetCameraMode(ECameraMode::MAIN);
 	}
 }
 void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
