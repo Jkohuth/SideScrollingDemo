@@ -24,7 +24,7 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	BoundingBox->SetRelativeLocation(FVector(0.f, 0.f,0.f));
 	BoundingBox->InitBoxExtent(MainBoxSize);
 	BoundingBox->bVisible = true;
-	BoundingBox->bHiddenInGame = false;
+	//BoundingBox->bHiddenInGame = false;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComponent->SetupAttachment(BoundingBox);
@@ -64,8 +64,9 @@ void UCameraBoundingBoxComponent::InitializeComponent() {
 	Super::InitializeComponent();
 	UE_LOG(LogClass, Log, TEXT("Initialized Component"));
 }
-// This works but requires a smoother transition
+// This works but requires a smoother transition perhaps a timeline
 void UCameraBoundingBoxComponent::SetCameraMode(ECameraMode mode) {
+	// There should be a timeline for transitions here
 	switch (mode) {
 		case MAIN:
 			BoxSize = MainBoxSize;

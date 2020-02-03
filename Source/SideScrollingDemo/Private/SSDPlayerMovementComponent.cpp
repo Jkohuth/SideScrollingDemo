@@ -312,16 +312,12 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		remainingTime -= timeTick;
 
 		// Store Current Values
-		UPrimitiveComponent* const OldBase = GetMovementBase();
-		const FVector PreviousBaseLocation = (OldBase != NULL) ? OldBase->GetComponentLocation() : FVector::ZeroVector;
 		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
 		FVector OldVelocity = Velocity;
 
 		RestorePreAdditiveRootMotionVelocity();
 
-		//FVector worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
-
-		FVector worldDirAtFeetLoc = RailSplineReference->FindDirectionClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
+		//FVector worldDirAtFeetLoc = RailSplineReference->FindDirectionClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
 
 		float oldDistanceAlongSpline = distanceAlongSpline;
 
@@ -338,6 +334,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		
 		//Acceleration = GravityDirAlongRail * worldDirAtDist;
 		Velocity += GravityAlongRail * timeTick;
+		
 		//Velocity.GetClampedToMaxSize(250.f);
 
 		grindSpeed = FVector::DotProduct(Velocity, worldDirAtDist);
@@ -346,7 +343,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, grindString);
 		//CalcVelocity(DeltaTime, grindFriction, false, GetMaxBrakingDeceleration());
 
-
+		//Should be in a struct thats initiated with the spline component
 		FVector beginSpline = RailSplineReference->GetWorldLocationAtSplinePoint(0);
 		FVector localBeginSpline = RailSplineReference->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
 		FVector endSpline = RailSplineReference->GetWorldLocationAtSplinePoint(RailSplineReference->GetNumberOfSplinePoints());
@@ -372,9 +369,17 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		const FVector Adjusted = worldDirAtDist * grindSpeed * timeTick;
 		//const FVector Adjusted = Velocity * timeTick;
 		//Adjusted = Adjusted * timeTick;
-
+		
+		//CharacterOwner->SetActorLocation();
 		SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit);
 		
+		FVector localPlayerLocationAlongSpline = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
+
+		FString tmp = "Local Player Location " + localPlayerLocationAlongSpline.ToCompactString();
+		tmp += " begin local " + localBeginSpline.ToCompactString();
+		tmp += " end local " + localEndSpline.ToCompactString();
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *tmp);
+
 		if (Hit.IsValidBlockingHit()) {
 			
 			if(Hit.GetActor() && !Hit.GetActor()->ActorHasTag(ECustomTags::GrindTag)){
@@ -399,6 +404,25 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 			SetMovementMode(MOVE_Falling);
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 			return;
+		}
+		tmp = "before call";
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *tmp);
+
+		if (localPlayerLocationAlongSpline.Equals(localBeginSpline, .25f) ||
+			localPlayerLocationAlongSpline.Equals(localEndSpline, .25f)) {
+			tmp = "before call";
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *tmp);
+			FVector StartTrace = GetActorFeetLocation();
+			FVector EndTrace = StartTrace;
+			EndTrace.Z -= 10.f;
+			FCollisionQueryParams CollisionParams;
+			CollisionParams.AddIgnoredActor(CharacterOwner);
+			DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Emerald);
+			if (GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams)) {
+				if (Hit.bBlockingHit && Hit.GetActor() && !Hit.GetActor()->ActorHasTag(ECustomTags::GrindTag)) {
+					SetMovementMode(MOVE_Walking);
+				}
+			}
 		}
  	}
 }
@@ -503,6 +527,8 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpl
 		float distanceToSplinePt2 = RailSpline->GetDistanceAlongSplineAtSplinePoint(splinePtAfterPlayer);
 		distanceAlongSpline = (playerDistInSplinePt - splinePtBeforePlayer) * (distanceToSplinePt2 - distanceToSplinePt1);
 		distanceAlongSpline += distanceToSplinePt1;
+		FString tmp = "Sp1 " + FString::SanitizeFloat(distanceToSplinePt1) + " Sp2 " + FString::SanitizeFloat(distanceToSplinePt2) + " distAlong " + FString::SanitizeFloat(distanceAlongSpline);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, tmp);
 
 		FVector worldLocAtDist = RailSpline->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
 		FVector worldDirAtDist = RailSpline->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
