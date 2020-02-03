@@ -32,6 +32,10 @@ UENUM(BlueprintType)
 enum ENavigationType {
 	MainLeft, MainRight
 };
+UENUM(BlueprintType)
+enum ECameraMode {
+	MAIN, CAVE
+};
 
 namespace ECustomTags {
 	const FName RailTag = FName("rail");
@@ -40,9 +44,10 @@ namespace ECustomTags {
 	const FName ClimbTag = FName("climb");
 	const FName GrindTag = FName("grind");
 	
+	// Enivronment
 	const FName BottomlessTag = FName("bottomless");
 	const FName WindTag = FName("wind");
-	
+	const FName CaveTag = FName("cave");
 	// Later I may seperate the enemies from the movement modes
 	const FName PlayerTag = FName("player");
 	const FName EnemyTag = FName("enemy");

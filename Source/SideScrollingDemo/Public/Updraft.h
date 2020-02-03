@@ -37,7 +37,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	float GetDraftSpeed(FVector ActorLocation);
+	float GetDraftSpeed(FVector ActorLocation, float GravityScalar);
 
 
 	FORCEINLINE class UBoxComponent* GetUpdraftVolume() const { return UpdraftVolume;  }

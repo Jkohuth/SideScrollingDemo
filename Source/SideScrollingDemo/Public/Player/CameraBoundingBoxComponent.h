@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "SideScrollingDemoTypes.h"
 #include "CameraBoundingBoxComponent.generated.h"
 
 
@@ -38,7 +39,7 @@ public:
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	UPROPERTY(EditAnywhere)
-	FVector BoxSize = FVector(50.f, 300.f, 325.f);
+	FVector BoxSize;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FTransform CameraTransform;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -73,6 +74,19 @@ public:
 	FVector CameraFollowExtentsPrevious;
 	
 	bool CheckLevelBounds();
+
+	void SetCameraMode(ECameraMode mode);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector MainBoxSize = FVector(50.f, 300.f, 325.f);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FTransform MainCameraTransform;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector CaveBoxSize = FVector(50.f, 200.f, 275.f);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FTransform CaveCameraTransform;
 
 	UFUNCTION(BlueprintCallable)
 		void InitializePosition(APlayerController*  PlayerController, AActor* ActorInFocus, UCapsuleComponent* targetCapsule);

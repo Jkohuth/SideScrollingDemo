@@ -41,8 +41,8 @@ AMalePlayer::AMalePlayer(const FObjectInitializer& ObjectInitializer)
 
 	//Camera = CreateDefaultSubobject<ACameraBoundingBox>(TEXT("Camera"));
 	//SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
-	CameraBounds = CreateDefaultSubobject<UCameraBoundingBoxComponent>(TEXT("CameraBounds"));
-	CameraBounds->GetCameraComponent()->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+	//CameraBounds = CreateDefaultSubobject<UCameraBoundingBoxComponent>(TEXT("CameraBounds"));
+	//CameraBounds->GetCameraComponent()->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 
 	MalePlayerMovement = Cast<UMalePlayerMovementComponent>(GetCharacterMovement());
 	
@@ -74,7 +74,7 @@ void AMalePlayer::BeginPlay()
 void AMalePlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	CameraBounds->UpdatePosition(GetCapsuleComponent());
+	//CameraBounds->UpdatePosition(GetCapsuleComponent());
 	if (isJumping) countJumpTime += DeltaTime;
 	if (isFocusing) { 
 		UpdateFocus(DeltaTime);

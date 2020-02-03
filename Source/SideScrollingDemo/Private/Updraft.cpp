@@ -17,8 +17,8 @@ AUpdraft::AUpdraft()
 
 	Draft = CreateDefaultSubobject<UParticleSystem>(TEXT("Particle"));
 	
-	strongDraftSpeed = 1500.f;
-	weakDraftSpeed = 980.f;
+	strongDraftSpeed = 1450.f;
+	weakDraftSpeed = 98000.f;
 
 
 
@@ -43,12 +43,14 @@ void AUpdraft::Tick(float DeltaTime)
 
 }
 
-float AUpdraft::GetDraftSpeed(FVector ActorLocation) {
+float AUpdraft::GetDraftSpeed(FVector ActorLocation, float GravityScalar) {
+	float ret;
 	if (ActorLocation.Z >= strongDraftThreshold) {
-		return strongDraftSpeed;
+		ret = strongDraftSpeed;
 	}
 	else if (ActorLocation.Z >= weakDraftThreshold) {
-		return weakDraftSpeed;
-	} 
-	return 0;
+		ret = weakDraftSpeed;
+	}
+	ret *= GravityScalar;
+	return ret;
 }
