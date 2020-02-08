@@ -232,7 +232,7 @@ void AMalePlayer::UpdateFocus(float DeltaTime) {
 		for (auto& Hit : FocusSphereZone) {
 			if (Hit.GetActor()) {
 				Hit.GetActor()->CustomTimeDilation = focusDilation;
-				FString tmp = FString::FString("The Actor that was dialated ") + GetDebugName(Hit.GetActor());
+				//FString tmp = FString::FString("The Actor that was dialated ") + GetDebugName(Hit.GetActor());
 				//UE_LOG(LogClass, Log, TEXT("The Actor that was dialated: %s"), *tmp);
 
 				//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, *tmp);
@@ -328,6 +328,7 @@ void AMalePlayer::InflictDamage(AActor* ImpactActor) {
 		}
 	}
 }
+/*
 float AMalePlayer::TakeDamage_Implementation(float Damage, struct FPointDamageEvent const & PointDamageEvent, class AController *EventInstigator, AActor *DamageCauser) {
 	FDamageEvent DamageEvent = PointDamageEvent;
 	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
@@ -350,6 +351,7 @@ float AMalePlayer::TakeDamage_Implementation(float Damage, struct FPointDamageEv
 
 	return ActualDamage;
 }
+*/
 void AMalePlayer::Respawn(FVector LastCheckPoint) {
 	Health = FullHealth;
 	SetCharacterState(ECharacterState::ACTIVE);

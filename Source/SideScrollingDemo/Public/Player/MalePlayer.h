@@ -116,8 +116,8 @@ public:
 		float FullHealth = 3.0;
 	UFUNCTION(BlueprintCallable)
 	void InflictDamage(AActor* ImpactActor);
-	UFUNCTION(BlueprintNativeEvent, Category="Damage")
-	float TakeDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser);
+	//UFUNCTION(BlueprintNativeEvent, Category="Damage")
+	//float TakeDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser);
 	UFUNCTION(BlueprintImplementableEvent, Category = "Anim")
 		void TriggerDeathAnim();
 

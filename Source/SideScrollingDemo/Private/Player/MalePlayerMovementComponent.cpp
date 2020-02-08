@@ -298,7 +298,7 @@ void UMalePlayerMovementComponent::PhysRail(float DeltaTime, int32 Iterations) {
 		}
 		// If Rail is suspended in Air make sure you stop the rail movement when the character isn't on it anymore
 		//FVector LocationClosetsTo = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
-		INT32 NumOfSplinePoints = RailSplineReference->GetNumberOfSplinePoints();
+		int32 NumOfSplinePoints = RailSplineReference->GetNumberOfSplinePoints();
 		FVector firstSplinePointLocation = RailSplineReference->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::World);
 		FVector lastSplinePointLocation = RailSplineReference->GetLocationAtSplinePoint(NumOfSplinePoints, ESplineCoordinateSpace::World);
 		
@@ -634,9 +634,9 @@ bool UMalePlayerMovementComponent::RestoreCollisionHeightAfterSlide() {
 	CharacterOwner->TeleportTo(NewLocation, CharacterOwner->GetActorRotation(), false, true);
 	CharacterOwner->GetCapsuleComponent()->SetCapsuleSize(DefRadius, DefHalfHeight);
 
-	if (bWantsSlideMeshRelativeLocationOffset) {
-		CharacterOwner->GetMesh()->SetRelativeLocation(DefCharacter->GetMesh()->RelativeLocation);
-	}
+//	if (bWantsSlideMeshRelativeLocationOffset) {
+//		CharacterOwner->GetMesh()->SetRelativeLocation(DefCharacter->GetMesh()->RelativeLocation);
+//	}
 	return true;
 }
 bool UMalePlayerMovementComponent::IsSliding() const {
@@ -644,7 +644,7 @@ bool UMalePlayerMovementComponent::IsSliding() const {
 }
 
 void UMalePlayerMovementComponent::AttachToRail(USplineComponent* RailSpline) {
-	if (MovementMode == MOVE_Custom && CustomMovementMode == MOVE_Rail) {
+/*	if (MovementMode == MOVE_Custom && CustomMovementMode == MOVE_Rail) {
 		return; // Do nothing we are already on a rail
 	}
 	else {
@@ -705,6 +705,7 @@ void UMalePlayerMovementComponent::AttachToRail(USplineComponent* RailSpline) {
 			}
 		}
 	}
+*/
 }
 float UMalePlayerMovementComponent::DistanceBetweenTwoVectors(FVector one, FVector two) {
 	float x = FMath::Square(one.X - two.X);

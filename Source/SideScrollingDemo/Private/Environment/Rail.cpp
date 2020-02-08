@@ -7,7 +7,7 @@
 #include "Engine.h"
 #include "Components/SplineMeshComponent.h"
 #include "MalePlayer.h"
-#include "malePlayerMovementComponent.h"
+#include "MalePlayerMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 
 
