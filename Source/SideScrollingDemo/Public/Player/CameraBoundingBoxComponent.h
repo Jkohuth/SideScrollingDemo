@@ -33,6 +33,9 @@ public:
 	UFUNCTION()
 		virtual void InitializeComponent();
 	UFUNCTION()
+		void InitializeCameraOverlapBounds(UPrimitiveComponent* OtherComp);
+
+	UFUNCTION()
 	void OnBoundingBoxOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnBoundingBoxOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
@@ -87,6 +90,9 @@ public:
 	FVector CaveBoxSize = FVector(50.f, 200.f, 275.f);
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FTransform CaveCameraTransform;
+
+	UFUNCTION(BlueprintCallable)
+		void SetLevelBounds(UPrimitiveComponent* Bounds);
 
 	UFUNCTION(BlueprintCallable)
 		void InitializePosition(APlayerController*  PlayerController, AActor* ActorInFocus, UCapsuleComponent* targetCapsule);

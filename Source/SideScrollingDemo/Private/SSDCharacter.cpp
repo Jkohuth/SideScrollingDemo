@@ -151,6 +151,10 @@ void ASSDCharacter::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AAc
 		CameraBounds->SetCameraMode(ECameraMode::CAVE);
 
 	}
+	else if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::LevelBoundsTag)) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Overlapped with level bounds");
+
+	}
 
 
 }
