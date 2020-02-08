@@ -24,7 +24,7 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	BoundingBox->SetRelativeLocation(FVector(0.f, 0.f,0.f));
 	BoundingBox->InitBoxExtent(MainBoxSize);
 	BoundingBox->bVisible = true;
-	//BoundingBox->bHiddenInGame = false;
+	BoundingBox->bHiddenInGame = true;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComponent->SetupAttachment(BoundingBox);
@@ -85,6 +85,7 @@ void UCameraBoundingBoxComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	Origin = BoundingBox->GetComponentLocation();
+
 	// ...
 	
 }
@@ -97,11 +98,15 @@ void UCameraBoundingBoxComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 	// ...
 }
+void UCameraBoundingBoxComponent::InitializeCameraOverlapBounds(UPrimitiveComponent* OtherComp) {
+
+}
 void UCameraBoundingBoxComponent::OnBoundingBoxOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
 
 	// Maybe using tags for everything isn't idea but before I start effecting performance you need to have something made
 	if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::LevelBoundsTag)) {
-		UBoxComponent* NewBounds = Cast<UBoxComponent>(OtherComp);
+		SetLevelBounds(OtherComp);
+		/*UBoxComponent* NewBounds = Cast<UBoxComponent>(OtherComp);
 		ALevelCameraFollowBounds* levelBounds = Cast<ALevelCameraFollowBounds>(OtherComp->GetAttachmentRootActor());
 		if (NewBounds && levelBounds) {
 			if (CameraFollowLocation == FVector::ZeroVector) {
@@ -117,12 +122,13 @@ void UCameraBoundingBoxComponent::OnBoundingBoxOverlapBegin(UPrimitiveComponent*
 				// Will have to clean this up later
 				CameraFollowExtents += NewBounds->GetScaledBoxExtent();
 			}
-		}
+		}*/
 	}
 }
 void UCameraBoundingBoxComponent::OnBoundingBoxOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
 
 	if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::LevelBoundsTag)) {
+		//SetLevelBounds(OtherComp);
 		UBoxComponent* OldBounds = Cast<UBoxComponent>(OtherComp);
 		ALevelCameraFollowBounds* levelBounds = Cast<ALevelCameraFollowBounds>(OtherComp->GetAttachmentRootActor());
 		if (OldBounds && levelBounds) {
@@ -145,6 +151,26 @@ void UCameraBoundingBoxComponent::OnHit(UPrimitiveComponent* HitComponent, AActo
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Hit the level bounds");
 	}
 }
+void UCameraBoundingBoxComponent::SetLevelBounds(UPrimitiveComponent* Bounds) {
+	UBoxComponent* NewBounds = Cast<UBoxComponent>(Bounds);
+	ALevelCameraFollowBounds* levelBounds = Cast<ALevelCameraFollowBounds>(Bounds->GetAttachmentRootActor());
+	if (NewBounds && levelBounds) {
+		if (CameraFollowLocation == FVector::ZeroVector) {
+			CameraFollowExtents = NewBounds->GetScaledBoxExtent();
+			CameraFollowLocation = levelBounds->GetActorLocation() + NewBounds->GetRelativeTransform().GetLocation();
+		}
+		else {
+			CameraFollowLocationPrevious = CameraFollowLocation;
+			CameraFollowExtentsPrevious = CameraFollowExtents;
+			CameraFollowLocationNext = levelBounds->GetActorLocation() + NewBounds->GetRelativeTransform().GetLocation();
+			CameraFollowExtentsNext = NewBounds->GetScaledBoxExtent();
+
+			// Will have to clean this up later
+			CameraFollowExtents += NewBounds->GetScaledBoxExtent();
+		}
+	}
+}
+
 void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsule){
 	if (targetCapsule == NULL) {
 		return;

@@ -168,6 +168,7 @@ public:
 	//void BackDashTrigger();
 
 	FORCEINLINE class USSDPlayerMovementComponent* GetPlayerMovement() const { return PlayerMovement; }
+	FORCEINLINE class UCameraBoundingBoxComponent* GetCameraBounds() const { return CameraBounds;  }
 
 	// SLIDE MOVEMENT
 
