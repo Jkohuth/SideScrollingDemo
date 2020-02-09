@@ -4,6 +4,7 @@
 #include "Updraft.h"
 #include "Components/BoxComponent.h"
 #include "Particles/ParticleSystem.h"
+#include "Engine.h"
 
 // Sets default values
 AUpdraft::AUpdraft()
@@ -28,8 +29,8 @@ AUpdraft::AUpdraft()
 void AUpdraft::BeginPlay()
 {
 	Super::BeginPlay();
-	FString tmp = UpdraftVolume->GetScaledBoxExtent().ToCompactString();
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, tmp);
+	//FString tmp = UpdraftVolume->GetScaledBoxExtent().ToCompactString();
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, tmp);
 
 	strongDraftThreshold = GetActorLocation().Z - UpdraftVolume->GetScaledBoxExtent().Z;
 	weakDraftThreshold = GetActorLocation().Z + (UpdraftVolume->GetScaledBoxExtent().Z / 2);
@@ -44,7 +45,7 @@ void AUpdraft::Tick(float DeltaTime)
 }
 
 float AUpdraft::GetDraftSpeed(FVector ActorLocation, float GravityScalar) {
-	float ret;
+	float ret = 0.f;
 	if (ActorLocation.Z >= strongDraftThreshold) {
 		ret = strongDraftSpeed;
 	}

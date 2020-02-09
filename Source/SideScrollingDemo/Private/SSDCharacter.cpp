@@ -13,7 +13,7 @@
 #include "GameFramework/PlayerController.h"
 #include "DrawDebugHelpers.h"
 #include "Updraft.h"
-
+#include "Engine.h"
 // Definition of tech debt
 #include "EnemyCharacter.h"
 #include "EnemyWall.h"
@@ -62,8 +62,7 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 
 
 }
-void ASSDCharacter::OnConstruction() {
-}
+
 // Called when the game starts or when spawned
 void ASSDCharacter::BeginPlay()
 {
