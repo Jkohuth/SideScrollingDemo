@@ -48,6 +48,7 @@ namespace ECustomTags {
 	const FName BottomlessTag = FName("bottomless");
 	const FName WindTag = FName("wind");
 	const FName CaveTag = FName("cave");
+	const FName EnvironmentDamageTag = FName("environmentdamage");
 	// Later I may seperate the enemies from the movement modes
 	const FName PlayerTag = FName("player");
 	const FName EnemyTag = FName("enemy");

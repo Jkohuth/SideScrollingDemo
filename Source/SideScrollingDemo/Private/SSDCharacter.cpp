@@ -184,6 +184,9 @@ void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 			GetPlayerMovement()->TriggerGrindMovement(Rail->GetRailSpline(), Hit);
 		}
 	}
+	else if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::EnvironmentDamageTag)) {
+		ReceiveEnvironmentalDamage(Hit);
+	}
 }
 
 // JUMP
@@ -341,6 +344,7 @@ void ASSDCharacter::Attack() {
 		//bool isHit = GetWorld()->SweepMultiByChannel(FocusSphereZone, Start, End, FQuat::Identity, ECollisionChannel::ECC_WorldDynamic, Sphere, CollisionParams);
 
 }
+// This will be removed when I use animations to send Anim notifies
 void ASSDCharacter::InflictDamageHandler(bool isHit, TArray<FHitResult> HitArray) {
 	if (isHit) {
 		for (FHitResult Hit : HitArray) {
@@ -386,6 +390,13 @@ float ASSDCharacter::ReceiveDamage_Implementation(float Damage, struct FPointDam
 	}
 
 	return ActualDamage;
+}
+void ASSDCharacter::ReceiveEnvironmentalDamage(FHitResult HitInfo) {
+	if (CharacterState == ECharacterState::ACTIVE) {
+		GetPlayerMovement()->KnockBack(HitInfo);
+		Health -= EnvironmentDamage;
+		DeathHandler();
+	}
 }
 void ASSDCharacter::DeathHandler() {
 	if (Health <= 0.f && GetCharacterState() != ECharacterState::DEAD) {
