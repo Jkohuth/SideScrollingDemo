@@ -387,8 +387,16 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		//Adjusted = Adjusted * timeTick;
 		
 		//CharacterOwner->SetActorLocation();
-		SafeMoveUpdatedComponent(Adjusted, PawnRotation, true, Hit);
-		
+		//SafeMoveUpdatedComponent(Adjusted, PawnRotation, true, Hit);
+
+		// Only works with thin rails
+		FVector newLocation;
+		newLocation = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
+		newLocation.Z += capsuleHalfHeight;
+
+
+		CharacterOwner->SetActorLocation(newLocation);
+
 		FVector localPlayerLocationAlongSpline = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
 
 		//FString tmp = "Local Player Location " + localPlayerLocationAlongSpline.ToCompactString();
@@ -397,7 +405,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *tmp);
 		if (!HasValidData()) return;
 
-		if (Hit.IsValidBlockingHit()) {
+		/*if (Hit.IsValidBlockingHit()) {
 			
 			if(Hit.GetActor() && !Hit.GetActor()->ActorHasTag(ECustomTags::GrindTag)){
 				SetMovementMode(MOVE_Walking);
@@ -411,6 +419,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 
 			CharacterOwner->SetActorLocation(correctionRail);
 		}
+		*/
 		if(bJumpOffGrind){
 			FVector upVector  = RailSplineReference->GetUpVectorAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
 			Velocity.Z += JumpZVelocity;
@@ -434,22 +443,26 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 			//tmp = "before call";
 			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *tmp);
 			FVector StartTrace = GetActorFeetLocation();
+			StartTrace.Y += capsuleRadius * FMath::Sign(Velocity.Y);
 			FVector EndTrace = StartTrace;
 			EndTrace.Z -= 50.f;
 			FCollisionQueryParams CollisionParams;
 			CollisionParams.AddIgnoredActor(CharacterOwner);
 			DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Red);
 			bool isHit = GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams);
-			if (Hit.bBlockingHit && Hit.GetActor() && Hit.GetActor()->ActorHasTag(ECustomTags::GrindTag)) {
-				continue;
-			}
-			else if(Hit.bBlockingHit && Hit.GetActor() && !Hit.GetActor()->ActorHasTag(ECustomTags::GrindTag)) {
+			//if (Hit.bBlockingHit && Hit.GetActor() && Hit.GetActor()->ActorHasTag(ECustomTags::GrindTag)) {
+			//	continue;
+			//}
+			if(Hit.bBlockingHit && Hit.GetActor() && !Hit.GetActor()->ActorHasTag(ECustomTags::GrindTag)) {
 				SetMovementMode(MOVE_Walking);
 				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 			}
 			else if (!Hit.bBlockingHit) {
 				// Make sure that capsule is over the edge
 				// This should be done in a large for loop
+				SetMovementMode(MOVE_Falling);
+				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+				return;
 				FHitResult leftHit;
 				StartTrace.Y += capsuleRadius;
 				EndTrace.Y += capsuleRadius;
