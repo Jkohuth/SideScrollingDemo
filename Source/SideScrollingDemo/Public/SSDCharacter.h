@@ -97,6 +97,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void InflictDamage(AActor* ImpactActor);
 
+	UFUNCTION(BlueprintCallable, Category = "Damage")
+		void ReceiveEnvironmentalDamage(FHitResult HitInfo);
+
+	float EnvironmentDamage = 1.f; // Keep it simple for now
+
 	// Handle Character Damage Taken
 	UFUNCTION(BlueprintNativeEvent, Category = "Damage")
 	float ReceiveDamage(float Damage, struct FPointDamageEvent const & DamageEvent, class AController *EventInstigator, AActor *DamageCauser);

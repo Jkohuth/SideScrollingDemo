@@ -31,6 +31,8 @@ public:
 		FVector OriginPos;
 	UPROPERTY(EditAnywhere)
 		float MaxWalkRadius = 1000.f;
+
+	FTimerHandle AnticipationTimer;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -45,6 +47,14 @@ public:
 		float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser);
 	UFUNCTION()
 		void InflictDamage(AActor* ImpactActor, const FHitResult& Hit);
+
+	UFUNCTION()
+		void DoAttack();
+	UFUNCTION()
+		void TriggerAttack();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Sense")
+		void PlayerSensed();
 
 	UFUNCTION()
 		void TurnAround();

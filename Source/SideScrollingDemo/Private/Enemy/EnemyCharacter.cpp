@@ -122,8 +122,7 @@ void AEnemyCharacter::OnSeePawn(APawn* OtherPawn) {
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, message);
 	ASSDCharacter* player = Cast<ASSDCharacter>(OtherPawn);
 	if (player && player->GetCharacterState() == ECharacterState::ACTIVE) {
-		Jump();
-		GetCharacterMovement()->Velocity.Y += GetActorForwardVector().Y * lungeVelocity;
+		TriggerAttack();
 	}
 }
 // Called to bind functionality to input
@@ -133,3 +132,12 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
+void AEnemyCharacter::TriggerAttack() {
+	GetWorld()->GetTimerManager().SetTimer(AnticipationTimer, this, &AEnemyCharacter::DoAttack, 1, false, 0.5);
+	PlayerSensed();
+}
+void AEnemyCharacter::DoAttack() {
+	GetWorld()->GetTimerManager().ClearTimer(AnticipationTimer);
+	Jump();
+	GetCharacterMovement()->Velocity.Y += GetActorForwardVector().Y * lungeVelocity;
+}

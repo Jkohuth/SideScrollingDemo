@@ -149,6 +149,7 @@ public:
 	float slopeNormal;
 	bool bJumpOffGrind = false;
 	FVector UpdateLocation;
+	FVector minGrindVelocity = FVector(0.f, 1000.f, 0.f);
 
 	void PrintStringToScreen(FString print);
 private:
