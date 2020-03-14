@@ -36,8 +36,14 @@ public:
 		virtual void InflictDamage(AActor* ImpactActor, const FHitResult& Hit);
 	
 	// Sensing
+	UPROPERTY(EditAnywhere)
+		float SensingInterval = .25f;
+	UPROPERTY(EditAnywhere)
+		float PeripheralVisionANgle = 35.f;
 	UFUNCTION()
-		void OnSeePawn(APawn *OtherPawn);
+		virtual void OnSeePawn(APawn *OtherPawn);
+	UFUNCTION()
+		virtual void TriggerAttack();
 
 	// Collision
 	UFUNCTION()
