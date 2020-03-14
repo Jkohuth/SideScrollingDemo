@@ -4,6 +4,7 @@
 #include "Enemy_Base.h"
 #include "Perception/PawnSensingComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "SSDCharacter.h"
 
 // Sets default values
 AEnemy_Base::AEnemy_Base()
@@ -49,9 +50,14 @@ void AEnemy_Base::InflictDamage(AActor* ImpactActor, const FHitResult& Hit) {
 }
 
 void AEnemy_Base::OnSeePawn(APawn* OtherPawn) {
+	ASSDCharacter* player = Cast<ASSDCharacter>(OtherPawn);
+	if (player && player->GetCharacterState() == ECharacterState::ACTIVE) {
+		TriggerAttack();
+	}
+}
+void AEnemy_Base::TriggerAttack() {
 
 }
-
 void AEnemy_Base::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
 
 }
