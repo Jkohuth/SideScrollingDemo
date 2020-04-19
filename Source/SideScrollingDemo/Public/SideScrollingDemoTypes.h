@@ -22,7 +22,7 @@ namespace EPlayerEffect
 }
 UENUM(BlueprintType)
 enum ECustomMovementMode {
-	MOVE_Wall, MOVE_Rail, MOVE_Path, MOVE_Grind, MOVE_Climb
+	MOVE_Wall, MOVE_Rail, MOVE_Path, MOVE_Grind, MOVE_Climb, MOVE_Swing
 };
 UENUM(BlueprintType)
 enum ECharacterState {
@@ -43,6 +43,7 @@ namespace ECustomTags {
 	const FName PathTag = FName("path");
 	const FName ClimbTag = FName("climb");
 	const FName GrindTag = FName("grind");
+	const FName SwingTag = FName("swing");
 	
 	// Enivronment
 	const FName BottomlessTag = FName("bottomless");

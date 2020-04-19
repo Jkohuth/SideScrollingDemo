@@ -26,6 +26,9 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	BoundingBox->bVisible = true;
 	BoundingBox->bHiddenInGame = true;
 
+	//BoundingBox->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, 180.f)));
+	BoundingBox->bAbsoluteRotation = true;
+	
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComponent->SetupAttachment(BoundingBox);
 	CameraComponent->PostProcessSettings.AutoExposureMinBrightness = 1.f;
@@ -40,6 +43,7 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	BoundingBox->OnComponentEndOverlap.AddDynamic(this, &UCameraBoundingBoxComponent::OnBoundingBoxOverlapEnd);
 	BoundingBox->OnComponentHit.AddDynamic(this, &UCameraBoundingBoxComponent::OnHit);
 
+
 	BoxExtent = BoundingBox->GetScaledBoxExtent();
 	
 	MainCameraTransform.SetLocation(FVector(1000.f, -250.f, 0.f));
@@ -49,6 +53,7 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	CaveCameraTransform.SetLocation(FVector(750.f, -250.f, 0.f));
 	CaveCameraTransform.SetRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, -180.f)));
 	CaveCameraTransform.SetScale3D(FVector(1.f));
+
 
 }
 void UCameraBoundingBoxComponent::OnConstructionComponent() {
@@ -230,6 +235,7 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 	//this->SetActorLocation(FVector(Origin.X, Origin.Y + shiftY, Origin.Z + shiftZ));
 	FVector updatedLocation = FVector(0.f, Origin.Y + shift.Y, Origin.Z + shift.Z);
 	//FMath::Clamp(updatedLocation.Y, CameraFollowLocation.Y + CameraFollowExtents.Y, CameraFollowLocation.Y - CameraFollowExtents.Y);
+	UE_LOG(LogClass, Log, TEXT("Camera Component Update Location %s"), *updatedLocation.ToCompactString());
 	BoundingBox->SetWorldLocation(updatedLocation);
 }
 bool UCameraBoundingBoxComponent::CheckLevelBounds() {

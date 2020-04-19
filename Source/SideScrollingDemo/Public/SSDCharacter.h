@@ -130,6 +130,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Pawn|Character")
 	bool IsClimbing() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Pawn|Character")
+	bool IsSwinging() const;
+
+	void TryToSwing();
+
 	// Focus - Think of a better name (Tranquil Fury, calm rage, ruhiger Grimm)
 
 	UPROPERTY(BlueprintReadOnly)
@@ -163,6 +168,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float effectRadius = 0.f;
+
+
 	// BACK DASH - needs button delay
 	//UFUNCTION(BlueprintCallable, Category = "MalePlayer")
 	//void BackDash();

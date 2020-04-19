@@ -101,6 +101,7 @@ void ASSDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	//PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &ASSDCharacter::DebugString);
 	PlayerInputComponent->BindAction("Focus", IE_Pressed, this, &ASSDCharacter::TriggerFocus);
 	PlayerInputComponent->BindAction("Focus", IE_Released, this, &ASSDCharacter::HaltFocus);
+	PlayerInputComponent->BindAction("Swing", IE_Pressed, this, &ASSDCharacter::TryToSwing);
 	//PlayerInputComponent->BindAction("BackDash", IE_Pressed, this, &ASSDCharacter::BackDash);
 	//PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &ASSDCharacter::OnStartSlide);
 	//PlayerInputComponent->BindAction("Slide", IE_Released, this, &ASSDCharacter::OnStopSlide);
@@ -461,6 +462,31 @@ void ASSDCharacter::AdjustFocusBarPercentage(float DeltaTime) {
 		}
 	}
 	
+}
+
+// Swing
+void ASSDCharacter::TryToSwing() {
+	FVector StartTrace = GetActorLocation();
+	StartTrace.Z += GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	FVector EndTrace = StartTrace;
+	EndTrace.Z += 1.f; // I don't think you can do shape traces in place
+
+
+	FVector HookSize = FVector(30.f, 70.f, 70.f); // Welcome to arbitary land
+	FCollisionShape HookVolume = FCollisionShape::MakeBox(HookSize);
+	
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+	FHitResult Hit;
+	GetWorld()->SweepSingleByChannel(Hit, StartTrace, EndTrace, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, HookVolume);
+	DrawDebugBox(GetWorld(), StartTrace, HookSize, FColor::Red, false, 2.f);
+
+	if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(ECustomTags::SwingTag)) {
+		GetPlayerMovement()->TriggerSwingMovement();
+	}
+}
+bool ASSDCharacter::IsSwinging() const {
+	return false;
 }
 
 // SLIDE 

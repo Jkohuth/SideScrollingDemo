@@ -1,0 +1,27 @@
+
+Currently I set up my game to function with a PS4 controller to a strangely warm reception. Excited that its playable and more satisfying with a game controller
+
+The game needs to be more mathematical, not in the nature of being about math but in the precision of the jumps, the seperation of obstacles the margins of error.
+Unfortunately I cannot commit to something like until I have enough gameplay to decide what the definite must be, however the desire to spread platforms based on current
+settings seems really engaging. 
+
+Fixed the Wall bug where the character would fall off if not enough of the capsule overlapped with the wall. 
+	Will Need to be added back in for the "Roll" mechanic but thats a feature request
+
+	x 0.03
+	y 0.108
+	-0.0245
+
+	-0.0833
+	0.01
+	-0.00831
+
+
+On sense player it will trigger a delay timer
+	During Timer:
+		Material Color will change
+		it will stop moving for a brief moment
+
+	TakeDamage
+		Enemy Material color will change
+
