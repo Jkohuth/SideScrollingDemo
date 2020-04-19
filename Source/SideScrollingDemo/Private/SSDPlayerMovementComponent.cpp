@@ -141,6 +141,9 @@ void USSDPlayerMovementComponent::PhysCustom(float DeltaTime, int32 Iterations) 
 		break;
 	case MOVE_Path:
 		break;
+	case MOVE_Swing:
+		PhysSwing(DeltaTime, Iterations);
+		break;
 	default:
 		UE_LOG(LogCharacterMovement, Warning, TEXT("Unsupported Movement Mode %d"), int32(MovementMode));
 		break;
@@ -561,6 +564,15 @@ void USSDPlayerMovementComponent::HaltFocusMovement() {
 
 }
 
+// Swing
+
+void USSDPlayerMovementComponent::TriggerSwingMovement() {
+	SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Swing);
+}
+
+void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
+
+}
 
 void USSDPlayerMovementComponent::BackDash(){
 

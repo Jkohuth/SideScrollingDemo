@@ -151,6 +151,11 @@ public:
 	FVector UpdateLocation;
 	FVector minGrindVelocity = FVector(0.f, 1000.f, 0.f);
 
+	// Swing
+	void PhysSwing(float DeltaTime, int32 Iterations);
+	//bool IsSwinging() const;
+	void TriggerSwingMovement();
+
 	void PrintStringToScreen(FString print);
 private:
 	uint32 bInSlide:1;
