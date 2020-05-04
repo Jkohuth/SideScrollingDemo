@@ -56,6 +56,9 @@ public:
 	uint8 BlendFunc;
 
 	void OnConstructionComponent();
+	void OnSSDCharacterBeginPlay(UCapsuleComponent* targetCapsule);
+
+	bool once = true;
 	
 	FVector Origin; // This is just origin
 	FVector BoxExtent; // This should exist somewhere in here

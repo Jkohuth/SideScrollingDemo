@@ -23,11 +23,12 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 
 	BoundingBox->SetRelativeLocation(FVector(0.f, 0.f,0.f));
 	BoundingBox->InitBoxExtent(MainBoxSize);
+	BoundingBox->bHiddenInGame = false;
 	BoundingBox->bVisible = true;
-	BoundingBox->bHiddenInGame = true;
-
-	//BoundingBox->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, 180.f)));
 	BoundingBox->bAbsoluteRotation = true;
+	BoundingBox->bAbsoluteLocation = true;
+	//BoundingBox->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, 180.f)));
+	//BoundingBox->bAbsoluteRotation = true;
 	
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComponent->SetupAttachment(BoundingBox);
@@ -42,7 +43,7 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	BoundingBox->OnComponentBeginOverlap.AddDynamic(this, &UCameraBoundingBoxComponent::OnBoundingBoxOverlapBegin);
 	BoundingBox->OnComponentEndOverlap.AddDynamic(this, &UCameraBoundingBoxComponent::OnBoundingBoxOverlapEnd);
 	BoundingBox->OnComponentHit.AddDynamic(this, &UCameraBoundingBoxComponent::OnHit);
-
+	
 
 	BoxExtent = BoundingBox->GetScaledBoxExtent();
 	
@@ -89,7 +90,6 @@ void UCameraBoundingBoxComponent::SetCameraMode(ECameraMode mode) {
 void UCameraBoundingBoxComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	Origin = BoundingBox->GetComponentLocation();
 
 	// ...
 	
@@ -104,6 +104,22 @@ void UCameraBoundingBoxComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	// ...
 }
 void UCameraBoundingBoxComponent::InitializeCameraOverlapBounds(UPrimitiveComponent* OtherComp) {
+
+}
+
+void UCameraBoundingBoxComponent::OnSSDCharacterBeginPlay(UCapsuleComponent* targetCapsule){
+	if(targetCapsule == NULL){
+		return;
+	}
+	CameraTransform = MainCameraTransform;
+	CameraComponent->SetRelativeTransform(MainCameraTransform);
+	CameraComponent->SetFieldOfView(FoV);
+	Origin = BoundingBox->GetComponentLocation();
+	halfHeight = targetCapsule->GetScaledCapsuleHalfHeight();
+	radius = targetCapsule->GetScaledCapsuleRadius();
+	
+	FString tmp = "Camera" + CameraComponent->GetRelativeLocation().ToCompactString() + "\nOrigin of the bounding box " + Origin.ToCompactString();
+	UE_LOG(LogClass, Log, TEXT("Camera Bounding Box Information %s"), *tmp);
 
 }
 void UCameraBoundingBoxComponent::OnBoundingBoxOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
@@ -181,8 +197,6 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 		return;
 	}
 	TargetLocation = targetCapsule->GetComponentLocation();
-	halfHeight = targetCapsule->GetScaledCapsuleHalfHeight();
-	radius = targetCapsule->GetScaledCapsuleRadius();
 
 
 	targetLeft = TargetLocation.Y + radius;
@@ -215,7 +229,7 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 	shift.Z = 0;
 
 	// Has to do with dumb orientation I need to fix that
-	if (targetRight > levelBoundsRight && targetRight < right) {
+	/*if (targetRight > levelBoundsRight && targetRight < right) {
 		shift.Y = targetRight - right;
 	}
 	else if (targetLeft < levelBoundsLeft && targetLeft > left) {
@@ -230,12 +244,20 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 	else if (targetTop < levelBoundsTop && targetTop > top) {
 		shift.Z = targetTop - top;
 
-	}
+	}*/
+	// Theres a certain point where the sign changes, 1 -> 0 -> -1, thats a headache but whatever
+	if(targetRight < right) shift.Y = targetRight - right;
+	else if(targetLeft > left) shift.Y = targetLeft - left;
+
+	if(targetBottom < bottom) shift.Z = targetBottom - bottom;
+	else if(targetTop > top) shift.Z = targetTop - top;
+
+	UE_LOG(LogClass, Log, TEXT("Camera Component Update Location %s"), *shift.ToCompactString());
 
 	//this->SetActorLocation(FVector(Origin.X, Origin.Y + shiftY, Origin.Z + shiftZ));
 	FVector updatedLocation = FVector(0.f, Origin.Y + shift.Y, Origin.Z + shift.Z);
 	//FMath::Clamp(updatedLocation.Y, CameraFollowLocation.Y + CameraFollowExtents.Y, CameraFollowLocation.Y - CameraFollowExtents.Y);
-	UE_LOG(LogClass, Log, TEXT("Camera Component Update Location %s"), *updatedLocation.ToCompactString());
+	//UE_LOG(LogClass, Log, TEXT("Camera Component Update Location %s"), *updatedLocation.ToCompactString());
 	BoundingBox->SetWorldLocation(updatedLocation);
 }
 bool UCameraBoundingBoxComponent::CheckLevelBounds() {
@@ -259,14 +281,14 @@ void UCameraBoundingBoxComponent::InitializePosition(APlayerController*  PlayerC
 void UCameraBoundingBoxComponent::ResetCamera(AActor* targetActor) {
 
 	TargetLocation = targetActor->GetActorLocation();
-	halfHeight = targetActor->GetSimpleCollisionHalfHeight();
-	radius = targetActor->GetSimpleCollisionRadius();
+	//halfHeight = targetActor->GetSimpleCollisionHalfHeight();
+	//radius = targetActor->GetSimpleCollisionRadius();
 	
 	FVector OffsetGround = TargetLocation;
 
 
 	OffsetGround.Z += (BoxExtent.Z - halfHeight);
-	FString resetString = "I Should probably add someinformation here: " +FString::SanitizeFloat(halfHeight) + " " + FString::FromInt(BoxExtent.Z) + " " + OffsetGround.ToCompactString();
+	FString resetString = "Reset Camera has been called: " +FString::SanitizeFloat(halfHeight) + " " + FString::FromInt(BoxExtent.Z) + " " + OffsetGround.ToCompactString();
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, resetString);
 	UE_LOG(LogClass, Log, TEXT("%s"), *resetString);
 	BoundingBox->SetWorldLocation(OffsetGround);	

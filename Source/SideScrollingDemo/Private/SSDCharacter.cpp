@@ -69,7 +69,9 @@ void ASSDCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	SetCharacterState(ECharacterState::ACTIVE);
-	CameraBounds->OnConstructionComponent();
+	CameraBounds->OnSSDCharacterBeginPlay(GetCapsuleComponent());
+	CameraBounds->ResetCamera(this);
+	
 	RespawnLocation = GetActorLocation();
 
 	if (GetPlayerMovement()) {
@@ -78,7 +80,6 @@ void ASSDCharacter::BeginPlay()
 	else {
 		UE_LOG(LogClass, Log, TEXT("PlayerMovement failed to load"));
 	}
-	CameraBounds->ResetCamera(this);
 	//SetCharacterState(ECharacterState::ACTIVE);
 	
 }

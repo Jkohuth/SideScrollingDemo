@@ -26,7 +26,7 @@ enum ECustomMovementMode {
 };
 UENUM(BlueprintType)
 enum ECharacterState {
-	ACTIVE, DEAD
+	ACTIVE, DEAD, REST
 };
 UENUM(BlueprintType)
 enum ENavigationType {

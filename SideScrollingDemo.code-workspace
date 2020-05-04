@@ -6,16 +6,36 @@
 		},
 		{
 			"name": "UE4",
-			"path": "C:\\Program Files\\Epic Games\\UE_4.23"
+			"path": "/opt/ue4"
 		}
 	],
 	"settings": {
-		"typescript.tsc.autoDetect": "off"
+		"typescript.tsc.autoDetect": "off",
+		"workbench.colorCustomizations": {
+			"activityBar.background": "#162376",
+			"titleBar.activeBackground": "#1F31A6",
+			"titleBar.activeForeground": "#FBFCFE"
+		},
+		"files.exclude": {
+			"**/.gitignore": true,
+			"**/.kdev4": true,
+			"**/.vscode": true,
+			"**/*.kdev4": true,
+			"**/*.pri": true,
+			"**/*.pro": true,
+			"**/Binaries": true,
+			"**/Content": true,
+			"**/DerivedDataCache": true,
+			"**/Intermediate": true,
+			"**/Saved": true
+		}
 	},
 	"extensions": {
 		"recommendations": [
 			"ms-vscode.cpptools",
-			"ms-vscode.csharp"
+			"ms-vscode.csharp",
+			"vadimcn.vscode-lldb",
+			"ms-vscode.mono-debug"
 		]
 	}
 }
