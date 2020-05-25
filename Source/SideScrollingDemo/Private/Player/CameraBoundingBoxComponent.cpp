@@ -252,7 +252,7 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 	if(targetBottom < bottom) shift.Z = targetBottom - bottom;
 	else if(targetTop > top) shift.Z = targetTop - top;
 
-	UE_LOG(LogClass, Log, TEXT("Camera Component Update Location %s"), *shift.ToCompactString());
+	//UE_LOG(LogClass, Log, TEXT("Camera Component Update Location %s"), *shift.ToCompactString());
 
 	//this->SetActorLocation(FVector(Origin.X, Origin.Y + shiftY, Origin.Z + shiftZ));
 	FVector updatedLocation = FVector(0.f, Origin.Y + shift.Y, Origin.Z + shift.Z);

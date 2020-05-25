@@ -1,0 +1,539 @@
+﻿Side Scrolling Demo
+<Working Title>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+License 
+If you use this in any of your games. Give credit in the GDD (this document) to Alec Markarian and Benjamin Stanley. We did work so you don’t have to.   
+
+
+Feel free to Modify, redistribute but not sell this document.
+
+
+
+
+TL;DR - Keep the credits section of this document intact and we are good and do not sell it.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Overview - Hack and Slash platformer with branching paths that lead to the same destination.
+
+Theme / Setting / Genre - Isolation, will to power, growth through struggle. Northern European inspired landscape with unique enemies and a few taken from existing Germanic/Romanic Mythos. Hack and Slash Platformer 
+
+Core Gameplay Mechanics Brief
+        2D Platforming
+        Hack And Slash Combat
+        Wall Movement for verticality
+        Rail Grinding - Speed/Platforming Challenges
+        Updrafts - Verticality
+
+Targeted platforms
+        PC
+        Switch (Dream On)
+Project Scope
+        As this will be my first project followed to completion my only goal is a single level
+
+Influences (Brief)
+        - Ninja Gaiden (NES) - Original Hack and Slash platformer
+        - Castlevania (NES) - Enemy placement and overall level design
+        - Sonic 2  (Genesis) - Branch linear levels
+
+The elevator Pitch
+Project Description (Brief):
+Project Description (Detailed)
+What sets this project apart?
+Core Gameplay Mechanics (Detailed)
+        - 2D platforming
+        - Hack and Slash Combat
+        - Wall Sliding
+        - Rail Grinding
+
+Story and Gameplay
+Story (Brief)
+Story (Detailed)
+Gameplay (Brief)
+Gameplay (Detailed)
+Assets Needed
+- 3D
+        Player
+                Mesh
+                Animations
+                        Rest (Begin/End)
+                        Idle/Walk/Run/Jump
+                        Atk Ground/Atk Air/Atk Wall/Atk Grind(?)
+                        Wall Slide/Wall Jump
+                        Take Damage/Defeated
+                        Victory
+        Enemy Frog
+                Mesh
+                Animations
+                        Idle/Walk
+                        Alert/Attack (Lunge)/Atk Successful
+                        Take Damage
+                        Retreat
+        Enemy Bird
+                Mesh
+                Animations
+                        Idle/Fly
+                        Alert/Attack (Dive bomb)
+        Enemy Worm
+                Mesh
+                Animations
+        Enemy Troll
+                Mesh
+                Animations
+                        Walk/Run/Jump
+                        Idle/Introduction
+        Enivornment
+                Trees/Rocks
+                Mounds/Particles (Bugs)
+
+
+
+- Sound
+        Player
+                Attack
+                Walk
+                Slide
+        Enemy Frog
+                Snarl
+                Alert
+                Walk
+        Enemy Bird
+                Caw
+
+- Code
+- Animation
+Schedule
+- <Object #1>
+- <Object #2>
+- <Object #3>
+- <Object #4>
+
+
+
+
+
+
+
+
+
+
+Overview
+
+
+Theme / Setting / Genre
+        - <Insert Theme here>
+Core Gameplay Mechanics Brief
+        - <Gameplay Mechanic #1>
+        - <Gameplay Mechanic #2>
+        - <Gameplay Mechanic #3>
+        - <Gameplay Mechanic #4>
+Targeted platforms
+        - <Example Platform #1 Here>
+        - <Example Platform #2 Here>
+        - <Example Platform #3 Here>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Project Scope 
+        - <Game Time Scale>
+                - Cost? (How much will it cost?)
+- Time Scale (How long will it take to make this game?)
+- <Team Size>
+        - <Core Team>
+                - Team Member name?
+                        - What does he/she do?
+                        - <Cost to employ them full time or part time>
+                - etc. 
+(List as many core team members as you need to)
+- <Marketing Team>
+                - Team Member name?
+                        - What does he/she do?
+                        - <Cost to employ them full time or part time>
+                - Etc.
+(List as many marketing team members as you need to)
+        - <Licenses / Hardware / Other Costs>
+        - <Total Costs with breakdown>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Influences (Brief)
+        Ninja Gaiden
+                Side Scrolling Hack and Slash platfromer
+                - <Medium> (Television, Games, Literature, Movies, etc.)
+- /Explain why this is an influence in 1 Paragraph or less/
+        - <Influence #2>
+                - <Medium> (Television, Games, Literature, Movies, etc.)
+                - /Explain Why in 1 Paragraph or less/
+- /Explain why this is an influence in 1 Paragraph or less/
+        - <Influence #3>
+                - <Medium> (Television, Games, Literature, Movies, etc.)
+- /Explain why this is an influence in 1 Paragraph or less/
+        - <Influence #4>
+                - <Medium> (Television, Games, Literature, Movies, etc.)
+                - /Explain Why in 1 Paragraph or less/
+- /Explain why this is an influence in 1 Paragraph or less/
+
+
+The elevator Pitch
+<A one sentence pitch for your game.> 
+Pretend that your were pitching your game to a executive going to the elevator. You have less than 60 Seconds.
+
+
+Project Description (Brief):
+
+
+<Two Paragraphs at least>
+<No more than three paragraphs>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Project Description (Detailed)
+
+
+<Four Paragraphs or more If needs be>
+<No more than six paragraphs>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+What sets this project apart?
+        - <Reason #1>
+        - <Reason #2>
+        - <Reason #3>
+        - <Reason #4>
+        - <etc.>
+Core Gameplay Mechanics (Detailed)
+        - <Core Gameplay Mechanic #1>
+                - <Details>
+                        /Describe in 2 Paragraphs or less/
+                - <How it works>
+                        /Describe in 2 Paragraphs or less/
+        - <Core Gameplay Mechanic #2>
+                - <Details>
+                        /Describe in 2 Paragraphs or less/
+                - <How it works>
+                        /Describe in 2 Paragraphs or less/
+        - <Core Gameplay Mechanic #3>
+                - <Details>
+                        /Describe in 2 Paragraphs or less/
+                - <How it works>
+                        /Describe in 2 Paragraphs or less/
+        - <Core Gameplay Mechanic #4>
+                - <Details>
+                        /Describe in 2 Paragraphs or less/
+                - <How it works>
+                        /Describe in 2 Paragraphs or less/
+
+
+
+
+
+
+
+
+Story and Gameplay
+
+
+Story (Brief)
+
+
+<The Summary or TL;DR version of below>
+Story (Detailed)
+
+
+<Go into as much detail as needs be>
+<Spare no detail>
+<Use Mind Mapping software to get your point across>
+
+
+Gameplay (Brief)
+<The Summary version of below>
+Gameplay (Detailed)
+<Go into as much detail as needs be>
+<Spare no detail>
+<Combine this with the game mechanics section above>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Assets Needed
+
+
+- 2D
+        - Textures
+                - Environment Textures
+- 3D
+        - Characters List
+                - Character #1
+                - Character #2
+                - Character #3
+                - etc.
+        - Environmental Art Lists
+                - Example #1
+                - Example #2 
+                - Example #3
+                - etc.
+- Sound
+        - Sound List (Ambient)
+                - Outside
+                        - Level 1
+                        - Level 2 
+                        - Level 3
+                        - etc.
+                - Inside
+                        - Level 1
+                        - Level 2
+                        - Level 3
+                        - etc.
+
+
+
+
+- Sound List (Player)
+                - Character Movement Sound List
+                        - Example 1
+                        - Example 2
+- etc. 
+                - Character Hit / Collision Sound list
+- Example 1
+                        - Example 2
+- etc.
+                - Character on Injured / Death sound list
+                        - Example 1
+                        - Example 2
+                        - etc.
+
+
+- Code
+        - Character Scripts (Player Pawn/Player Controller)
+        - Ambient Scripts (Runs in the background)
+        - Example
+- NPC Scripts
+        - Example
+        - etc.
+- Animation
+        - Environment Animations 
+                - Example
+                - etc.
+        - Character Animations 
+                - Player
+- Example 
+- etc.
+                - NPC
+                        - Example
+                        - etc.
+
+
+
+
+Schedule
+        - <Object #1>
+                - Time Scale
+                        - Milestone 1
+                        - Milestone 2
+                        - Etc.
+        - <Object #2>
+                - Time Scale
+                        - Milestone 1
+                        - Milestone 2
+                        - Etc.
+        - <Object #3>
+                - Time Scale
+                        - Milestone 1
+                        - Milestone 2
+                        - Etc.
+        - <Object #4>
+                - Time Scale
+                        - Milestone 1
+                        - Milestone 2
+                        - Etc.

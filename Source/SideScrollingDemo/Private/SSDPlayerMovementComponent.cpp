@@ -106,7 +106,7 @@ void USSDPlayerMovementComponent::SetCharacterGravity(float Value){
 }
 void USSDPlayerMovementComponent::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) {
 
-	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+	//Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
 	switch (PrevMovementMode) {
 	case EMovementMode::MOVE_Custom:
 		switch (PreviousCustomMode) {
@@ -312,7 +312,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 	if(!RailSplineReference->IsValidLowLevel()) return;
 
 	float remainingTime = DeltaTime;
-	while((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations)){
+	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations)) {
 		Iterations++;
 		const float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
 		remainingTime -= timeTick;
@@ -322,8 +322,10 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		const FQuat PawnRotation = UpdatedComponent->GetComponentQuat();
 		bJustTeleported = false;
 
+		FVector ActorForwardVector = CharacterOwner->GetActorForwardVector();
+
 		RestorePreAdditiveRootMotionVelocity();
-		
+
 		const FVector OldVelocity = Velocity;
 
 		// Stash the current distance along spline
@@ -343,8 +345,9 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		// Calculate Velocity - currently there is no terminal limit
 		Velocity += GravityAlongRail * timeTick;
 		// Require a minimum velocity so character doesn't stand stationary
-		if (Velocity.Equals(FVector::ZeroVector, 25.f)) {
-			Velocity = minGrindVelocity * CharacterOwner->GetActorForwardVector() * timeTick;
+		// This will have an error when sliding down a rail
+		if (Velocity.Equals(FVector::ZeroVector, minGrindVelocity.Size())) {
+			Velocity = minGrindVelocity * ActorForwardVector;
 		}
 		// Express Velocity as a speed along the rail
 		grindSpeed = FVector::DotProduct(Velocity, worldDirAtDist);
@@ -361,17 +364,11 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, grindString);
 		//CalcVelocity(DeltaTime, grindFriction, false, GetMaxBrakingDeceleration());
 
-		//Should be in a struct thats initiated with the spline component
-		FVector beginSpline = RailSplineReference->GetWorldLocationAtSplinePoint(0);
-		FVector localBeginSpline = RailSplineReference->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
-		FVector endSpline = RailSplineReference->GetWorldLocationAtSplinePoint(RailSplineReference->GetNumberOfSplinePoints());
-		FVector localEndSpline = RailSplineReference->GetLocationAtSplinePoint(RailSplineReference->GetNumberOfSplinePoints(), ESplineCoordinateSpace::Local);
-
 		distanceAlongSpline += (grindSpeed * timeTick);
 
 		worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
-		
-		
+
+
 		/*FVector updatePosition = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
 		updatePosition.Z += capsuleHalfHeight;
 		CharacterOwner->SetActorLocation(updatePosition);
@@ -383,22 +380,39 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		//FVector UpdateLocation;
 		//UpdateLocation = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
 		//UpdateLocation.Z += capsuleHalfHeight;
-		FHitResult Hit(1.f);
+		//FHitResult Hit(1.f);
 		//const FVector Adjusted = worldDirAtDist * grindSpeed * timeTick;
-		const FVector Adjusted = 0.5f * (OldVelocity + Velocity)* timeTick;
+		//const FVector Adjusted = 0.5f * (OldVelocity + Velocity)* timeTick;
 		//const FVector Adjusted = Velocity * timeTick;
 		//Adjusted = Adjusted * timeTick;
-		
+
 		//CharacterOwner->SetActorLocation();
 		//SafeMoveUpdatedComponent(Adjusted, PawnRotation, true, Hit);
 
+		FVector beginSpline = RailSplineReference->GetWorldLocationAtSplinePoint(0);
+		FVector localBeginSpline = RailSplineReference->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
+		FVector endSpline = RailSplineReference->GetWorldLocationAtSplinePoint(RailSplineReference->GetNumberOfSplinePoints());
+		FVector localEndSpline = RailSplineReference->GetLocationAtSplinePoint(RailSplineReference->GetNumberOfSplinePoints(), ESplineCoordinateSpace::Local);
+
 		// Only works with thin rails
-		FVector newLocation;
-		newLocation = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
-		newLocation.Z += capsuleHalfHeight;
+		FVector updatedGrindLocation;
+		updatedGrindLocation = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
 
+		// If we reached the end of the spline we need to get the next world location manually
+		//FString locations = "updatedGrindLocation: " + updatedGrindLocation.ToCompactString() + "\nBeginSpline: " + beginSpline.ToCompactString() + "\nEndspline: " + endSpline.ToCompactString();
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *locations);
 
-		CharacterOwner->SetActorLocation(newLocation);
+		if (updatedGrindLocation.Equals(beginSpline, capsuleRadius) || updatedGrindLocation.Equals(endSpline,capsuleRadius)) {
+			//Velocity = FMath::Sign(Velocity.Y) * worldDirAtDist * Velocity;
+
+			updatedGrindLocation = CharacterOwner->GetActorLocation();
+			updatedGrindLocation += Velocity * timeTick;
+		}
+		else {
+			updatedGrindLocation.Z += capsuleHalfHeight;
+		}
+		CharacterOwner->SetActorLocation(updatedGrindLocation);
+
 
 		FVector localPlayerLocationAlongSpline = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
 
@@ -423,6 +437,9 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 			CharacterOwner->SetActorLocation(correctionRail);
 		}
 		*/
+
+		//Should be in a struct thats initiated with the spline component
+
 		if(bJumpOffGrind){
 			FVector upVector  = RailSplineReference->GetUpVectorAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
 			Velocity.Z += JumpZVelocity;
@@ -439,50 +456,54 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 			return;
 		}
-		FString tmp = "before call";
 
-		if (localPlayerLocationAlongSpline.Equals(localBeginSpline, .25f) ||
-			localPlayerLocationAlongSpline.Equals(localEndSpline, .25f)) {
-			//tmp = "before call";
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *tmp);
-			FVector StartTrace = GetActorFeetLocation();
-			StartTrace.Y += capsuleRadius * FMath::Sign(Velocity.Y);
-			FVector EndTrace = StartTrace;
-			EndTrace.Z -= 50.f;
+		if (localPlayerLocationAlongSpline.Equals(localBeginSpline, capsuleRadius) ||
+			localPlayerLocationAlongSpline.Equals(localEndSpline, capsuleRadius)) {
+			FHitResult HitCenter;
+			FHitResult HitBehind;
+			FHitResult HitForward;
+
 			FCollisionQueryParams CollisionParams;
 			CollisionParams.AddIgnoredActor(CharacterOwner);
+
+			float endTraceZ = 10.f;
+			FVector StartTrace = GetActorFeetLocation();
+			//UE_LOG(LogCharacterMovement, Log, TEXT("GetActorFeetLocation %s"), *GetActorFeetLocation().ToCompactString());
+			//StartTrace.Y += capsuleRadius * FMath::Sign(Velocity.Y);
+			FVector EndTrace = StartTrace;
+			EndTrace.Z -= endTraceZ;
+
 			DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Red);
-			bool isHit = GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams);
-			//if (Hit.bBlockingHit && Hit.GetActor() && Hit.GetActor()->ActorHasTag(ECustomTags::GrindTag)) {
-			//	continue;
-			//}
-			if(Hit.bBlockingHit && Hit.GetActor() && !Hit.GetActor()->ActorHasTag(ECustomTags::GrindTag)) {
+			GetWorld()->LineTraceSingleByChannel(HitCenter, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams);
+			
+			StartTrace.Y += capsuleRadius * -1 * ActorForwardVector.Y;
+			EndTrace.Y = StartTrace.Y;
+			DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Red);
+			GetWorld()->LineTraceSingleByChannel(HitBehind, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams);
+
+			StartTrace.Y += 2 * capsuleRadius * ActorForwardVector.Y;
+			EndTrace.Y = StartTrace.Y;
+			DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Red);
+			GetWorld()->LineTraceSingleByChannel(HitBehind, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams);
+
+
+			// Directly underneath player and behind player, if hit something that is not a rail start walking
+			if( (HitCenter.bBlockingHit && HitCenter.GetActor() && !HitCenter.GetActor()->ActorHasTag(ECustomTags::GrindTag)) &&
+				(HitBehind.bBlockingHit && HitBehind.GetActor() && !HitBehind.GetActor()->ActorHasTag(ECustomTags::GrindTag)) &&
+				(HitForward.bBlockingHit && HitForward.GetActor() && !HitForward.GetActor()->ActorHasTag(ECustomTags::GrindTag)) ) {
+				// Directly underneath the character is not a rail check the radius behind
 				SetMovementMode(MOVE_Walking);
 				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+				return;
+
 			}
-			else if (!Hit.bBlockingHit) {
+			// We didn't hit anything he fell off the rail
+			else if (!HitCenter.bBlockingHit && !HitBehind.bBlockingHit && !HitForward.bBlockingHit) {
 				// Make sure that capsule is over the edge
 				// This should be done in a large for loop
 				SetMovementMode(MOVE_Falling);
 				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 				return;
-				FHitResult leftHit;
-				StartTrace.Y += capsuleRadius;
-				EndTrace.Y += capsuleRadius;
-				GetWorld()->LineTraceSingleByChannel(leftHit, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams);
-				DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Red);
-
-				FHitResult rightHit;
-				StartTrace.Y -= 2*capsuleRadius;
-				EndTrace.Y -= 2*capsuleRadius;
-				GetWorld()->LineTraceSingleByChannel(rightHit, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams);
-				DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Red);
-
-				if (!leftHit.bBlockingHit && !rightHit.bBlockingHit) {
-					SetMovementMode(MOVE_Falling);
-					StartNewPhysics(remainingTime + timeTick, Iterations - 1);
-				}
-
 			}
 	
 		}
