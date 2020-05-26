@@ -149,7 +149,7 @@ public:
 	float slopeNormal;
 	bool bJumpOffGrind = false;
 	FVector UpdateLocation;
-	FVector minGrindVelocity = FVector(0.f, 1000.f, 0.f);
+	FVector minGrindVelocity = FVector(0.f, 250.f, 0.f);
 
 	// Swing
 	void PhysSwing(float DeltaTime, int32 Iterations);

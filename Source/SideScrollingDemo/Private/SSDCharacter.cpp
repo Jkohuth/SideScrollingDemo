@@ -39,6 +39,7 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ASSDCharacter::OnActorOverlapBegin);
 	GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &ASSDCharacter::OnActorOverlapEnd);
 
+	// CameraBounds would be better added in blueprints I think it's giving me errors with hot reload
 	CameraBounds = CreateDefaultSubobject<UCameraBoundingBoxComponent>(TEXT("CameraBounds"));
 	//CameraBounds->GetCameraComponent()->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 
@@ -197,7 +198,7 @@ void ASSDCharacter::Jump() {
 		GetPlayerMovement()->OnJumpInput();
 		GetPlayerMovement()->isJumping = true;
 	}
-	
+
 	Super::Jump();
 }
 void ASSDCharacter::StopJumping() {
@@ -206,6 +207,7 @@ void ASSDCharacter::StopJumping() {
 		GetPlayerMovement()->SetCharacterGravity(GetPlayerMovement()->FallingGravityScalar); 
 		GetPlayerMovement()->isJumping = false;
 	}
+
 }
 void ASSDCharacter::NotifyJumpApex()
 {

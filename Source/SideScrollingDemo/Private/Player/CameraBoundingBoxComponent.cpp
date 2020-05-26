@@ -23,8 +23,8 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 
 	BoundingBox->SetRelativeLocation(FVector(0.f, 0.f,0.f));
 	BoundingBox->InitBoxExtent(MainBoxSize);
-	BoundingBox->bHiddenInGame = false;
-	BoundingBox->bVisible = true;
+	//BoundingBox->bHiddenInGame = false;
+	//BoundingBox->bVisible = true;
 	BoundingBox->bAbsoluteRotation = true;
 	BoundingBox->bAbsoluteLocation = true;
 	//BoundingBox->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, 180.f)));

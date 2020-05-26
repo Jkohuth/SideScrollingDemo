@@ -105,8 +105,7 @@ void USSDPlayerMovementComponent::SetCharacterGravity(float Value){
 	GravityScale = Value;
 }
 void USSDPlayerMovementComponent::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) {
-
-	//Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
 	switch (PrevMovementMode) {
 	case EMovementMode::MOVE_Custom:
 		switch (PreviousCustomMode) {
@@ -345,8 +344,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		// Calculate Velocity - currently there is no terminal limit
 		Velocity += GravityAlongRail * timeTick;
 		// Require a minimum velocity so character doesn't stand stationary
-		// This will have an error when sliding down a rail
-		if (Velocity.Equals(FVector::ZeroVector, minGrindVelocity.Size())) {
+		if (FMath::IsNearlyEqual(GravityMagInDir, 0.f, 2.f) && Velocity.Equals(FVector::ZeroVector, minGrindVelocity.Size())) {
 			Velocity = minGrindVelocity * ActorForwardVector;
 		}
 		// Express Velocity as a speed along the rail
@@ -631,6 +629,7 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpl
 	}
 }
 void USSDPlayerMovementComponent::OnJumpInput(){
+
     if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Climb)) {
 		JumpOffWall();
 	}
