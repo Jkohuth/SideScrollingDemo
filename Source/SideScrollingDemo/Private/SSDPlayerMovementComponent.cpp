@@ -465,15 +465,20 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 			CollisionParams.AddIgnoredActor(CharacterOwner);
 
 			float endTraceZ = 10.f;
+			float endTraceCapsuleZ = 5.f;
+			float capsuleRadiusIncrease = 5.f;
 			FVector StartTrace = GetActorFeetLocation();
 			//UE_LOG(LogCharacterMovement, Log, TEXT("GetActorFeetLocation %s"), *GetActorFeetLocation().ToCompactString());
 			//StartTrace.Y += capsuleRadius * FMath::Sign(Velocity.Y);
 			FVector EndTrace = StartTrace;
 			EndTrace.Z -= endTraceZ;
 
+			// Perhaps replace this with shape trace
 			DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Red);
 			GetWorld()->LineTraceSingleByChannel(HitCenter, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams);
 			
+			//StartTrace.Z += capsuleRadius;
+
 			StartTrace.Y += capsuleRadius * -1 * ActorForwardVector.Y;
 			EndTrace.Y = StartTrace.Y;
 			DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Red);
@@ -485,8 +490,39 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 			GetWorld()->LineTraceSingleByChannel(HitBehind, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams);
 
 
+			// Collision Shape trace in the future will be superior way of checking
+			FCollisionShape scanCapsule = FCollisionShape::MakeCapsule(FVector(capsuleRadius, capsuleRadius + capsuleRadiusIncrease, 1.f));
+			StartTrace = GetActorFeetLocation();
+			EndTrace = StartTrace;
+			EndTrace.Z -= endTraceZ;
+
+			//DrawDebugCapsule(GetWorld(), GetActorFeetLocation(), scanCapsule.GetCapsuleHalfHeight(), scanCapsule.GetCapsuleRadius(), FQuat::Identity, FColor::Blue, false, 1.0f);
+
+			TArray<FHitResult> HitResults;
+			GetWorld()->SweepMultiByChannel(HitResults, StartTrace, EndTrace, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, scanCapsule);
+
+			bool hitFloor = false;
+
+			for (auto HitResult : HitResults) {
+				if (HitResult.bBlockingHit && HitResult.GetActor() && HitResult.GetActor()->ActorHasTag(ECustomTags::GrindTag)) {
+					return;
+				}
+				else if (HitResult.bBlockingHit && HitResult.GetActor()) {
+					hitFloor = true;
+				}
+			}
+			if (hitFloor) {
+				SetMovementMode(MOVE_Walking);
+				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+				return;
+			}
+			else {
+				SetMovementMode(MOVE_Falling);
+				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+				return;
+			}
 			// Directly underneath player and behind player, if hit something that is not a rail start walking
-			if( (HitCenter.bBlockingHit && HitCenter.GetActor() && !HitCenter.GetActor()->ActorHasTag(ECustomTags::GrindTag)) &&
+			/*if( (HitCenter.bBlockingHit && HitCenter.GetActor() && !HitCenter.GetActor()->ActorHasTag(ECustomTags::GrindTag)) &&
 				(HitBehind.bBlockingHit && HitBehind.GetActor() && !HitBehind.GetActor()->ActorHasTag(ECustomTags::GrindTag)) &&
 				(HitForward.bBlockingHit && HitForward.GetActor() && !HitForward.GetActor()->ActorHasTag(ECustomTags::GrindTag)) ) {
 				// Directly underneath the character is not a rail check the radius behind
@@ -502,7 +538,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 				SetMovementMode(MOVE_Falling);
 				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 				return;
-			}
+			}*/
 	
 		}
  	}

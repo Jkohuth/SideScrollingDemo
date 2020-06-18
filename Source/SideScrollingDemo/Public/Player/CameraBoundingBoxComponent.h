@@ -18,20 +18,23 @@ public:
 	UCameraBoundingBoxComponent();
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* CameraComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
 		class UBoxComponent* BoundingBox;
 	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
+		class UStaticMeshComponent* ViewPlane;
+
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	UFUNCTION()
-		virtual void InitializeComponent();
+	//UFUNCTION()
+	//	virtual void InitializeComponent();
 	UFUNCTION()
 		void InitializeCameraOverlapBounds(UPrimitiveComponent* OtherComp);
 
@@ -41,6 +44,10 @@ public:
 	void OnBoundingBoxOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	UFUNCTION(BlueprintCallable)
+		void InitializeViewPlane();	
+	UFUNCTION(BlueprintCallable)
+		void MoveViewPlane();
 	UPROPERTY(EditAnywhere)
 	FVector BoxSize;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -55,7 +62,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	uint8 BlendFunc;
 
-	void OnConstructionComponent();
+	//void OnConstructionComponent();
 	void OnSSDCharacterBeginPlay(UCapsuleComponent* targetCapsule);
 
 	bool once = true;
@@ -106,6 +113,7 @@ public:
 
 	FORCEINLINE class UCameraComponent* GetCameraComponent() const { return CameraComponent; }
 	FORCEINLINE class UBoxComponent* GetBoundingBox() const { return BoundingBox; }
+	FORCEINLINE class UStaticMeshComponent* GetViewPlane() const { return ViewPlane;  }
 
 		
 };

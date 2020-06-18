@@ -11,3 +11,10 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogSideScrollingDemo, Log, All);
 
+class FSideScrollingDemoModule
+	: public IModuleInterface
+{
+public:
+	virtual void StartupModule() override;
+	virtual void ShutdownModule() override;
+};

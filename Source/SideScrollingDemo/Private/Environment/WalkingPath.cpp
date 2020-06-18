@@ -17,12 +17,12 @@ AWalkingPath::AWalkingPath()
 	TrailPath0 = CreateDefaultSubobject<UBoxComponent>(TEXT("Path0"));
 	TrailPath1 = CreateDefaultSubobject<UBoxComponent>(TEXT("Path1"));
 
-	TrailPath0->AttachTo(SplinePath);
+	//TrailPath0->AttachToComponent(SplinePath);
 	TrailPath0->SetVisibility(true);
 	TrailPath0->bHiddenInGame = false;
 	//TrailPath0->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-	TrailPath1->AttachTo(SplinePath);
+	//TrailPath1->AttachToComponent(SplinePath);
 	TrailPath1->SetVisibility(true);
 	TrailPath1->bHiddenInGame = false;
 	//TrailPath1->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);

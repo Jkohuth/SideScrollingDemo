@@ -9,6 +9,45 @@
 /**
  * 
  */
+
+USTRUCT(BlueprintType)
+struct FPlayerMovementHandler
+{
+	GENERATED_USTRUCT_BODY()
+ 
+public:
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float AirControl;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float JumpZVelocity;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float GroundFriction;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float MaxWalkSpeed;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float MaxFlySpeed;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float MaxAcceleration;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float WallSlideFriction;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float JumpRailVelocity;
+	FPlayerMovementHandler() {}
+
+	FPlayerMovementHandler(float airControl, float jumpZVelocity, float groundFriction, float maxWalkSpeed, float maxFlySpeed, float maxAcceleration, float wallSlideFriction, float jumpRailVelocity)
+	{
+		this->AirControl = airControl;
+		this->JumpZVelocity = jumpZVelocity;
+		this->GroundFriction = groundFriction;
+		this->MaxWalkSpeed = maxWalkSpeed;
+		this->MaxFlySpeed = maxFlySpeed;
+		this->MaxAcceleration = maxAcceleration;
+		this->WallSlideFriction = wallSlideFriction;
+		this->JumpRailVelocity = jumpRailVelocity;
+	}
+};
+
 UCLASS()
 class SIDESCROLLINGDEMO_API USSDPlayerMovementComponent : public UCharacterMovementComponent
 {
@@ -116,7 +155,7 @@ public:
 	float updraftSpeed;
 
 	// Focus
-
+	float JumpRailVelocity;
 	// Brute force it for now does it really matter if you prematurly optimize?
 	float NormAirControl = 0.6f;
 	float NormJumpZVelocity = 1750.f;

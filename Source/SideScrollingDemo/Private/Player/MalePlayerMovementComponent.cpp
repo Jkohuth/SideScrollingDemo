@@ -124,7 +124,7 @@ void UMalePlayerMovementComponent::PhysWall(float DeltaTime, int32 Iterations) {
 	if (DeltaTime < MIN_TICK_TIME) return;
 
 	// Make sure the character own is valid to move if not stop it from moving and return
-	if (!CharacterOwner || (!CharacterOwner->Controller && !bRunPhysicsWithNoController && !HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity() && (CharacterOwner->Role != ROLE_SimulatedProxy))) {
+	if (!CharacterOwner || (!CharacterOwner->Controller && !bRunPhysicsWithNoController && !HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity() && (CharacterOwner->GetLocalRole() != ROLE_SimulatedProxy))) {
 		Acceleration = FVector::ZeroVector;
 		Velocity = FVector::ZeroVector;
 		return;
@@ -197,7 +197,7 @@ void UMalePlayerMovementComponent::PhysRail(float DeltaTime, int32 Iterations) {
 	if (DeltaTime < MIN_TICK_TIME) return;
 	if (!RailSplineReference->IsValidLowLevel()) return;
 	// Make sure the character own is valid to move if not stop it from moving and return
-	if (!CharacterOwner || (!CharacterOwner->Controller && !bRunPhysicsWithNoController && !HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity() && (CharacterOwner->Role != ROLE_SimulatedProxy))) {
+	if (!CharacterOwner || (!CharacterOwner->Controller && !bRunPhysicsWithNoController && !HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity() && (CharacterOwner->GetLocalRole() != ROLE_SimulatedProxy))) {
 		Acceleration = FVector::ZeroVector;
 		Velocity = FVector::ZeroVector;
 		return;
@@ -206,7 +206,7 @@ void UMalePlayerMovementComponent::PhysRail(float DeltaTime, int32 Iterations) {
 
 	float remainingTime = DeltaTime;
 	
-	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations) && CharacterOwner && (CharacterOwner->Controller || bRunPhysicsWithNoController || HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity() || (CharacterOwner->Role == ROLE_SimulatedProxy)))
+	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations) && CharacterOwner && (CharacterOwner->Controller || bRunPhysicsWithNoController || HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity() || (CharacterOwner->GetLocalRole() == ROLE_SimulatedProxy)))
 	{
 		Iterations++;
 		const float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
@@ -598,7 +598,7 @@ void UMalePlayerMovementComponent::SetSlideCollisionHeight() {
 	// Applying correction to PawnOwner mesh relative location
 	if (bWantsSlideMeshRelativeLocationOffset) {
 		ACharacter* DefCharacter = CharacterOwner->GetClass()->GetDefaultObject<ACharacter>();
-		const FVector correction = DefCharacter->GetMesh()->RelativeLocation + SlideMeshRelativeLocationOffset;
+		const FVector correction = DefCharacter->GetMesh()->GetRelativeLocation() + SlideMeshRelativeLocationOffset;
 		CharacterOwner->GetMesh()->SetRelativeLocation(correction);
 	}
 }

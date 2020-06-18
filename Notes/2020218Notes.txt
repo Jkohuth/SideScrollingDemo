@@ -25,3 +25,165 @@ On sense player it will trigger a delay timer
 	TakeDamage
 		Enemy Material color will change
 
+
+
+
+Tasks:
+blen
+	Implement Melee Attack/Collision - Done: Used Rama melee weapon, if you want to reinvent the wheel roll your own engine
+
+	Rail grinding... again (spinning my wheels a bit) - Works but has flaws, isn't as expansive as initially desired
+
+	Combat
+		Wall Slash animation
+		Air Jump Animation
+		Perry?
+
+	
+	make some basic particle physics for health
+
+	intro -> Resting to play
+
+
+
+Interests:
+	Game Making
+	Learning German
+	Learning Japanese
+	Playing Guitar
+	Working on Richards Code
+
+Givens:
+	Diet
+	Exercise
+
+
+
+2020-05-28
+
+Fixes Done Today
+
+Corrected module loading "/Project/Shaders" to not throw exception
+Fixed Jumping to look more natural when lands`
+Listed Bugs and fixes required
+
+__________________________________________________________________________
+
+	Bugs:
+		Jumping off a falling platform does short jump instead of full jump
+
+		Sliding down rails that have no endings causes player to glitch out
+
+Updraft Needs particles and tweeking - set cap on upward velocity
+
+Rest Areas
+	Rest Animations
+	Mesh for character to sit/relax on
+	Refill bars
+
+Focus
+	Post Processing Material - Demonstrate effect
+	Decide on how much it "Juices" the character
+	Link with Rail for sick rail jumps
+
+Death Animation
+	New mesh cause death animation to fail - retarget
+
+2020-05-29
+
+
+	Rail Grinding - Goodish no bugs moves as expected
+
+	Repaired Respawn after changing Skeletal mesh
+
+	TODO: Tasklist 2020-05-30
+		After a few bug fixes I decided laying out tasks and ideas was a better way of finding things to check off
+
+		Focus Movement
+			Create UStruct to hold modified movement components
+				Create Functions to swap between normal and focus mode
+				Increase Jump Velocity in focus mode
+		Animation
+			Wall Animation
+			GroundIdle (replace current ground idle as transitioning causes scythe to clip through body)
+			Resting - (Import already made resting animation -> retarget)
+
+
+
+		Particles
+			Updraft Wind
+			Rest Area + Mesh
+
+		Shaders
+			Focus Shader
+				Have postprocessing shader form a radius that can be altered around the player
+
+		Mesh
+			Enemy Frog
+				Unpair skeletal bones from mirror mesh
+				Walk
+				Lunge (Bite?)
+				Alert
+			Only Attack when within screen view
+
+		Enemies
+			Create Enemy Bird prototype
+
+
+		Environment
+			BackGrounds
+				Massage into level fjord style background
+
+2020-05-30
+
+		Enemy Frog Mes
+			Mirrored bones
+			Setup Vertex groups
+			Set up stackoverflow question on how to not get the mirror modifier in pose mode (https://blender.stackexchange.com/questions/180556/armature-rotates-both-sides-of-mirrored-mesh/180561#180561)
+
+			Duplicated Blueprint and C++ class to rename from EnemyCharacter->EnemyFrog
+			Added it to collision_ENEMY channel (Actually reverted to Pawn as there was some issues with that)
+			Added delay to Frog Lunge
+
+	TODO TaskList:
+		Player Hit cooldown (don't let repeated hits stack)
+
+2020-05-31
+	
+	Fixed LevelBoundingBox - Works with Process Now
+	Found out can't import .usf files revert module (for now)
+	Added UStruct to PlayerMovementComponent
+
+	Attempted Rest_idle/Rest_stop/Ground_idle/GroundAtk_1 - Varying success
+
+2020-06-03
+
+	Tweaked some animations and exported them to Unreal
+	Idle -> Run looks good
+		Need to make custom Jump animation
+	Neutral attack is fine standing still
+		looks awkward when running
+			Lean forward attack?
+
+2020-06-04 - Morning
+	Messed Around with wall movement animations and Jumping
+
+	Started working on a post processing shader
+		Doesn't work but its a start, the code compiles but isn't localized
+
+		Perhaps creating a sphere object and changing the radius of that with a material (not post process) can yield the desire effect
+
+	TODO:
+		Put these notes in Excel or excel like program: start tracking time
+
+2020-06-17
+	Added a view plane to the camera and created a decent enough material to work with it
+
+	TODO:
+		Gameplay of Focus Movement
+
+		Create Bird Enemy
+
+		Add Fade in and Fade out of material based on button press
+
+		Working Title Leeres Volk

@@ -29,10 +29,10 @@ protected:
 	TEnumAsByte<enum ECharacterState> CharacterState;
 
 	// Might make this a Camera Manager component
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
 	class UCameraBoundingBoxComponent* CameraBounds;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	class UPostProcessComponent* CharacterEffects;
 	// Handle Axis Input
 	void MoveRight(float Value);
@@ -71,6 +71,9 @@ public:
 	/////////////////////////////
 
 	void InflictDamageHandler(bool isHit, TArray<FHitResult> HitArray);
+
+	UFUNCTION()
+	void InitializeLevelBounds(UPrimitiveComponent* Bounds);
 
 	// DAMAGE
 

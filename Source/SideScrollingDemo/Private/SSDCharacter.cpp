@@ -70,9 +70,10 @@ void ASSDCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	SetCharacterState(ECharacterState::ACTIVE);
-	CameraBounds->OnSSDCharacterBeginPlay(GetCapsuleComponent());
-	CameraBounds->ResetCamera(this);
-	
+	if (CameraBounds) {
+		CameraBounds->OnSSDCharacterBeginPlay(GetCapsuleComponent());
+		CameraBounds->ResetCamera(this);
+	}
 	RespawnLocation = GetActorLocation();
 
 	if (GetPlayerMovement()) {
@@ -130,7 +131,7 @@ void ASSDCharacter::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AAc
 	if (OtherActor && OtherActor->ActorHasTag(ECustomTags::GrindTag)) {
 		ARail* Rail = Cast<ARail>(OtherActor);
 		if (Rail) {
-			GetPlayerMovement()->TriggerGrindMovement(Rail->GetRailSpline(), SweepResult);
+			//GetPlayerMovement()->TriggerGrindMovement(Rail->GetRailSpline(), SweepResult);
 		}
 	}
 	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::RestTag)) {
@@ -170,6 +171,7 @@ void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActo
 }
 void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
 	// Check for Wall Movement
+
 	if(OtherActor && OtherActor->ActorHasTag(ECustomTags::ClimbTag) && FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.2f) 
 		&& GetPlayerMovement()->MovementMode == MOVE_Falling){ // Angle Tolerance
 		if (GetPlayerMovement()) {
@@ -178,9 +180,10 @@ void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	} 
 	// Check for Rail Movement
 	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::GrindTag)) {
+
 		if (GetPlayerMovement()->CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) return;
 
-		if (Hit.ImpactNormal.Y > 0.8f) return;
+		if (Hit.ImpactNormal.Y > 0.8f || Hit.ImpactNormal.Z <= -0.1f) return;
 
 		ARail* Rail = Cast<ARail>(OtherActor);
 		if (Rail) {
@@ -191,7 +194,11 @@ void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 		ReceiveEnvironmentalDamage(Hit);
 	}
 }
-
+void ASSDCharacter::InitializeLevelBounds(UPrimitiveComponent* Bounds) {
+	if (CameraBounds && Bounds) {
+		CameraBounds->SetLevelBounds(Bounds);
+	}
+}
 // JUMP
 void ASSDCharacter::Jump() {
 	if (GetPlayerMovement()) {

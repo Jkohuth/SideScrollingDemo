@@ -89,8 +89,8 @@ Story and Gameplay
 Story (Brief)
 Story (Detailed)
 Gameplay (Brief)
-Gameplay (Detailed)
-Assets Needed
+Gameplay (Detailed
+A)ssets Needed
 - 3D
         Player
                 Mesh

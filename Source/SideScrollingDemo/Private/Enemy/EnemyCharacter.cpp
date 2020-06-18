@@ -30,7 +30,6 @@ void AEnemyCharacter::PostInitializeComponents() {
 	Super::PostInitializeComponents();
 	PawnSensor->OnSeePawn.AddDynamic(this, &AEnemyCharacter::OnSeePawn);
 	PawnSensor->OnHearNoise.AddDynamic(this, &AEnemyCharacter::OnHearNoise);
-
 }
 // Called when the game starts or when spawned
 void AEnemyCharacter::BeginPlay()
@@ -39,6 +38,7 @@ void AEnemyCharacter::BeginPlay()
 	OriginPos = GetActorLocation();
 	GetCharacterMovement()->bConstrainToPlane = true;
 	GetCharacterMovement()->SetPlaneConstraintAxisSetting(LockXAxis);
+
 	
 }
 

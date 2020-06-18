@@ -9,6 +9,7 @@
 #include "LevelCameraFollowBounds.h"
 #include "Camera/PlayerCameraManager.h"
 #include "GameFramework/PlayerController.h"
+#include "Components/StaticMeshComponent.h"
 
 // Sets default values for this component's properties
 UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
@@ -55,21 +56,23 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	CaveCameraTransform.SetRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, -180.f)));
 	CaveCameraTransform.SetScale3D(FVector(1.f));
 
-
+	ViewPlane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ViewPlane"));
+	ViewPlane->SetupAttachment(BoundingBox);
 }
-void UCameraBoundingBoxComponent::OnConstructionComponent() {
+/*void UCameraBoundingBoxComponent::OnConstructionComponent() {
 	//SetCameraMode(ECameraMode::MAIN);
 	//BoundingBox->SetBoxExtent(MainBoxSize);
-	CameraTransform = MainCameraTransform;
-	CameraComponent->SetRelativeTransform(MainCameraTransform);
-	CameraComponent->SetFieldOfView(FoV);
+
 
 }
 
 void UCameraBoundingBoxComponent::InitializeComponent() {
 	Super::InitializeComponent();
+	CameraTransform = MainCameraTransform;
+	CameraComponent->SetRelativeTransform(MainCameraTransform);
+	CameraComponent->SetFieldOfView(FoV);
 	UE_LOG(LogClass, Log, TEXT("Initialized Component"));
-}
+}*/
 // This works but requires a smoother transition perhaps a timeline
 void UCameraBoundingBoxComponent::SetCameraMode(ECameraMode mode) {
 	// There should be a timeline for transitions here
@@ -106,9 +109,18 @@ void UCameraBoundingBoxComponent::TickComponent(float DeltaTime, ELevelTick Tick
 void UCameraBoundingBoxComponent::InitializeCameraOverlapBounds(UPrimitiveComponent* OtherComp) {
 
 }
-
+void UCameraBoundingBoxComponent::InitializeViewPlane() {
+	FVector viewPlaneLocation = MainCameraTransform.GetLocation();
+	viewPlaneLocation.X = 0.f;
+	ViewPlane->SetWorldLocation(viewPlaneLocation);
+}
+void::UCameraBoundingBoxComponent::MoveViewPlane() {
+	FVector viewPlaneLocation = ViewPlane->GetRelativeLocation();
+	viewPlaneLocation.X += 10.f;
+	ViewPlane->SetRelativeLocation(viewPlaneLocation);
+}
 void UCameraBoundingBoxComponent::OnSSDCharacterBeginPlay(UCapsuleComponent* targetCapsule){
-	if(targetCapsule == NULL){
+	if(targetCapsule == NULL || CameraComponent == nullptr){
 		return;
 	}
 	CameraTransform = MainCameraTransform;
@@ -117,8 +129,12 @@ void UCameraBoundingBoxComponent::OnSSDCharacterBeginPlay(UCapsuleComponent* tar
 	Origin = BoundingBox->GetComponentLocation();
 	halfHeight = targetCapsule->GetScaledCapsuleHalfHeight();
 	radius = targetCapsule->GetScaledCapsuleRadius();
+
+	FVector viewPlaneVector = MainCameraTransform.GetLocation();
+	viewPlaneVector.X -= 35.f;
+	ViewPlane->SetRelativeLocation(viewPlaneVector);
 	
-	FString tmp = "Camera" + CameraComponent->GetRelativeLocation().ToCompactString() + "\nOrigin of the bounding box " + Origin.ToCompactString();
+	FString tmp = "Camera" + CameraComponent->GetRelativeLocation().ToCompactString() + " Origin of the bounding box " + Origin.ToCompactString() + " ViewPlane: " + ViewPlane->GetComponentLocation().ToCompactString();
 	UE_LOG(LogClass, Log, TEXT("Camera Bounding Box Information %s"), *tmp);
 
 }
@@ -229,7 +245,7 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 	shift.Z = 0;
 
 	// Has to do with dumb orientation I need to fix that
-	/*if (targetRight > levelBoundsRight && targetRight < right) {
+	if (targetRight > levelBoundsRight && targetRight < right) {
 		shift.Y = targetRight - right;
 	}
 	else if (targetLeft < levelBoundsLeft && targetLeft > left) {
@@ -244,14 +260,14 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 	else if (targetTop < levelBoundsTop && targetTop > top) {
 		shift.Z = targetTop - top;
 
-	}*/
+	}
 	// Theres a certain point where the sign changes, 1 -> 0 -> -1, thats a headache but whatever
-	if(targetRight < right) shift.Y = targetRight - right;
+	/*if(targetRight < right) shift.Y = targetRight - right;
 	else if(targetLeft > left) shift.Y = targetLeft - left;
 
 	if(targetBottom < bottom) shift.Z = targetBottom - bottom;
 	else if(targetTop > top) shift.Z = targetTop - top;
-
+	*/
 	//UE_LOG(LogClass, Log, TEXT("Camera Component Update Location %s"), *shift.ToCompactString());
 
 	//this->SetActorLocation(FVector(Origin.X, Origin.Y + shiftY, Origin.Z + shiftZ));

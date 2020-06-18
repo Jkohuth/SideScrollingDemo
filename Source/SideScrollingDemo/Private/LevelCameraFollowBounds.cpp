@@ -19,7 +19,7 @@ ALevelCameraFollowBounds::ALevelCameraFollowBounds()
 	
 	Bounds0->SetupAttachment(RootComponent);
 	Bounds0->bHiddenInGame = false;
-	Bounds0->bVisible = true;
+	Bounds0->SetVisibility(true);
 	Bounds0->bEditableWhenInherited = true;
 	LevelBounds.Add(Bounds0);
 }
