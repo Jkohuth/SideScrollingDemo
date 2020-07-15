@@ -66,6 +66,10 @@ public:
 	void OnSSDCharacterBeginPlay(UCapsuleComponent* targetCapsule);
 
 	bool once = true;
+	bool lockCameraToBottom = false;
+
+	UFUNCTION()
+		void setLockCameraToBottom(bool setLock);
 	
 	FVector Origin; // This is just origin
 	FVector BoxExtent; // This should exist somewhere in here
@@ -95,6 +99,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FTransform MainCameraTransform;
 
+	UPROPERTY(EditAnywhere)
+		float maxDistanceLimiter = 8.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector CaveBoxSize = FVector(50.f, 200.f, 275.f);
@@ -107,7 +113,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void InitializePosition(APlayerController*  PlayerController, AActor* ActorInFocus, UCapsuleComponent* targetCapsule);
 	UFUNCTION(BlueprintCallable)
-		void UpdatePosition(UCapsuleComponent* targetCapsule);
+		void UpdatePosition(UCapsuleComponent* targetCapsule, float DeltaTime);
 	UFUNCTION(BlueprintCallable)
 		void ResetCamera(AActor* targetActor);
 

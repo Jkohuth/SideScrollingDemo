@@ -24,18 +24,19 @@ USSDPlayerMovementComponent::USSDPlayerMovementComponent(const FObjectInitialize
     SetPlaneConstraintAxisSetting(LockXAxis);
     bOrientRotationToMovement = true;
 
-    AirControl = NormAirControl;
+    /*AirControl = NormAirControl;
     JumpZVelocity = NormJumpZVelocity;
     GroundFriction = NormGroundFriction;
     MaxWalkSpeed = NormMaxWalkSpeed;
     MaxFlySpeed = NormMaxFlySpeed; // Why is this here?
-	GravityScale = RisingGravityScalar;
 	MaxAcceleration = NormMaxAcceleration;
 	WallSlideFriction = NormWallSlideFriction; // Pretty Sure I made this variable
+	*/
+	UpdateCharacterMovementValues(NormalPlayerMovement);
 
 	bNotifyApex = true;
 	RotationRate = FRotator(0.f, 2160.f, 0.f); // Want snappy turn arounds
-
+	GravityScale = RisingGravityScalar;
 
 	MaxMovementSpeeds = FVector(0.f, MaxWalkSpeed, JumpZVelocity);
 	//RailSpeed = FVector(0.f, -500.0f, 0.f);
@@ -115,6 +116,9 @@ void USSDPlayerMovementComponent::OnMovementModeChanged(EMovementMode PrevMoveme
 		case ECustomMovementMode::MOVE_Grind:
 			MaxAcceleration = MaxAccel;
 			break;		
+		case ECustomMovementMode::MOVE_Swing:
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "You're trying to swing");
+			break;
 		}
 		break;
 	case EMovementMode::MOVE_Falling:
@@ -126,6 +130,11 @@ void USSDPlayerMovementComponent::OnMovementModeChanged(EMovementMode PrevMoveme
 	case EMovementMode::MOVE_None:
 		break;
 	case EMovementMode::MOVE_Walking:
+		break;
+	}
+	switch (MovementMode) {
+	case EMovementMode::MOVE_Walking:
+
 		break;
 	}
 
@@ -148,6 +157,17 @@ void USSDPlayerMovementComponent::PhysCustom(float DeltaTime, int32 Iterations) 
 		break;
 	}
 
+}
+void USSDPlayerMovementComponent::UpdateCharacterMovementValues(FPlayerMovementHandler newPlayerMovementValues) {
+	AirControl = newPlayerMovementValues.AirControl;
+	JumpZVelocity = newPlayerMovementValues.JumpZVelocity;
+	GroundFriction = newPlayerMovementValues.GroundFriction;
+	MaxWalkSpeed = newPlayerMovementValues.MaxWalkSpeed;
+	MaxFlySpeed = newPlayerMovementValues.MaxFlySpeed; 
+
+	MaxAcceleration = newPlayerMovementValues.MaxAcceleration;
+	WallSlideFriction = newPlayerMovementValues.WallSlideFriction;
+	JumpRailVelocity = newPlayerMovementValues.JumpRailVelocity;
 }
 
 // Climb
@@ -256,6 +276,7 @@ void USSDPlayerMovementComponent::TriggerClimbMovement(FHitResult ClimbTrigger){
 	if (FMath::IsNearlyEqual(forward.Y,towardWall), 0.2f) {
 
 		FRotator turnAround = CharacterOwner->GetActorRotation();
+		// Get the forward vector from the arrow component and make it point away from the wall CharacterOwner->GetArrowComponent()->GetForwardVector();
 		turnAround.Yaw += 180.0f;
 		CharacterOwner->SetActorRotation(turnAround);
 	}
@@ -414,33 +435,13 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 
 		FVector localPlayerLocationAlongSpline = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
 
-		//FString tmp = "Local Player Location " + localPlayerLocationAlongSpline.ToCompactString();
-		//tmp += " begin local " + localBeginSpline.ToCompactString();
-		//tmp += " end local " + localEndSpline.ToCompactString();
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *tmp);
 		if (!HasValidData()) return;
-
-		/*if (Hit.IsValidBlockingHit()) {
-			
-			if(Hit.GetActor() && !Hit.GetActor()->ActorHasTag(ECustomTags::GrindTag)){
-				SetMovementMode(MOVE_Walking);
-				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
-				return;
-			}
-			const FVector RequestedAdjustment = GetPenetrationAdjustment(Hit);
-			FVector correctionRail = CharacterOwner->GetActorLocation();
-			correctionRail.Z += Hit.PenetrationDepth; // Despite being stuck this returns 0
-			correctionRail.Z += 2.f;
-
-			CharacterOwner->SetActorLocation(correctionRail);
-		}
-		*/
 
 		//Should be in a struct thats initiated with the spline component
 
 		if(bJumpOffGrind){
 			FVector upVector  = RailSplineReference->GetUpVectorAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
-			Velocity.Z += JumpZVelocity;
+			Velocity.Z += JumpRailVelocity;
 			float jumpMagnitude = FVector::DotProduct(Velocity, upVector);
 			//float railFudgeFactor = 1.5f;
 			//jumpMagnitude *= railFudgeFactor;
@@ -551,15 +552,8 @@ bool USSDPlayerMovementComponent::IsGrinding() const {
 }
 void USSDPlayerMovementComponent::TriggerFocusMovement() {
 	if (this) {
-		AirControl = FocusAirControl * NormAirControl;
-		JumpZVelocity = FocusJumpZVelocity * NormJumpZVelocity;
-		GroundFriction = FocusGroundFriction * NormGroundFriction;
-		MaxWalkSpeed = FocusMaxWalkSpeed * NormMaxWalkSpeed;
-		GravityScale = FocusGravityScale * RisingGravityScalar;
-		MaxAcceleration = FocusMaxAcceleration * NormMaxAcceleration;
+		UpdateCharacterMovementValues(FocusPlayerMovement);
 	}
-
-
 
 	// I spent this evening doing what I do all day cause I want to bring these ideas to life
 	// And I'm not even that good 14 - 1 - 2020
@@ -608,13 +602,9 @@ void USSDPlayerMovementComponent::PrintStringToScreen(FString print) {
 
 }
 void USSDPlayerMovementComponent::HaltFocusMovement() {
+	// Update this you swine
 	if (this) {
-		AirControl = NormAirControl;
-		JumpZVelocity = NormJumpZVelocity;
-		GroundFriction = NormGroundFriction;
-		MaxWalkSpeed = NormMaxWalkSpeed;
-		GravityScale = RisingGravityScalar;
-		MaxAcceleration = NormMaxAcceleration;
+		UpdateCharacterMovementValues(NormalPlayerMovement);
 	}
 
 }
@@ -626,14 +616,33 @@ void USSDPlayerMovementComponent::TriggerSwingMovement() {
 }
 
 void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
+	if (DeltaTime < MIN_TICK_TIME) return;
 
+	float remainingTime = DeltaTime;
+	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations)) {
+		Iterations++;
+		const float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
+		remainingTime -= timeTick;
+
+		// Store Current Values
+		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
+		const FQuat PawnRotation = UpdatedComponent->GetComponentQuat();
+		bJustTeleported = false;
+	}
 }
-
+bool USSDPlayerMovementComponent::IsSwinging() const {
+	return (MovementMode == MOVE_Custom) && (CustomMovementMode == MOVE_Swing) && UpdatedComponent;
+}
 void USSDPlayerMovementComponent::BackDash(){
 
 }
 void USSDPlayerMovementComponent::KnockBack(const FHitResult& Hit){
+	FVector knock = KnockBackVelocity;
+	if (FMath::IsNearlyZero(Hit.ImpactNormal.Y, 0.2f)) { knock.Y *= CharacterOwner->GetActorForwardVector().Y;	}
+	else { knock.Y *= -1 * Hit.ImpactNormal.Y; }
 
+	Velocity = knock;
+	SetMovementMode(MOVE_Falling);
 }
 
 void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpline, const FHitResult& RailCollision){

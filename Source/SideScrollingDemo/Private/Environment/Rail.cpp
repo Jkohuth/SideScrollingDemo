@@ -6,8 +6,8 @@
 #include "CameraBoundingBox.h"
 #include "Engine.h"
 #include "Components/SplineMeshComponent.h"
-#include "MalePlayer.h"
-#include "MalePlayerMovementComponent.h"
+//#include "MalePlayer.h"
+//#include "MalePlayerMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 
 
@@ -70,7 +70,7 @@ void ARail::Tick(float DeltaTime)
 void ARail::RailRayCast() {
 	// from begining to end on the spline find the +Z direction and draw a raycast across a length up for the duration
 
-	FName TraceTag("RailTag");
+	/*FName TraceTag("RailTag");
 	TArray<FHitResult> HitResults;
 	
 	//GetWorld()->DebugDrawTraceTag = TraceTag;
@@ -136,7 +136,7 @@ void ARail::RailRayCast() {
 
 	}
 	FHitResult result(1.0f);
-	//return false;
+	//return false;*/
 }
 FVector ARail::GetSplineLocation() {
 	return SplineLocation;

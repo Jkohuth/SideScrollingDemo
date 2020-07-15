@@ -26,8 +26,8 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	BoundingBox->InitBoxExtent(MainBoxSize);
 	//BoundingBox->bHiddenInGame = false;
 	//BoundingBox->bVisible = true;
-	BoundingBox->bAbsoluteRotation = true;
-	BoundingBox->bAbsoluteLocation = true;
+	BoundingBox->SetUsingAbsoluteLocation(true);
+	BoundingBox->SetUsingAbsoluteRotation(true);
 	//BoundingBox->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, 180.f)));
 	//BoundingBox->bAbsoluteRotation = true;
 	
@@ -208,7 +208,7 @@ void UCameraBoundingBoxComponent::SetLevelBounds(UPrimitiveComponent* Bounds) {
 	}
 }
 
-void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsule){
+void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsule, float DeltaTime){
 	if (targetCapsule == NULL) {
 		return;
 	}
@@ -261,6 +261,16 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 		shift.Z = targetTop - top;
 
 	}
+	if (lockCameraToBottom && targetBottom != bottom) {
+		shift.Z = (targetBottom - bottom);
+		if (shift.Z >= maxDistanceLimiter) {
+			shift.Z *= DeltaTime;
+		}
+		else {
+			shift.Z = 0.f;
+		}
+	}
+
 	// Theres a certain point where the sign changes, 1 -> 0 -> -1, thats a headache but whatever
 	/*if(targetRight < right) shift.Y = targetRight - right;
 	else if(targetLeft > left) shift.Y = targetLeft - left;
@@ -309,3 +319,4 @@ void UCameraBoundingBoxComponent::ResetCamera(AActor* targetActor) {
 	UE_LOG(LogClass, Log, TEXT("%s"), *resetString);
 	BoundingBox->SetWorldLocation(OffsetGround);	
 }
+void UCameraBoundingBoxComponent::setLockCameraToBottom(bool setLock) { lockCameraToBottom = setLock; }

@@ -157,6 +157,25 @@ public:
 	// Focus
 	float JumpRailVelocity;
 	// Brute force it for now does it really matter if you prematurly optimize?
+
+	UPROPERTY(EditAnywhere)
+		FPlayerMovementHandler NormalPlayerMovement = FPlayerMovementHandler(0.6f, 1750.f, 2.f, 1300.f, 600.f, 3500.f, 3.f, 1000.f);
+	UPROPERTY(EditAnywhere)
+		FPlayerMovementHandler FocusPlayerMovement = FPlayerMovementHandler(1.2f, 2000.f, 0.f, 1600.f, 600.f, 4250.f, 3.f, 1500.f);
+	UFUNCTION()
+		void UpdateCharacterMovementValues(FPlayerMovementHandler newPlayerMovementValues);
+	/*
+	FPlayerMovementHandler(float airControl, float jumpZVelocity, float groundFriction, float maxWalkSpeed, float maxFlySpeed, float maxAcceleration, float wallSlideFriction, float jumpRailVelocity)
+	{
+		this->AirControl = airControl;
+		this->JumpZVelocity = jumpZVelocity;
+		this->GroundFriction = groundFriction;
+		this->MaxWalkSpeed = maxWalkSpeed;
+		this->MaxFlySpeed = maxFlySpeed;
+		this->MaxAcceleration = maxAcceleration;
+		this->WallSlideFriction = wallSlideFriction;
+		this->JumpRailVelocity = jumpRailVelocity;
+	}
 	float NormAirControl = 0.6f;
 	float NormJumpZVelocity = 1750.f;
 	float NormGroundFriction = 8.f;
@@ -172,7 +191,7 @@ public:
 	float FocusMaxWalkSpeed = 2.0f;
 	float FocusMaxAcceleration = 3.f;
 	float FocusGravityScale = 2.0f;
-
+*/
 	void TriggerFocusMovement();
 	void HaltFocusMovement();
 
@@ -192,6 +211,7 @@ public:
 
 	// Swing
 	void PhysSwing(float DeltaTime, int32 Iterations);
+	bool IsSwinging() const;
 	//bool IsSwinging() const;
 	void TriggerSwingMovement();
 

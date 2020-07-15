@@ -16,7 +16,6 @@
 #include "Engine.h"
 // Definition of tech debt
 #include "EnemyCharacter.h"
-#include "EnemyWall.h"
 
 // Sets default values
 ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
@@ -92,7 +91,7 @@ void ASSDCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	AdjustFocusBarPercentage(DeltaTime);
 	// Keep Player within Camera Bounds
-	CameraBounds->UpdatePosition(GetCapsuleComponent());
+	CameraBounds->UpdatePosition(GetCapsuleComponent(), DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -108,14 +107,14 @@ void ASSDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	//PlayerInputComponent->BindAction("BackDash", IE_Pressed, this, &ASSDCharacter::BackDash);
 	//PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &ASSDCharacter::OnStartSlide);
 	//PlayerInputComponent->BindAction("Slide", IE_Released, this, &ASSDCharacter::OnStopSlide);
-	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ASSDCharacter::Attack);
+	//PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &ASSDCharacter::Attack);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ASSDCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("MoveUp", this, &ASSDCharacter::MoveUp);
 
 }
 
 void ASSDCharacter::MoveRight(float Value) {
-	if (GetPlayerMovement() && (GetPlayerMovement()->UpdatedComponent == RootComponent)) {
+	if (GetPlayerMovement() && (GetPlayerMovement()->UpdatedComponent == RootComponent)) { 
 		GetPlayerMovement()->MoveRightInput(Value);
 	}
 }
@@ -172,8 +171,9 @@ void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActo
 void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
 	// Check for Wall Movement
 
-	if(OtherActor && OtherActor->ActorHasTag(ECustomTags::ClimbTag) && FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.2f) 
-		&& GetPlayerMovement()->MovementMode == MOVE_Falling){ // Angle Tolerance
+	if( OtherActor && OtherActor->ActorHasTag(ECustomTags::ClimbTag) && 
+		FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.4f) 
+ 		&& GetPlayerMovement()->MovementMode == MOVE_Falling){ // Angle Tolerance
 		if (GetPlayerMovement()) {
 			GetPlayerMovement()->TriggerClimbMovement(Hit);
 		}
@@ -233,7 +233,18 @@ void ASSDCharacter::NotifyJumpApex()
 }
 
 // CHARACTER STATE
-
+void ASSDCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) {
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+	switch (PrevMovementMode) {
+	case EMovementMode::MOVE_Walking:
+		CameraBounds->setLockCameraToBottom(false);
+	}
+	switch (GetPlayerMovement()->MovementMode) {
+	case EMovementMode::MOVE_Walking:
+		CameraBounds->setLockCameraToBottom(true);
+		break;
+	}
+}
 void ASSDCharacter::SetCharacterState(ECharacterState NewCharacterState){
 	CharacterState = NewCharacterState;
 }
@@ -242,119 +253,6 @@ ECharacterState ASSDCharacter::GetCharacterState(){
 }
 
 
-void ASSDCharacter::Attack() {
-
-	float capsuleRadius = GetCapsuleComponent()->GetScaledCapsuleRadius();
-	float capsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-
-
-	FCollisionQueryParams CollisionParams(FName(TEXT("Attack")), true, this);
-	CollisionParams.AddIgnoredActor(this);
-	CollisionParams.AddIgnoredComponent(GetCapsuleComponent());
-	float weaponLengthAboveBelow = 40.f;
-	FVector hitBoxSizeAboveBelow = FVector(30.f, 60.f, 30.f);
-	
-	if (GetPlayerMovement()->IsClimbing()) {
-
-		float weaponLengthForward = 40.f;
-		FVector hitBoxSize = FVector(30.f, 30.f, 90.f);
-		
-		FVector StartAboveBelow = GetActorLocation();
-		StartAboveBelow.Z += capsuleHalfHeight + weaponLengthAboveBelow;
-		FVector EndAboveBelow = StartAboveBelow;
-		EndAboveBelow.Z += 1.f;
-		FCollisionShape weaponVolume = FCollisionShape::MakeBox(hitBoxSizeAboveBelow);
-		TArray<FHitResult> HitArrayAbove;
-		
-		bool isHitAbove = GetWorld()->SweepMultiByChannel(HitArrayAbove, StartAboveBelow, EndAboveBelow, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
-		DrawDebugBox(GetWorld(), StartAboveBelow, hitBoxSizeAboveBelow, FColor::Red, false, 2.f);
-		InflictDamageHandler(isHitAbove, HitArrayAbove);
-
-		StartAboveBelow = GetActorLocation();
-		StartAboveBelow.Z -= capsuleHalfHeight + weaponLengthAboveBelow;
-		EndAboveBelow = StartAboveBelow;
-		EndAboveBelow.Z -= 1.f;
-		TArray<FHitResult> HitArrayBelow;
-
-		bool isHitBelow = GetWorld()->SweepMultiByChannel(HitArrayBelow, StartAboveBelow, EndAboveBelow, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
-		DrawDebugBox(GetWorld(), StartAboveBelow, hitBoxSizeAboveBelow, FColor::Red, false, 2.f);
-		InflictDamageHandler(isHitBelow, HitArrayBelow);
-
-		FVector StartForward = GetActorLocation();
-		StartForward.Y += GetActorForwardVector().Y * (weaponLengthForward + capsuleRadius);
-		FVector EndForward = StartForward;
-		EndForward.Y += GetActorForwardVector().Y;
-		weaponVolume = FCollisionShape::MakeBox(hitBoxSize);
-		TArray<FHitResult> HitArrayForward;
-		
-		bool isHitForward = GetWorld()->SweepMultiByChannel(HitArrayForward, StartForward, EndForward, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
-		DrawDebugBox(GetWorld(), StartForward, hitBoxSize, FColor::Red, false, 2.f);
-		InflictDamageHandler(isHitForward, HitArrayForward);
-
-	}
-	else if (GetPlayerMovement()->IsFalling()) {
-		float weaponLengthForwardBehind = 40.f;
-		FVector hitBoxSize = FVector(30.f, 30.f, 90.f);
-
-		FVector StartAboveBelow = GetActorLocation();
-		StartAboveBelow.Z += capsuleHalfHeight + weaponLengthAboveBelow;
-		FVector EndAboveBelow = StartAboveBelow;
-		EndAboveBelow.Z += 1.f;
-		FCollisionShape weaponVolume = FCollisionShape::MakeBox(hitBoxSizeAboveBelow);
-		TArray<FHitResult> HitArrayAbove;
-
-		bool isHitAbove = GetWorld()->SweepMultiByChannel(HitArrayAbove, StartAboveBelow, EndAboveBelow, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
-		DrawDebugBox(GetWorld(), StartAboveBelow, hitBoxSizeAboveBelow, FColor::Red, false, 2.f);
-		InflictDamageHandler(isHitAbove, HitArrayAbove);
-
-		StartAboveBelow = GetActorLocation();
-		StartAboveBelow.Z -= capsuleHalfHeight + weaponLengthAboveBelow;
-		EndAboveBelow = StartAboveBelow;
-		EndAboveBelow.Z -= 1.f;
-		TArray<FHitResult> HitArrayBelow;
-
-		bool isHitBelow = GetWorld()->SweepMultiByChannel(HitArrayBelow, StartAboveBelow, EndAboveBelow, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
-		DrawDebugBox(GetWorld(), StartAboveBelow, hitBoxSizeAboveBelow, FColor::Red, false, 2.f);
-		InflictDamageHandler(isHitBelow, HitArrayBelow);
-
-		FVector StartForwardBehind = GetActorLocation();
-		StartForwardBehind.Y += GetActorForwardVector().Y * (weaponLengthForwardBehind + capsuleRadius);
-		FVector EndForwardBehind = StartForwardBehind;
-		EndForwardBehind.Y += GetActorForwardVector().Y;
-		weaponVolume = FCollisionShape::MakeBox(hitBoxSize);
-		TArray<FHitResult> HitArrayForward;
-
-		bool isHitForward = GetWorld()->SweepMultiByChannel(HitArrayForward, StartForwardBehind, EndForwardBehind, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
-		DrawDebugBox(GetWorld(), StartForwardBehind, hitBoxSize, FColor::Red, false, 2.f);
-		InflictDamageHandler(isHitForward, HitArrayForward);
-
-		StartForwardBehind = GetActorLocation();
-		StartForwardBehind.Y -= GetActorForwardVector().Y * (weaponLengthForwardBehind + capsuleRadius);
-		EndForwardBehind = StartForwardBehind;
-		TArray<FHitResult> HitArrayBehind;
-
-		bool isHitBehind = GetWorld()->SweepMultiByChannel(HitArrayBehind, StartForwardBehind, EndForwardBehind, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
-		DrawDebugBox(GetWorld(), StartForwardBehind, hitBoxSize, FColor::Red, false, 2.f);
-		InflictDamageHandler(isHitBehind, HitArrayBehind);
-
-	}
-	else {
-		float weaponLength = 90.f;
-		FVector hitBoxSize = FVector(30.f, 70.f, 50.f);
-		FVector Start = GetActorLocation();
-		Start.Y += GetActorForwardVector().Y * (GetCapsuleComponent()->GetScaledCapsuleRadius() + weaponLength);
-		FVector End = Start;
-		End.Y += 1.f;
-		FCollisionShape weaponVolume = FCollisionShape::MakeBox(hitBoxSize);
-		TArray<FHitResult> HitArray;
-		bool isHit = GetWorld()->SweepMultiByChannel(HitArray, Start, End, FQuat::Identity, ECollisionChannel::ECC_WorldStatic, weaponVolume);
-		DrawDebugBox(GetWorld(), Start, hitBoxSize, FColor::Red, false, 2.f);
-
-		InflictDamageHandler(isHit, HitArray);
-	}
-		//bool isHit = GetWorld()->SweepMultiByChannel(FocusSphereZone, Start, End, FQuat::Identity, ECollisionChannel::ECC_WorldDynamic, Sphere, CollisionParams);
-
-}
 // This will be removed when I use animations to send Anim notifies
 void ASSDCharacter::InflictDamageHandler(bool isHit, TArray<FHitResult> HitArray) {
 	if (isHit) {
@@ -369,14 +267,14 @@ void ASSDCharacter::InflictDamageHandler(bool isHit, TArray<FHitResult> HitArray
 // DAMAGE
 
 void ASSDCharacter::InflictDamage(AActor* ImpactActor){
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController != nullptr) {
+	AController* controller = Cast<AController>(GetController());
+	if (controller != nullptr) {
 		if ((ImpactActor != nullptr) && (ImpactActor != this)) {
 			TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
 			FDamageEvent DamageEvent(ValidDamageTypeClass);
 
 			const float DamageAmount = 1.0f;
-			ImpactActor->TakeDamage(DamageAmount, DamageEvent, PlayerController, this);
+			ImpactActor->TakeDamage(DamageAmount, DamageEvent, controller, this);
 	
 		}
 	}
@@ -390,20 +288,21 @@ float ASSDCharacter::ReceiveDamage_Implementation(float Damage, struct FPointDam
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "ReceiveDamage Called");
 
 	// This ensures the player won't get hit repeatedly by the same creature
-	if (CharacterState == ECharacterState::ACTIVE) {
+
+	if (CanReceiveDamage()) {
 		GetPlayerMovement()->KnockBack(PointDamageEvent.HitInfo);
 
 		if (ActualDamage > 0.f) {
 			Health -= ActualDamage;
 			DeathHandler();
 		}
-		//immuneToDamage = true;
+		immuneToDamage = true;
+		GetWorld()->GetTimerManager().SetTimer(DamageImmunityTimer, this, &ASSDCharacter::ResetDamageImmunity, immunityDurationInSeconds, false);
 	}
-
 	return ActualDamage;
 }
 void ASSDCharacter::ReceiveEnvironmentalDamage(FHitResult HitInfo) {
-	if (CharacterState == ECharacterState::ACTIVE) {
+	if (CanReceiveDamage()) {
 		GetPlayerMovement()->KnockBack(HitInfo);
 		Health -= EnvironmentDamage;
 		DeathHandler();
@@ -415,18 +314,24 @@ void ASSDCharacter::DeathHandler() {
 		SetCharacterState(ECharacterState::DEAD);
 	}
 }
-void ASSDCharacter::PostDamageImmunity(float DeltaTime){
-	currentDamageFrame++;
-	if (currentDamageFrame >= frameImmunity) {
-		currentDamageFrame = 0.f;
-		immuneToDamage = false;
+
+void ASSDCharacter::ResetDamageImmunity() {
+	immuneToDamage = false;
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Damage is reset");
+
+}
+bool ASSDCharacter::CanReceiveDamage() {
+	if (CharacterState == ECharacterState::ACTIVE && !immuneToDamage) {
+		return true;
 	}
+	return false;
 }
 void ASSDCharacter::Respawn(FVector LastCheckPoint){
 	Health = FullHealth;
 	SetCharacterState(ECharacterState::ACTIVE);
 	FocusBarPercentage = 1.f;
 	SetActorLocation(LastCheckPoint); // May need to use a different method
+	CameraBounds->ResetCamera(this);
 }
 bool ASSDCharacter::IsDead(){
 	if(GetCharacterState() == ECharacterState::DEAD)
@@ -496,7 +401,7 @@ void ASSDCharacter::TryToSwing() {
 	}
 }
 bool ASSDCharacter::IsSwinging() const {
-	return false;
+	return GetPlayerMovement() && GetPlayerMovement()->IsSwinging();
 }
 
 // SLIDE 

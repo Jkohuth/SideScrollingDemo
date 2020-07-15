@@ -88,7 +88,7 @@ Have player make an attempt on his life in the opening (forcibly make all inputs
 
 Have a town with dialogue 
 	-When the character over hears people talking about the king change animation to be more aggressive add rumble
-		Con: Lots of added effect without asserting the point enough
+		Con: Lots of added effect without asserting the ponit enough
 Mandatory dream sequence
 	Use stressful atmosphere and visual imagry to express how desperately the protagonist desires to slay the abusive king
 
@@ -111,3 +111,36 @@ As an incentive to get involved with other people and strengthen your connection
 Major Expenses:
 	LLC Filing / Colorado Business License
 	Lawyer fee for free lance contract
+
+
+
+
+23 - 6 - 20
+
+Story is decent however it does more telling rather than showing and while the language is colorful its lacking in what I want to convey. Everything from Game Magic, to protagonist story, to the motivation to complete the game is completely hidden from the player. My aonly goal with this is to share a feeling of emptiness that haunts the protagonist that pushes him to seek his revenge mission. I want to stress the particular emotions of the character and juxtapose them with the backdrop. Hes not an enlightened figure, hes a broken young adult who is only pursuing the quest because its the only thing in the world that is actually worth doing. 
+
+Ways to convey emotional state
+
+	Intro: Player resting near the base of a tree that overlooks a view
+					Protag is disinterested in the scenary
+
+9-7-20
+
+	I have taken an extended break from my game in order to clear my head and pursue other endeavours. However a large porition of the level was redesigned
+
+	Created Swing Idle Anim
+	Goals:
+		More Level Design
+			- Background rocks
+			- More Realistic Fjords
+			- Textures?
+
+10-7-20
+	
+	(Morning)
+	Added some level meshes
+	Cleaned up blueprints
+	Nothing spectacular
+
+14 - 7 -20
+ 	Fixed MOVE_Swing

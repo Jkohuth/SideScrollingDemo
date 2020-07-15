@@ -41,7 +41,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -75,12 +75,15 @@ public:
 	UFUNCTION()
 	void InitializeLevelBounds(UPrimitiveComponent* Bounds);
 
+
 	// DAMAGE
 
 	UPROPERTY(EditAnywhere)
-	float frameImmunity = 90.f;     // Duration of Immuity
-	float currentDamageFrame = 0.f; // Counts frames
+		float immunityDurationInSeconds = 1.f;
 	bool immuneToDamage = false;		// Keeps track if immune to damage
+	FTimerHandle DamageImmunityTimer;
+	void ResetDamageImmunity();
+	bool CanReceiveDamage();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Health = 1.0f;
@@ -88,11 +91,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float FullHealth = 3.0;
 
-	UFUNCTION(BlueprintCallable)
-	void PostDamageImmunity(float DeltaTime); // Triggers Immunity
-
-	UFUNCTION()
-		void Attack();
+	//UFUNCTION()
+	//	void Attack();
 
 	UFUNCTION(BlueprintCallable)
 		bool IsDead();
