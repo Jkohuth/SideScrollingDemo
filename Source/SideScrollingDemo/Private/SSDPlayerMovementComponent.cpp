@@ -11,6 +11,7 @@
 #include "DrawDebugHelpers.h"
 #include "Updraft.h"
 #include "Engine.h"
+#include "Math/UnrealMathUtility.h"
 
 
 DEFINE_LOG_CATEGORY_STATIC(LogCharacterMovement, Log, All);
@@ -85,6 +86,8 @@ void USSDPlayerMovementComponent::MoveRightInput(float Value){
 			switch (CustomMovementMode) {
 				case ECustomMovementMode::MOVE_Climb:
 					break;
+				case ECustomMovementMode::MOVE_Swing:
+					break;
 			}
 			break;
 		default:
@@ -95,12 +98,26 @@ void USSDPlayerMovementComponent::MoveRightInput(float Value){
 void USSDPlayerMovementComponent::MoveUpInput(float Value){
 
 }
+void USSDPlayerMovementComponent::OnJumpInput() {
 
+	if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Climb)) {
+		JumpOffWall();
+	}
+	else if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) {
+		bJumpOffGrind = true;
+	}
+	else if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Swing)) {
+		HaltSwingMovement();
+	}
+}
 void USSDPlayerMovementComponent::SetCustomMovementMode(uint8 CustomMovement) {
 	SetMovementMode(MOVE_Custom, CustomMovement);
 }
 bool USSDPlayerMovementComponent::CheckCustomMovementMode(uint8 CustomMovement){
 	return MovementMode == MOVE_Custom && CustomMovementMode == CustomMovement;
+}
+bool USSDPlayerMovementComponent::CheckMovementMode(uint8 ExpectedMovement) {
+	return MovementMode == ExpectedMovement;
 }
 void USSDPlayerMovementComponent::SetCharacterGravity(float Value){
 	GravityScale = Value;
@@ -130,11 +147,6 @@ void USSDPlayerMovementComponent::OnMovementModeChanged(EMovementMode PrevMoveme
 	case EMovementMode::MOVE_None:
 		break;
 	case EMovementMode::MOVE_Walking:
-		break;
-	}
-	switch (MovementMode) {
-	case EMovementMode::MOVE_Walking:
-
 		break;
 	}
 
@@ -611,8 +623,108 @@ void USSDPlayerMovementComponent::HaltFocusMovement() {
 
 // Swing
 
-void USSDPlayerMovementComponent::TriggerSwingMovement() {
+void USSDPlayerMovementComponent::TriggerSwingMovement(FVector pivotPosition) {
+	if (!CheckMovementMode(MOVE_Falling)) return; 
 	SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Swing);
+
+	this->pivotPosition = pivotPosition;
+
+	// Lets draw a ray for the top of the capsule drawn to the pivot point
+
+
+	FVector StartTrace = GetActorLocation();
+	//StartTrace.Z += CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	FVector EndTrace = pivotPosition;
+	FString PhysSwingLogging = "Player Postition " + StartTrace.ToCompactString() + " Pivot Position " + pivotPosition.ToCompactString();
+	UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *PhysSwingLogging);
+
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(CharacterOwner);
+	//TArray<FHitResult> Hits;
+	FHitResult Hit;
+	
+	//GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams);
+	//DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Purple, true, 3.0f);
+
+	StartTrace.Y = EndTrace.Y;
+	//DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Purple, true, 3.0f);
+
+
+	// I want to find the angle between the vertical and the player
+	// Make this a function when calculating what the new position will be you'll need to keep updating the angles
+
+
+	theta = CalculateAngleCharacterPivot(pivotPosition);
+
+	//float ScytheLength = 143.f + capsuleHalfHeight;
+
+	FVector updatePos = FVector::ZeroVector;
+
+	updatePos.Y = lengthOfPendulum * FMath::Cos(theta);
+	updatePos.Z = lengthOfPendulum * FMath::Sin(theta);
+
+
+	// if actorLocation.Z > pivotLocation.Z quad 1 or 2
+	// if actorLocation.Y > pivotlocation.Y quat 2 or 3 fucking level is backwards
+
+	FVector newLocation = FVector(0.f, pivotPosition.Y - updatePos.Y, pivotPosition.Z + updatePos.Z);
+
+	CharacterOwner->SetActorLocation(newLocation);
+
+	//DrawDebugLine(GetWorld(), CharacterOwner->GetActorLocation(), pivotPosition, FColor::Cyan, true, 3.0f);
+
+	PhysSwingLogging = "Pivot Postiion " + pivotPosition.ToCompactString() + " Theta: " + FString::SanitizeFloat(theta) + " Sin(theta) " + FString::SanitizeFloat(FMath::Sin(theta)) + " Cos(theta) " + FString::SanitizeFloat(FMath::Cos(theta)) + " theta degrees " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " updatePos " + updatePos.ToCompactString() + " Updated Location " + newLocation.ToCompactString();
+	UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *PhysSwingLogging);
+
+}
+
+float USSDPlayerMovementComponent::CalculateAngleCharacterPivot(FVector pivotPosition) {
+
+	FVector playerPosition = CharacterOwner->GetActorLocation();
+
+	//float hyp = FVector::Dist(playerPos, pivotPosition); // 1.43m 143cm Measured from blender, bottom of scythe to top of players head 
+	//float hyp = (pivotPosition - playerPosition).Size();
+	float hyp = FVector::Dist(pivotPosition, playerPosition);
+//	float opp = FMath::Abs(pivotPosition.Y - playerPos.Y);
+	float opp = FMath::Abs(pivotPosition.Z - playerPosition.Z);
+	float theta = FMath::Asin(opp / hyp);
+	FString calculate = "Hyp " + FString::SanitizeFloat(hyp) + " opp " + FString::SanitizeFloat(opp) + " theta " + FString::SanitizeFloat(theta) + " theta Degrees " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta));
+	UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *calculate);
+
+
+	// Now that we have theta for a triangle in quad 1 lets find where it really is
+
+	// Lets break this down into two Y and Z
+	//                                                           ^ Z
+	//                                                           |
+	// if player Y > pivot Y under my really dumb system Y <______ That means quad 2/3
+	// if player Z > pivot Z 
+
+	if (playerPosition.Z >= pivotPosition.Z) {
+		if (playerPosition.Y <= pivotPosition.Y) {
+			// quad 1
+			theta += 0.f;
+		}
+		else if (playerPosition.Y >= pivotPosition.Y) {
+			// quad 2
+			theta = PI - theta;
+		}
+	}
+	else if (playerPosition.Z <= pivotPosition.Z) {
+		if (playerPosition.Y >= pivotPosition.Y) {
+			// quad 3
+			theta += PI;
+		}	
+		else if (playerPosition.Y <= pivotPosition.Y) {
+			// quad 1
+			theta = 2*PI - theta;
+		}
+	}
+
+	FString PhysSwingLogging = "theta " + FString::SanitizeFloat(theta);
+	UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *PhysSwingLogging);
+
+	return theta;
 }
 
 void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
@@ -628,7 +740,42 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
 		const FQuat PawnRotation = UpdatedComponent->GetComponentQuat();
 		bJustTeleported = false;
+
+
+		theta+= timeTick;
+
+		//float ScytheLength = 143.f + capsuleHalfHeight;
+
+		FVector updatePos = FVector::ZeroVector;
+
+		updatePos.Y = lengthOfPendulum * FMath::Cos(theta);
+		updatePos.Z = lengthOfPendulum * FMath::Sin(theta);
+
+		//updatePos *= timeTick;
+
+
+		FVector updatePos2 = FVector(0.f, pivotPosition.Y - updatePos.Y, pivotPosition.Z + updatePos.Z);
+
+
+		CharacterOwner->SetActorLocation(updatePos2);
+
+		reduceLogging++;
+		if (reduceLogging % 150 == 0) {
+			FString PhysSwingLogging = "Theta Radians " + FString::SanitizeFloat(theta) + " Theta Degrees " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " updatePos " + updatePos.ToCompactString() + " NewLocation " + updatePos2.ToCompactString() + " pivotPosition " + pivotPosition.ToCompactString();
+			//FString PhysSwingLogging = "Direction Vector: " + direction.ToCompactString() + " DirectNormal: " + directionNormal.ToCompactString() + " Velocity: " + Velocity.ToCompactString() + " Force Applied: " + forceApplied.ToCompactString();
+			//	"Theta: " + FString::SanitizeFloat(theta) + " Sin(theta) " + FString::SanitizeFloat(FMath::Sin(theta)) + " Cos(theta) " + FString::SanitizeFloat(FMath::Cos(theta));
+			UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *PhysSwingLogging);
+			reduceLogging = 1;
+		}
+
+		//FVector velocity = 300.f * DeltaTime;
 	}
+}
+void USSDPlayerMovementComponent::HaltSwingMovement() {
+	SetMovementMode(MOVE_Falling);
+
+	//CharacterOwner->SetActorRotation(actorRotationPreSwing);
+
 }
 bool USSDPlayerMovementComponent::IsSwinging() const {
 	return (MovementMode == MOVE_Custom) && (CustomMovementMode == MOVE_Swing) && UpdatedComponent;
@@ -673,15 +820,7 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpl
 		return;
 	}
 }
-void USSDPlayerMovementComponent::OnJumpInput(){
 
-    if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Climb)) {
-		JumpOffWall();
-	}
-	else if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) {
-		bJumpOffGrind = true;
-	}
-}
 void USSDPlayerMovementComponent::JumpOffWall() {
 	SetMovementMode(MOVE_Falling);
 	Velocity = FVector::ZeroVector;

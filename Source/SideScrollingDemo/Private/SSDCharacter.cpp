@@ -235,6 +235,9 @@ void ASSDCharacter::NotifyJumpApex()
 // CHARACTER STATE
 void ASSDCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) {
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+	
+	if (!GetPlayerMovement()) return;
+
 	switch (PrevMovementMode) {
 	case EMovementMode::MOVE_Walking:
 		CameraBounds->setLockCameraToBottom(false);
@@ -397,7 +400,7 @@ void ASSDCharacter::TryToSwing() {
 	DrawDebugBox(GetWorld(), StartTrace, HookSize, FColor::Red, false, 2.f);
 
 	if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(ECustomTags::SwingTag)) {
-		GetPlayerMovement()->TriggerSwingMovement();
+		GetPlayerMovement()->TriggerSwingMovement(Hit.GetActor()->GetActorLocation());
 	}
 }
 bool ASSDCharacter::IsSwinging() const {

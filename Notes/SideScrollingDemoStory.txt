@@ -144,3 +144,7 @@ Ways to convey emotional state
 
 14 - 7 -20
  	Fixed MOVE_Swing
+
+17 - 7 - 20
+	Did the basics of aligning the animation with the animation with the Pivot
+		Perhaps rotating the Player is the best course of action so that I wont have an immediate need to do more animations?

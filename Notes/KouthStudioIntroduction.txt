@@ -1,0 +1,12 @@
+
+Kouth.Studio Introduction Video
+
+
+Hey My Name is Jakob, I've been a software Engineer for roughly 4 years now and have a few years learning and creating projects prior to my employment. 
+I have small scattered amounts of experience creating Games dating back to my first project, a Rough C++ based Game Engine. It wasn't much but the process taught me
+the fundalmentals of programming as I took a lower level approach from using OpenGL and a simple Text Editor to creating my own Makefiles and window contexts.
+
+Now I spend most of my personal dev time wrenching an Unreal Engine project for a SideScroller I've been wanting to make for quite some time. Despite the ambitious aspirations
+this project has been something I've been working on for over a year now and I want to showcase not only the game, but what I've learned about Unreal Engine and game programming along the way.
+
+So if that's your beat stick around from some tutorials and be on the lookout for the rough demo of my first real project dropping on itch.io

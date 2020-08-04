@@ -91,7 +91,10 @@ public:
 	void SetCustomMovementMode(uint8 CustomMovement);	
 	UFUNCTION(BlueprintCallable)
 	bool CheckCustomMovementMode(uint8 CustomMovement);
-	
+
+	UFUNCTION(BlueprintCallable)
+		bool CheckMovementMode(uint8 ExpectedMovement);
+
 	UPROPERTY(EditAnywhere)
 	float WallSlideFriction;
 
@@ -213,9 +216,20 @@ public:
 	void PhysSwing(float DeltaTime, int32 Iterations);
 	bool IsSwinging() const;
 	//bool IsSwinging() const;
-	void TriggerSwingMovement();
+	UFUNCTION(BlueprintCallable)
+	void TriggerSwingMovement(FVector pivotPosition);
+	void HaltSwingMovement();
+	FQuat actorRotationPreSwing;
+	float CalculateAngleCharacterPivot(FVector pivotPosition);
+	UPROPERTY(BlueprintReadOnly)
+	FVector pivotPosition;
+	int reduceLogging = 0.f;
+	float lengthOfPendulum = 200.f;
+	UPROPERTY(BlueprintReadOnly)
+	float theta;
 
 	void PrintStringToScreen(FString print);
+
 private:
 	uint32 bInSlide:1;
 };
