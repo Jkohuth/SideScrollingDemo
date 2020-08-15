@@ -102,6 +102,8 @@ public:
 	UPROPERTY(EditAnywhere)
 		float maxDistanceLimiter = 8.f;
 
+	float bottomOffset = 45.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector CaveBoxSize = FVector(50.f, 200.f, 275.f);
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

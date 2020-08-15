@@ -106,7 +106,7 @@ void USSDPlayerMovementComponent::OnJumpInput() {
 	else if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) {
 		bJumpOffGrind = true;
 	}
-	else if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Swing)) {
+	else if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Swing) || isSwinging) {
 		HaltSwingMovement();
 	}
 }
@@ -252,7 +252,6 @@ void USSDPlayerMovementComponent::PhysClimb(float DeltaTime, int32 Iterations){
 		End.Z += capsuleHalfHeight;
 
 
-		//bool isHit = GetWorld()->LineTraceSingleByChannel(WallHit, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionParams);
 		wallTraces.Add(GetWorld()->LineTraceSingleByChannel(WallHit, Start, End, ECollisionChannel::ECC_WorldStatic, CollisionParams));
 
 		Start.Z -= capsuleHalfHeight;
@@ -343,6 +342,8 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 	if(DeltaTime < MIN_TICK_TIME) return;
 	if(!RailSplineReference->IsValidLowLevel()) return;
 
+	FString debugGrind;
+
 	float remainingTime = DeltaTime;
 	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations)) {
 		Iterations++;
@@ -368,18 +369,36 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		// I do want input to effect Acceleration but this can be done later
 		// ******************
 
+		debugGrind = "";
+
 		// Compute Current Gravity - Use dot product to find Gravity along the angle of the rail
-		FVector worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
+		//FVector worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
+		FVector worldDirAtDist = RailSplineReference->FindDirectionClosestToWorldLocation(CharacterOwner->GetActorLocation(), ESplineCoordinateSpace::World);
+		
 		FVector Gravity = FVector(0.f, 0.f, GetGravityZ());
 		float GravityMagInDir = FVector::DotProduct(Gravity, worldDirAtDist);
 		FVector GravityAlongRail = GravityMagInDir * worldDirAtDist;
 
+		debugGrind += "WorldDirAtDist " + worldDirAtDist.ToCompactString() + " GravityMag " + FString::SanitizeFloat(GravityMagInDir) + " Gravity along rail " + GravityAlongRail.ToCompactString();
+
 		// Calculate Velocity - currently there is no terminal limit
 		Velocity += GravityAlongRail * timeTick;
+
+		Velocity = Velocity * worldDirAtDist;
 		// Require a minimum velocity so character doesn't stand stationary
 		if (FMath::IsNearlyEqual(GravityMagInDir, 0.f, 2.f) && Velocity.Equals(FVector::ZeroVector, minGrindVelocity.Size())) {
 			Velocity = minGrindVelocity * ActorForwardVector;
 		}
+
+		FHitResult Hit(1.f);
+		FVector Adjusted = 0.5f*(OldVelocity + Velocity) *timeTick;
+
+		debugGrind += " Velocity " + Velocity.ToCompactString() + " OldVelocity " + OldVelocity.ToCompactString()+" Adjusted " + Adjusted.ToCompactString();
+
+		SafeMoveUpdatedComponent(Adjusted, PawnRotation, true, Hit);
+		LogAtReducedRate(debugGrind, 30);
+		
+/*
 		// Express Velocity as a speed along the rail
 		grindSpeed = FVector::DotProduct(Velocity, worldDirAtDist);
 
@@ -399,26 +418,6 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 
 		worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
 
-
-		/*FVector updatePosition = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
-		updatePosition.Z += capsuleHalfHeight;
-		CharacterOwner->SetActorLocation(updatePosition);
-
-		FVector oldDistWorldLoc = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(oldDistanceAlongSpline);
-		FVector newDistWorldLoc = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
-		FHitResult Hit(1.f);*/
-
-		//FVector UpdateLocation;
-		//UpdateLocation = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
-		//UpdateLocation.Z += capsuleHalfHeight;
-		//FHitResult Hit(1.f);
-		//const FVector Adjusted = worldDirAtDist * grindSpeed * timeTick;
-		//const FVector Adjusted = 0.5f * (OldVelocity + Velocity)* timeTick;
-		//const FVector Adjusted = Velocity * timeTick;
-		//Adjusted = Adjusted * timeTick;
-
-		//CharacterOwner->SetActorLocation();
-		//SafeMoveUpdatedComponent(Adjusted, PawnRotation, true, Hit);
 
 		FVector beginSpline = RailSplineReference->GetWorldLocationAtSplinePoint(0);
 		FVector localBeginSpline = RailSplineReference->GetLocationAtSplinePoint(0, ESplineCoordinateSpace::Local);
@@ -442,11 +441,11 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		else {
 			updatedGrindLocation.Z += capsuleHalfHeight;
 		}
-		CharacterOwner->SetActorLocation(updatedGrindLocation);
+		//CharacterOwner->SetActorLocation(updatedGrindLocation);
 
 
 		FVector localPlayerLocationAlongSpline = RailSplineReference->FindLocationClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::Local);
-
+		*/
 		if (!HasValidData()) return;
 
 		//Should be in a struct thats initiated with the spline component
@@ -455,19 +454,14 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 			FVector upVector  = RailSplineReference->GetUpVectorAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
 			Velocity.Z += JumpRailVelocity;
 			float jumpMagnitude = FVector::DotProduct(Velocity, upVector);
-			//float railFudgeFactor = 1.5f;
-			//jumpMagnitude *= railFudgeFactor;
 			Velocity = jumpMagnitude * upVector;
-			FString tmp = "Jump Magnitude" + FString::SanitizeFloat(jumpMagnitude) + " Velocity = " + Velocity.ToCompactString() + " Gravity "
-				+ FString::SanitizeFloat(Gravity.Z);
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *tmp);
 
 			bJumpOffGrind = false;
 			SetMovementMode(MOVE_Falling);
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 			return;
 		}
-
+/*
 		if (localPlayerLocationAlongSpline.Equals(localBeginSpline, capsuleRadius) ||
 			localPlayerLocationAlongSpline.Equals(localEndSpline, capsuleRadius)) {
 			FHitResult HitCenter;
@@ -551,11 +545,12 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 				SetMovementMode(MOVE_Falling);
 				StartNewPhysics(remainingTime + timeTick, Iterations - 1);
 				return;
-			}*/
+			}
 	
-		}
+		}*/
  	}
 }
+
 bool USSDPlayerMovementComponent::IsClimbing() const {
 	return (MovementMode == MOVE_Custom) && (CustomMovementMode == MOVE_Climb) && UpdatedComponent;
 }
@@ -626,6 +621,9 @@ void USSDPlayerMovementComponent::HaltFocusMovement() {
 void USSDPlayerMovementComponent::TriggerSwingMovement(FVector pivotPosition) {
 	if (!CheckMovementMode(MOVE_Falling)) return; 
 	SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Swing);
+	//isSwinging = true;
+	
+	//SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Swing);
 
 	this->pivotPosition = pivotPosition;
 
@@ -670,7 +668,9 @@ void USSDPlayerMovementComponent::TriggerSwingMovement(FVector pivotPosition) {
 	FVector newLocation = FVector(0.f, pivotPosition.Y - updatePos.Y, pivotPosition.Z + updatePos.Z);
 
 	CharacterOwner->SetActorLocation(newLocation);
+	Velocity = FVector::ZeroVector;
 
+	//CharacterOwner->GetCapsuleComponent()->SetSimulatePhysics(true);
 	//DrawDebugLine(GetWorld(), CharacterOwner->GetActorLocation(), pivotPosition, FColor::Cyan, true, 3.0f);
 
 	PhysSwingLogging = "Pivot Postiion " + pivotPosition.ToCompactString() + " Theta: " + FString::SanitizeFloat(theta) + " Sin(theta) " + FString::SanitizeFloat(FMath::Sin(theta)) + " Cos(theta) " + FString::SanitizeFloat(FMath::Cos(theta)) + " theta degrees " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " updatePos " + updatePos.ToCompactString() + " Updated Location " + newLocation.ToCompactString();
@@ -682,14 +682,11 @@ float USSDPlayerMovementComponent::CalculateAngleCharacterPivot(FVector pivotPos
 
 	FVector playerPosition = CharacterOwner->GetActorLocation();
 
-	//float hyp = FVector::Dist(playerPos, pivotPosition); // 1.43m 143cm Measured from blender, bottom of scythe to top of players head 
-	//float hyp = (pivotPosition - playerPosition).Size();
 	float hyp = FVector::Dist(pivotPosition, playerPosition);
-//	float opp = FMath::Abs(pivotPosition.Y - playerPos.Y);
 	float opp = FMath::Abs(pivotPosition.Z - playerPosition.Z);
 	float theta = FMath::Asin(opp / hyp);
-	FString calculate = "Hyp " + FString::SanitizeFloat(hyp) + " opp " + FString::SanitizeFloat(opp) + " theta " + FString::SanitizeFloat(theta) + " theta Degrees " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta));
-	UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *calculate);
+	//FString calculate = "Hyp " + FString::SanitizeFloat(hyp) + " opp " + FString::SanitizeFloat(opp) + " theta " + FString::SanitizeFloat(theta) + " theta Degrees " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta));
+	//UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *calculate);
 
 
 	// Now that we have theta for a triangle in quad 1 lets find where it really is
@@ -721,14 +718,13 @@ float USSDPlayerMovementComponent::CalculateAngleCharacterPivot(FVector pivotPos
 		}
 	}
 
-	FString PhysSwingLogging = "theta " + FString::SanitizeFloat(theta);
-	UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *PhysSwingLogging);
-
 	return theta;
 }
 
 void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 	if (DeltaTime < MIN_TICK_TIME) return;
+
+	FString debugSwing;
 
 	float remainingTime = DeltaTime;
 	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations)) {
@@ -741,44 +737,80 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 		const FQuat PawnRotation = UpdatedComponent->GetComponentQuat();
 		bJustTeleported = false;
 
+		const FVector OldVelocity = Velocity;
 
-		theta+= timeTick;
+		debugSwing = "";
 
-		//float ScytheLength = 143.f + capsuleHalfHeight;
+		FVector Gravity(0.f, 0.f, GetGravityZ());
+			
+		debugSwing += "Velocity init: " + Velocity.ToCompactString() + " Gravity: " + Gravity.ToCompactString();
 
-		FVector updatePos = FVector::ZeroVector;
+		FVector dirPlayerPivot = pivotPosition - CharacterOwner->GetActorLocation();
 
-		updatePos.Y = lengthOfPendulum * FMath::Cos(theta);
-		updatePos.Z = lengthOfPendulum * FMath::Sin(theta);
+		float newTheta = GetAngleForSwing(dirPlayerPivot);
+		float centripAccelMag = FMath::Pow(Velocity.Size(), 2) / lengthOfPendulum;
 
-		//updatePos *= timeTick;
+		FVector Tension = (FMath::Abs(GetGravityZ())*FMath::Cos(newTheta) + centripAccelMag) * dirPlayerPivot.GetSafeNormal();
 
+		debugSwing += " Tension: " + Tension.ToCompactString() + " theta Degrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(newTheta)) + " dirPlayerPivot " + dirPlayerPivot.ToCompactString();
+		//debugSwing += " Velocity After Gravity: " + Velocity.ToCompactString() +  " Direction of TensionVec: " + dirPlayerPivot.GetSafeNormal().ToCompactString() + " Tension " + Tension.ToCompactString() + " timeTick " + FString::SanitizeFloat(timeTick);
 
-		FVector updatePos2 = FVector(0.f, pivotPosition.Y - updatePos.Y, pivotPosition.Z + updatePos.Z);
+		Velocity = NewSwingVelocity(Velocity, Gravity, Tension, timeTick);
 
+		debugSwing += " Velocity after addingAccelerations: " + Velocity.ToCompactString();
 
-		CharacterOwner->SetActorLocation(updatePos2);
+		FVector Adjusted = 0.5f * (OldVelocity + Velocity) * timeTick;
+
+		debugSwing += " Adjusted " + Adjusted.ToCompactString();
+
+		FHitResult Hit(1.f);
+		SafeMoveUpdatedComponent(Adjusted, PawnRotation, true, Hit);
+
+		//theta = CalculateAngleCharacterPivot(pivotPosition);
 
 		reduceLogging++;
-		if (reduceLogging % 150 == 0) {
-			FString PhysSwingLogging = "Theta Radians " + FString::SanitizeFloat(theta) + " Theta Degrees " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " updatePos " + updatePos.ToCompactString() + " NewLocation " + updatePos2.ToCompactString() + " pivotPosition " + pivotPosition.ToCompactString();
-			//FString PhysSwingLogging = "Direction Vector: " + direction.ToCompactString() + " DirectNormal: " + directionNormal.ToCompactString() + " Velocity: " + Velocity.ToCompactString() + " Force Applied: " + forceApplied.ToCompactString();
-			//	"Theta: " + FString::SanitizeFloat(theta) + " Sin(theta) " + FString::SanitizeFloat(FMath::Sin(theta)) + " Cos(theta) " + FString::SanitizeFloat(FMath::Cos(theta));
-			UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *PhysSwingLogging);
+		if (reduceLogging % 10 == 0) {
+			UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *debugSwing);
 			reduceLogging = 1;
 		}
-
-		//FVector velocity = 300.f * DeltaTime;
 	}
 }
 void USSDPlayerMovementComponent::HaltSwingMovement() {
 	SetMovementMode(MOVE_Falling);
-
+	isSwinging = false;
 	//CharacterOwner->SetActorRotation(actorRotationPreSwing);
 
 }
+float USSDPlayerMovementComponent::GetAngleForSwing(FVector DirectionVector) {
+	//if (DirectionVector.Y <= KINDA_SMALL_NUMBER){
+	//	return FMath::Atan(0.f);
+	//}
+	return FMath::Atan(DirectionVector.Y / DirectionVector.Z);
+}
+FVector USSDPlayerMovementComponent::NewSwingVelocity(const FVector& InitialVelocity, const FVector& Gravity, const FVector& Tension, float DeltaTime) const {
+	FVector Result = InitialVelocity;
+
+	if (DeltaTime > 0.f) {
+		Result += Gravity * DeltaTime;
+		Result += Tension * DeltaTime;
+
+		// Don't exceed terminal velocity.
+		const float TerminalLimit = FMath::Abs(GetPhysicsVolume()->TerminalVelocity);
+		if (Result.SizeSquared() > FMath::Square(TerminalLimit))
+		{
+			const FVector GravityDir = Tension.GetSafeNormal();
+			if ((Result | GravityDir) > TerminalLimit)
+			{
+				Result = FVector::PointPlaneProject(Result, FVector::ZeroVector, GravityDir) + GravityDir * TerminalLimit;
+			}
+		}
+	}
+	return Result;
+}
+
 bool USSDPlayerMovementComponent::IsSwinging() const {
 	return (MovementMode == MOVE_Custom) && (CustomMovementMode == MOVE_Swing) && UpdatedComponent;
+	// return isSwinging;
 }
 void USSDPlayerMovementComponent::BackDash(){
 
@@ -815,7 +847,9 @@ void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpl
 		
 		grindSpeed = FVector::DotProduct(Velocity, worldDirAtDist);
 		Velocity = grindSpeed * worldDirAtDist;
-		worldLocAtDist.Z += capsuleHalfHeight;
+
+		float fudgeFactor = 15.f; // Since I am no longer using SetActorLocation and am instead using SafeMoveUpdate I think the collisions are holding me back
+		worldLocAtDist.Z += capsuleHalfHeight + fudgeFactor;
 		CharacterOwner->SetActorLocation(worldLocAtDist);
 		return;
 	}
@@ -864,4 +898,11 @@ FString USSDPlayerMovementComponent::GetMovementModeString() {
 			break;
 	}
 	return mode;
+}
+void USSDPlayerMovementComponent::LogAtReducedRate(FString Log, int ratePerFrames) {
+	frameCount++;
+	if (frameCount % ratePerFrames == 0) {
+		UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *Log);
+		frameCount = 1;
+	}
 }

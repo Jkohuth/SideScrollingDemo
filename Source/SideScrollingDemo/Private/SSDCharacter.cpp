@@ -40,6 +40,7 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 
 	// CameraBounds would be better added in blueprints I think it's giving me errors with hot reload
 	CameraBounds = CreateDefaultSubobject<UCameraBoundingBoxComponent>(TEXT("CameraBounds"));
+	verify(CameraBounds != nullptr);
 	//CameraBounds->GetCameraComponent()->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 
 	CharacterEffects = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcess"));

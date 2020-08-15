@@ -24,8 +24,7 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 
 	BoundingBox->SetRelativeLocation(FVector(0.f, 0.f,0.f));
 	BoundingBox->InitBoxExtent(MainBoxSize);
-	//BoundingBox->bHiddenInGame = false;
-	//BoundingBox->bVisible = true;
+
 	BoundingBox->SetUsingAbsoluteLocation(true);
 	BoundingBox->SetUsingAbsoluteRotation(true);
 	//BoundingBox->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, 180.f)));
@@ -48,11 +47,11 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 
 	BoxExtent = BoundingBox->GetScaledBoxExtent();
 	
-	MainCameraTransform.SetLocation(FVector(1000.f, -250.f, 0.f));
+	MainCameraTransform.SetLocation(FVector(1000.f, -250.f, -50.f));
 	MainCameraTransform.SetRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, -180.f)));
 	MainCameraTransform.SetScale3D(FVector(1.f));
 
-	CaveCameraTransform.SetLocation(FVector(750.f, -250.f, 0.f));
+	CaveCameraTransform.SetLocation(FVector(750.f, -250.f, -25.f));
 	CaveCameraTransform.SetRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, -180.f)));
 	CaveCameraTransform.SetScale3D(FVector(1.f));
 

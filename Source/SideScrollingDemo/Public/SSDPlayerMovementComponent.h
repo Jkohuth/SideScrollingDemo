@@ -210,11 +210,12 @@ public:
 	float slopeNormal;
 	bool bJumpOffGrind = false;
 	FVector UpdateLocation;
-	FVector minGrindVelocity = FVector(0.f, 250.f, 0.f);
+	FVector minGrindVelocity = FVector(0.f, 500.f, 0.f);
 
 	// Swing
 	void PhysSwing(float DeltaTime, int32 Iterations);
 	bool IsSwinging() const;
+	bool isSwinging = false;
 	//bool IsSwinging() const;
 	UFUNCTION(BlueprintCallable)
 	void TriggerSwingMovement(FVector pivotPosition);
@@ -223,12 +224,17 @@ public:
 	float CalculateAngleCharacterPivot(FVector pivotPosition);
 	UPROPERTY(BlueprintReadOnly)
 	FVector pivotPosition;
+	float GetAngleForSwing(FVector DirectionVector);
+	FVector NewSwingVelocity(const FVector& InitialVelocity, const FVector& Gravity, const FVector& Tension, float DeltaTime) const;
 	int reduceLogging = 0.f;
 	float lengthOfPendulum = 200.f;
 	UPROPERTY(BlueprintReadOnly)
 	float theta;
 
 	void PrintStringToScreen(FString print);
+
+	int frameCount = 0.f;
+	void LogAtReducedRate(FString Log, int ratePerFrames);
 
 private:
 	uint32 bInSlide:1;
