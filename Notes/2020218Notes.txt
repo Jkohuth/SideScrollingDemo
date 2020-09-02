@@ -187,3 +187,19 @@ Death Animation
 		Add Fade in and Fade out of material based on button press
 
 		Working Title Leeres Volk
+
+2020-09-01
+	I have been working on the game sparingly not as much as Id like for this 3 month gap
+
+	TODO:
+		Fix Swing Movement Offset
+
+			First step diagonse what is happening
+2020-09-02
+	
+	Accomplished:
+		Swing movements errors are occuring when the players height exceeds that of the pivot, as tension is still being applied when the character should be in freefall
+
+	TODO:
+		Fix Swing movement bug
+		Add player input for swing movement

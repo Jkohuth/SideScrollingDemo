@@ -228,8 +228,8 @@ public:
 	FVector NewSwingVelocity(const FVector& InitialVelocity, const FVector& Gravity, const FVector& Tension, float DeltaTime) const;
 	int reduceLogging = 0.f;
 	float lengthOfPendulum = 200.f;
-	UPROPERTY(BlueprintReadOnly)
-	float theta;
+	UPROPERTY(BlueprintReadWrite)
+	float PendulumFriction = 0.2f;
 
 	void PrintStringToScreen(FString print);
 

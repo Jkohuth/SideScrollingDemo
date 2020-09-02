@@ -621,40 +621,11 @@ void USSDPlayerMovementComponent::HaltFocusMovement() {
 void USSDPlayerMovementComponent::TriggerSwingMovement(FVector pivotPosition) {
 	if (!CheckMovementMode(MOVE_Falling)) return; 
 	SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Swing);
-	//isSwinging = true;
-	
-	//SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Swing);
 
+	// Store the Location of the Pivot in a Local Variable for use later
 	this->pivotPosition = pivotPosition;
-
-	// Lets draw a ray for the top of the capsule drawn to the pivot point
-
-
-	FVector StartTrace = GetActorLocation();
-	//StartTrace.Z += CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-	FVector EndTrace = pivotPosition;
-	FString PhysSwingLogging = "Player Postition " + StartTrace.ToCompactString() + " Pivot Position " + pivotPosition.ToCompactString();
-	UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *PhysSwingLogging);
-
-	FCollisionQueryParams CollisionParams;
-	CollisionParams.AddIgnoredActor(CharacterOwner);
-	//TArray<FHitResult> Hits;
-	FHitResult Hit;
 	
-	//GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECollisionChannel::ECC_WorldStatic, CollisionParams);
-	//DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Purple, true, 3.0f);
-
-	StartTrace.Y = EndTrace.Y;
-	//DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor::Purple, true, 3.0f);
-
-
-	// I want to find the angle between the vertical and the player
-	// Make this a function when calculating what the new position will be you'll need to keep updating the angles
-
-
-	theta = CalculateAngleCharacterPivot(pivotPosition);
-
-	//float ScytheLength = 143.f + capsuleHalfHeight;
+	float theta = CalculateAngleCharacterPivot(pivotPosition);
 
 	FVector updatePos = FVector::ZeroVector;
 
@@ -668,16 +639,95 @@ void USSDPlayerMovementComponent::TriggerSwingMovement(FVector pivotPosition) {
 	FVector newLocation = FVector(0.f, pivotPosition.Y - updatePos.Y, pivotPosition.Z + updatePos.Z);
 
 	CharacterOwner->SetActorLocation(newLocation);
+
+	// TODO: Find the sum of forces (Gravity and Tension) here and then get the velocity using the dot product against that
 	Velocity = FVector::ZeroVector;
 
-	//CharacterOwner->GetCapsuleComponent()->SetSimulatePhysics(true);
-	//DrawDebugLine(GetWorld(), CharacterOwner->GetActorLocation(), pivotPosition, FColor::Cyan, true, 3.0f);
-
-	PhysSwingLogging = "Pivot Postiion " + pivotPosition.ToCompactString() + " Theta: " + FString::SanitizeFloat(theta) + " Sin(theta) " + FString::SanitizeFloat(FMath::Sin(theta)) + " Cos(theta) " + FString::SanitizeFloat(FMath::Cos(theta)) + " theta degrees " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " updatePos " + updatePos.ToCompactString() + " Updated Location " + newLocation.ToCompactString();
+	FString PhysSwingLogging = "Pivot Postiion " + pivotPosition.ToCompactString() + " Theta: " + FString::SanitizeFloat(theta) + " Sin(theta) " + FString::SanitizeFloat(FMath::Sin(theta)) + " Cos(theta) " + FString::SanitizeFloat(FMath::Cos(theta)) + " theta degrees " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " updatePos " + updatePos.ToCompactString() + " Updated Location " + newLocation.ToCompactString();
 	UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *PhysSwingLogging);
 
 }
 
+void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
+	if (DeltaTime < MIN_TICK_TIME) return;
+
+	FString debugSwing;
+
+	float remainingTime = DeltaTime;
+	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations)) {
+		Iterations++;
+		const float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
+		remainingTime -= timeTick;
+
+		// Store Current Values
+		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
+		const FQuat PawnRotation = UpdatedComponent->GetComponentQuat();
+		bJustTeleported = false;
+
+		const FVector OldVelocity = Velocity;
+		float MaxDecel = GetMaxBrakingDeceleration();
+
+
+		// TODO: 
+		// Get Player Input for horizontal movement
+		// Add acceleration in direction of the forces (Tension + Gravity)
+
+		//CalcVelocity(timeTick, PendulumFriction, false, MaxDecel);
+
+		debugSwing = "";
+
+		FVector Gravity(0.f, 0.f, GetGravityZ());
+			
+		//debugSwing += "Velocity init: " + Velocity.ToCompactString() + " Gravity: " + Gravity.ToCompactString();
+
+		FVector dirPlayerPivot = pivotPosition - CharacterOwner->GetActorLocation();
+
+		float theta = GetAngleForSwing(dirPlayerPivot);
+		float centripAccelMag = FMath::Pow(Velocity.Size(), 2) / lengthOfPendulum;
+
+		FVector Tension = (FMath::Abs(GetGravityZ())*FMath::Cos(theta) + centripAccelMag) * dirPlayerPivot.GetSafeNormal();
+
+		//debugSwing += " Tension: " + Tension.ToCompactString() + " theta Degrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " dirPlayerPivot " + dirPlayerPivot.ToCompactString();
+		//debugSwing += " Velocity After Gravity: " + Velocity.ToCompactString() +  " Direction of TensionVec: " + dirPlayerPivot.GetSafeNormal().ToCompactString() + " Tension " + Tension.ToCompactString() + " timeTick " + FString::SanitizeFloat(timeTick);
+
+		Velocity = NewSwingVelocity(Velocity, Gravity, Tension, timeTick);
+
+		debugSwing += " Velocity after adding Accelerations: " + Velocity.ToCompactString();
+
+		if (GetActorLocation().Z > pivotPosition.Z) {
+			debugSwing += " It should start breaking down now Theta: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " Character Position: " + GetActorLocation().ToCompactString() + " PivotPosition: " + pivotPosition.ToCompactString();
+		}
+
+		FVector Adjusted = 0.5f * (OldVelocity + Velocity) * timeTick;
+
+		debugSwing += " Adjusted " + Adjusted.ToCompactString();
+
+		FHitResult Hit(1.f);
+		SafeMoveUpdatedComponent(Adjusted, PawnRotation, true, Hit);
+		dirPlayerPivot = pivotPosition - CharacterOwner->GetActorLocation();
+
+		//theta = CalculateAngleCharacterPivot(pivotPosition);
+
+		reduceLogging++;
+		if (reduceLogging % 1 == 0) {
+			UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *debugSwing);
+			reduceLogging = 1;
+		}
+	}
+}
+void USSDPlayerMovementComponent::HaltSwingMovement() {
+	SetMovementMode(MOVE_Falling);
+	isSwinging = false;
+	this->pivotPosition = FVector::ZeroVector;
+	//CharacterOwner->SetActorRotation(actorRotationPreSwing);
+
+}
+float USSDPlayerMovementComponent::GetAngleForSwing(FVector DirectionVector) {
+	//if (DirectionVector.Y <= KINDA_SMALL_NUMBER){
+	//	return FMath::Atan(0.f);
+	//}
+	return FMath::Atan(DirectionVector.Y / DirectionVector.Z);
+}
 float USSDPlayerMovementComponent::CalculateAngleCharacterPivot(FVector pivotPosition) {
 
 	FVector playerPosition = CharacterOwner->GetActorLocation();
@@ -685,12 +735,8 @@ float USSDPlayerMovementComponent::CalculateAngleCharacterPivot(FVector pivotPos
 	float hyp = FVector::Dist(pivotPosition, playerPosition);
 	float opp = FMath::Abs(pivotPosition.Z - playerPosition.Z);
 	float theta = FMath::Asin(opp / hyp);
-	//FString calculate = "Hyp " + FString::SanitizeFloat(hyp) + " opp " + FString::SanitizeFloat(opp) + " theta " + FString::SanitizeFloat(theta) + " theta Degrees " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta));
-	//UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *calculate);
-
 
 	// Now that we have theta for a triangle in quad 1 lets find where it really is
-
 	// Lets break this down into two Y and Z
 	//                                                           ^ Z
 	//                                                           |
@@ -711,97 +757,32 @@ float USSDPlayerMovementComponent::CalculateAngleCharacterPivot(FVector pivotPos
 		if (playerPosition.Y >= pivotPosition.Y) {
 			// quad 3
 			theta += PI;
-		}	
+		}
 		else if (playerPosition.Y <= pivotPosition.Y) {
 			// quad 1
-			theta = 2*PI - theta;
+			theta = 2 * PI - theta;
 		}
 	}
-
 	return theta;
 }
 
-void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
-	if (DeltaTime < MIN_TICK_TIME) return;
-
-	FString debugSwing;
-
-	float remainingTime = DeltaTime;
-	while ((remainingTime >= MIN_TICK_TIME) && (Iterations < MaxSimulationIterations)) {
-		Iterations++;
-		const float timeTick = GetSimulationTimeStep(remainingTime, Iterations);
-		remainingTime -= timeTick;
-
-		// Store Current Values
-		const FVector OldLocation = UpdatedComponent->GetComponentLocation();
-		const FQuat PawnRotation = UpdatedComponent->GetComponentQuat();
-		bJustTeleported = false;
-
-		const FVector OldVelocity = Velocity;
-
-		debugSwing = "";
-
-		FVector Gravity(0.f, 0.f, GetGravityZ());
-			
-		debugSwing += "Velocity init: " + Velocity.ToCompactString() + " Gravity: " + Gravity.ToCompactString();
-
-		FVector dirPlayerPivot = pivotPosition - CharacterOwner->GetActorLocation();
-
-		float newTheta = GetAngleForSwing(dirPlayerPivot);
-		float centripAccelMag = FMath::Pow(Velocity.Size(), 2) / lengthOfPendulum;
-
-		FVector Tension = (FMath::Abs(GetGravityZ())*FMath::Cos(newTheta) + centripAccelMag) * dirPlayerPivot.GetSafeNormal();
-
-		debugSwing += " Tension: " + Tension.ToCompactString() + " theta Degrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(newTheta)) + " dirPlayerPivot " + dirPlayerPivot.ToCompactString();
-		//debugSwing += " Velocity After Gravity: " + Velocity.ToCompactString() +  " Direction of TensionVec: " + dirPlayerPivot.GetSafeNormal().ToCompactString() + " Tension " + Tension.ToCompactString() + " timeTick " + FString::SanitizeFloat(timeTick);
-
-		Velocity = NewSwingVelocity(Velocity, Gravity, Tension, timeTick);
-
-		debugSwing += " Velocity after addingAccelerations: " + Velocity.ToCompactString();
-
-		FVector Adjusted = 0.5f * (OldVelocity + Velocity) * timeTick;
-
-		debugSwing += " Adjusted " + Adjusted.ToCompactString();
-
-		FHitResult Hit(1.f);
-		SafeMoveUpdatedComponent(Adjusted, PawnRotation, true, Hit);
-
-		//theta = CalculateAngleCharacterPivot(pivotPosition);
-
-		reduceLogging++;
-		if (reduceLogging % 10 == 0) {
-			UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *debugSwing);
-			reduceLogging = 1;
-		}
-	}
-}
-void USSDPlayerMovementComponent::HaltSwingMovement() {
-	SetMovementMode(MOVE_Falling);
-	isSwinging = false;
-	//CharacterOwner->SetActorRotation(actorRotationPreSwing);
-
-}
-float USSDPlayerMovementComponent::GetAngleForSwing(FVector DirectionVector) {
-	//if (DirectionVector.Y <= KINDA_SMALL_NUMBER){
-	//	return FMath::Atan(0.f);
-	//}
-	return FMath::Atan(DirectionVector.Y / DirectionVector.Z);
-}
 FVector USSDPlayerMovementComponent::NewSwingVelocity(const FVector& InitialVelocity, const FVector& Gravity, const FVector& Tension, float DeltaTime) const {
 	FVector Result = InitialVelocity;
 
-	if (DeltaTime > 0.f) {
-		Result += Gravity * DeltaTime;
-		Result += Tension * DeltaTime;
+	FVector SumOfForces = Gravity + Tension;
 
+	if (DeltaTime > 0.f) {
+		//Result += Gravity * DeltaTime;
+		//Result += Tension * DeltaTime;
+		Result += SumOfForces * DeltaTime;
 		// Don't exceed terminal velocity.
 		const float TerminalLimit = FMath::Abs(GetPhysicsVolume()->TerminalVelocity);
 		if (Result.SizeSquared() > FMath::Square(TerminalLimit))
 		{
-			const FVector GravityDir = Tension.GetSafeNormal();
-			if ((Result | GravityDir) > TerminalLimit)
+			const FVector SumOfForcesDir = SumOfForces.GetSafeNormal();
+			if ((Result | SumOfForcesDir) > TerminalLimit)
 			{
-				Result = FVector::PointPlaneProject(Result, FVector::ZeroVector, GravityDir) + GravityDir * TerminalLimit;
+				Result = FVector::PointPlaneProject(Result, FVector::ZeroVector, SumOfForcesDir) + SumOfForcesDir * TerminalLimit;
 			}
 		}
 	}
