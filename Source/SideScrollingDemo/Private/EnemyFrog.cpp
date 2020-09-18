@@ -87,7 +87,7 @@ void AEnemyFrog::TurnAround() {
 
 void AEnemyFrog::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpluse, const FHitResult& Hit) {
 	//UE_LOG(LogEnemy, Log, TEXT("Enemy Hit %s"), *OtherActor->GetName());
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "OnHit was called");
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "OnHit was called");
 
 	TurnAround();
 	if (OtherActor && OtherActor->ActorHasTag(ECustomTags::PlayerTag)) {

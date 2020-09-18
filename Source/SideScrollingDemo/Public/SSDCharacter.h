@@ -195,6 +195,8 @@ public:
 	// Event called when player releases slide button
 	void OnStopSlide();
 
+	void DebugString();
+
 private:
 	uint32 bPressedSlide:1;
 };

@@ -18,13 +18,13 @@ public:
 	UCameraBoundingBoxComponent();
 
 protected:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadWrite, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* CameraComponent;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadWrite, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
 		class UBoxComponent* BoundingBox;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadWrite, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
 		class UStaticMeshComponent* ViewPlane;
 
 	// Called when the game starts
@@ -118,6 +118,8 @@ public:
 		void UpdatePosition(UCapsuleComponent* targetCapsule, float DeltaTime);
 	UFUNCTION(BlueprintCallable)
 		void ResetCamera(AActor* targetActor);
+
+	bool ConfirmComponentValidLowLevel();
 
 	FORCEINLINE class UCameraComponent* GetCameraComponent() const { return CameraComponent; }
 	FORCEINLINE class UBoxComponent* GetBoundingBox() const { return BoundingBox; }

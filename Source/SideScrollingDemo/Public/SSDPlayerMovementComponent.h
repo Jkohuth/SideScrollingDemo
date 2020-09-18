@@ -221,15 +221,19 @@ public:
 	void TriggerSwingMovement(FVector pivotPosition);
 	void HaltSwingMovement();
 	FQuat actorRotationPreSwing;
-	float CalculateAngleCharacterPivot(FVector pivotPosition);
+	FVector CalculateCharacterPivotDistance(FVector pivotPosition);
 	UPROPERTY(BlueprintReadOnly)
 	FVector pivotPosition;
 	float GetAngleForSwing(FVector DirectionVector);
 	FVector NewSwingVelocity(const FVector& InitialVelocity, const FVector& Gravity, const FVector& Tension, float DeltaTime) const;
 	int reduceLogging = 0.f;
-	float lengthOfPendulum = 200.f;
-	UPROPERTY(BlueprintReadWrite)
-	float PendulumFriction = 0.2f;
+	float lengthOfPendulum = 220.f;
+	UPROPERTY(EditAnywhere)
+	float PendulumFriction = .8f;
+	UPROPERTY(EditAnywhere)
+	float TerminalSwingVelocity = 2500.f;
+	UPROPERTY(EditAnywhere)
+	float MaxSwingAccel = 400.f;
 
 	void PrintStringToScreen(FString print);
 

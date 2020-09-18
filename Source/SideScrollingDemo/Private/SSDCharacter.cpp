@@ -40,8 +40,8 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 
 	// CameraBounds would be better added in blueprints I think it's giving me errors with hot reload
 	CameraBounds = CreateDefaultSubobject<UCameraBoundingBoxComponent>(TEXT("CameraBounds"));
-	verify(CameraBounds != nullptr);
-	//CameraBounds->GetCameraComponent()->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+	check(GetCameraBounds()->IsValidLowLevel());
+	GetCameraBounds()->GetCameraComponent()->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 
 	CharacterEffects = CreateDefaultSubobject<UPostProcessComponent>(TEXT("PostProcess"));
 	CharacterEffects->SetupAttachment(RootComponent);
@@ -69,10 +69,9 @@ void ASSDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetCharacterState(ECharacterState::ACTIVE);
-	if (CameraBounds) {
-		CameraBounds->OnSSDCharacterBeginPlay(GetCapsuleComponent());
-		CameraBounds->ResetCamera(this);
+	if (GetCameraBounds()) {
+		GetCameraBounds()->OnSSDCharacterBeginPlay(GetCapsuleComponent());
+		GetCameraBounds()->ResetCamera(this);
 	}
 	RespawnLocation = GetActorLocation();
 
@@ -92,7 +91,7 @@ void ASSDCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	AdjustFocusBarPercentage(DeltaTime);
 	// Keep Player within Camera Bounds
-	CameraBounds->UpdatePosition(GetCapsuleComponent(), DeltaTime);
+	GetCameraBounds()->UpdatePosition(GetCapsuleComponent(), DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -101,7 +100,7 @@ void ASSDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-	//PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &ASSDCharacter::DebugString);
+	PlayerInputComponent->BindAction("Debug", IE_Pressed, this, &ASSDCharacter::DebugString);
 	PlayerInputComponent->BindAction("Focus", IE_Pressed, this, &ASSDCharacter::TriggerFocus);
 	PlayerInputComponent->BindAction("Focus", IE_Released, this, &ASSDCharacter::HaltFocus);
 	PlayerInputComponent->BindAction("Swing", IE_Pressed, this, &ASSDCharacter::TryToSwing);
@@ -151,7 +150,7 @@ void ASSDCharacter::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AAc
 	}
 	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::CaveTag)) {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Cave Overlap");
-		CameraBounds->SetCameraMode(ECameraMode::CAVE);
+		GetCameraBounds()->SetCameraMode(ECameraMode::CAVE);
 
 	}
 	else if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::LevelBoundsTag)) {
@@ -166,7 +165,7 @@ void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActo
 		GetPlayerMovement()->HaltUpdraftMovement();
 	}
 	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::CaveTag)) {
-		CameraBounds->SetCameraMode(ECameraMode::MAIN);
+		GetCameraBounds()->SetCameraMode(ECameraMode::MAIN);
 	}
 }
 void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
@@ -196,8 +195,8 @@ void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	}
 }
 void ASSDCharacter::InitializeLevelBounds(UPrimitiveComponent* Bounds) {
-	if (CameraBounds && Bounds) {
-		CameraBounds->SetLevelBounds(Bounds);
+	if (GetCameraBounds()->IsValidLowLevel() && Bounds) {
+		GetCameraBounds()->SetLevelBounds(Bounds);
 	}
 }
 // JUMP
@@ -241,11 +240,12 @@ void ASSDCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 
 
 	switch (PrevMovementMode) {
 	case EMovementMode::MOVE_Walking:
-		CameraBounds->setLockCameraToBottom(false);
+		GetCameraBounds()->setLockCameraToBottom(false);
+		break;
 	}
 	switch (GetPlayerMovement()->MovementMode) {
 	case EMovementMode::MOVE_Walking:
-		CameraBounds->setLockCameraToBottom(true);
+		GetCameraBounds()->setLockCameraToBottom(true);
 		break;
 	}
 }
@@ -335,7 +335,7 @@ void ASSDCharacter::Respawn(FVector LastCheckPoint){
 	SetCharacterState(ECharacterState::ACTIVE);
 	FocusBarPercentage = 1.f;
 	SetActorLocation(LastCheckPoint); // May need to use a different method
-	CameraBounds->ResetCamera(this);
+	GetCameraBounds()->ResetCamera(this);
 }
 bool ASSDCharacter::IsDead(){
 	if(GetCharacterState() == ECharacterState::DEAD)
@@ -431,4 +431,21 @@ void ASSDCharacter::OnStartSlide(){
 }
 void ASSDCharacter::OnStopSlide(){
 	
+}
+
+void ASSDCharacter::DebugString() {
+	FString output = "Character's current state ";
+	switch (this->CharacterState) {
+	case ACTIVE:
+		output += "ACTIVE";
+		break;
+	case REST:
+		output += "REST";
+		break;
+	case DEAD:
+		output += "DEAD";
+		break;
+	}
+
+	UE_LOG(LogClass, Log, TEXT("%s"), *output);
 }

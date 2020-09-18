@@ -87,6 +87,7 @@ void USSDPlayerMovementComponent::MoveRightInput(float Value){
 				case ECustomMovementMode::MOVE_Climb:
 					break;
 				case ECustomMovementMode::MOVE_Swing:
+					AddInputVector(FVector(0.f, -Value, 0.f));
 					break;
 			}
 			break;
@@ -124,6 +125,8 @@ void USSDPlayerMovementComponent::SetCharacterGravity(float Value){
 }
 void USSDPlayerMovementComponent::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) {
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+	FString PreviousMovementModeString = "Previous ModementMode ";
+
 	switch (PrevMovementMode) {
 	case EMovementMode::MOVE_Custom:
 		switch (PreviousCustomMode) {
@@ -134,7 +137,7 @@ void USSDPlayerMovementComponent::OnMovementModeChanged(EMovementMode PrevMoveme
 			MaxAcceleration = MaxAccel;
 			break;		
 		case ECustomMovementMode::MOVE_Swing:
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "You're trying to swing");
+			MaxAcceleration = MaxAccel;
 			break;
 		}
 		break;
@@ -149,7 +152,6 @@ void USSDPlayerMovementComponent::OnMovementModeChanged(EMovementMode PrevMoveme
 	case EMovementMode::MOVE_Walking:
 		break;
 	}
-
 }
 void USSDPlayerMovementComponent::PhysCustom(float DeltaTime, int32 Iterations) {
 	switch (CustomMovementMode) {
@@ -625,26 +627,17 @@ void USSDPlayerMovementComponent::TriggerSwingMovement(FVector pivotPosition) {
 	// Store the Location of the Pivot in a Local Variable for use later
 	this->pivotPosition = pivotPosition;
 	
-	float theta = CalculateAngleCharacterPivot(pivotPosition);
+	CharacterOwner->SetActorLocation(CalculateCharacterPivotDistance(pivotPosition));
+	MaxAcceleration = MaxSwingAccel;
 
-	FVector updatePos = FVector::ZeroVector;
+	FVector dirPlayerPivot = this->pivotPosition - CharacterOwner->GetActorLocation();
 
-	updatePos.Y = lengthOfPendulum * FMath::Cos(theta);
-	updatePos.Z = lengthOfPendulum * FMath::Sin(theta);
-
-
-	// if actorLocation.Z > pivotLocation.Z quad 1 or 2
-	// if actorLocation.Y > pivotlocation.Y quat 2 or 3 fucking level is backwards
-
-	FVector newLocation = FVector(0.f, pivotPosition.Y - updatePos.Y, pivotPosition.Z + updatePos.Z);
-
-	CharacterOwner->SetActorLocation(newLocation);
-
+	Velocity = Velocity.Size() * dirPlayerPivot.GetSafeNormal();
 	// TODO: Find the sum of forces (Gravity and Tension) here and then get the velocity using the dot product against that
-	Velocity = FVector::ZeroVector;
+	//Velocity = FVector::ZeroVector;
 
-	FString PhysSwingLogging = "Pivot Postiion " + pivotPosition.ToCompactString() + " Theta: " + FString::SanitizeFloat(theta) + " Sin(theta) " + FString::SanitizeFloat(FMath::Sin(theta)) + " Cos(theta) " + FString::SanitizeFloat(FMath::Cos(theta)) + " theta degrees " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " updatePos " + updatePos.ToCompactString() + " Updated Location " + newLocation.ToCompactString();
-	UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *PhysSwingLogging);
+	//FString PhysSwingLogging = "Pivot Postiion " + pivotPosition.ToCompactString() + " Theta: " + FString::SanitizeFloat(theta) + " Sin(theta) " + FString::SanitizeFloat(FMath::Sin(theta)) + " Cos(theta) " + FString::SanitizeFloat(FMath::Cos(theta)) + " theta degrees " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " updatePos " + updatePos.ToCompactString() + " Updated Location " + newLocation.ToCompactString();
+	//UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *PhysSwingLogging);
 
 }
 
@@ -672,7 +665,7 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 		// Get Player Input for horizontal movement
 		// Add acceleration in direction of the forces (Tension + Gravity)
 
-		//CalcVelocity(timeTick, PendulumFriction, false, MaxDecel);
+		CalcVelocity(timeTick, PendulumFriction, false, MaxDecel); // Using this function can I set a resonable max acceleration
 
 		debugSwing = "";
 
@@ -683,20 +676,23 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 		FVector dirPlayerPivot = pivotPosition - CharacterOwner->GetActorLocation();
 
 		float theta = GetAngleForSwing(dirPlayerPivot);
+		FVector Tension = FVector::ZeroVector;
 		float centripAccelMag = FMath::Pow(Velocity.Size(), 2) / lengthOfPendulum;
+		Tension = (FMath::Abs(GetGravityZ())*FMath::Cos(theta) + centripAccelMag) * dirPlayerPivot.GetSafeNormal();
 
-		FVector Tension = (FMath::Abs(GetGravityZ())*FMath::Cos(theta) + centripAccelMag) * dirPlayerPivot.GetSafeNormal();
+		if (GetActorLocation().Z >= pivotPosition.Z) {
+			Tension = FVector::ZeroVector;
 
-		//debugSwing += " Tension: " + Tension.ToCompactString() + " theta Degrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " dirPlayerPivot " + dirPlayerPivot.ToCompactString();
+			debugSwing += " ThetaDegrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " ThetaRadians " + FString::SanitizeFloat(theta);
+		}
+	/**/	//debugSwing += " Tension: " + Tension.ToCompactString() + " theta Degrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " dirPlayerPivot " + dirPlayerPivot.ToCompactString();
 		//debugSwing += " Velocity After Gravity: " + Velocity.ToCompactString() +  " Direction of TensionVec: " + dirPlayerPivot.GetSafeNormal().ToCompactString() + " Tension " + Tension.ToCompactString() + " timeTick " + FString::SanitizeFloat(timeTick);
 
 		Velocity = NewSwingVelocity(Velocity, Gravity, Tension, timeTick);
 
-		debugSwing += " Velocity after adding Accelerations: " + Velocity.ToCompactString();
+		//debugSwing += "Velocity Size" + FString::SanitizeFloat(Velocity.Size()) + " Velocity + Accelerations: " + Velocity.ToCompactString();
 
-		if (GetActorLocation().Z > pivotPosition.Z) {
-			debugSwing += " It should start breaking down now Theta: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " Character Position: " + GetActorLocation().ToCompactString() + " PivotPosition: " + pivotPosition.ToCompactString();
-		}
+		//debugSwing += " ThetaDegrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " ThetaRadians " + FString::SanitizeFloat(theta) + " centripAccel: " + FString::SanitizeFloat(centripAccelMag) + " Tension: " + Tension.ToCompactString();
 
 		FVector Adjusted = 0.5f * (OldVelocity + Velocity) * timeTick;
 
@@ -705,6 +701,12 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 		FHitResult Hit(1.f);
 		SafeMoveUpdatedComponent(Adjusted, PawnRotation, true, Hit);
 		dirPlayerPivot = pivotPosition - CharacterOwner->GetActorLocation();
+
+		FVector CharacterDistance = CalculateCharacterPivotDistance(pivotPosition);
+
+		if (!dirPlayerPivot.Equals(CharacterDistance, 30.f)) {
+			CharacterOwner->SetActorLocation(CharacterDistance);
+		}
 
 		//theta = CalculateAngleCharacterPivot(pivotPosition);
 
@@ -728,7 +730,7 @@ float USSDPlayerMovementComponent::GetAngleForSwing(FVector DirectionVector) {
 	//}
 	return FMath::Atan(DirectionVector.Y / DirectionVector.Z);
 }
-float USSDPlayerMovementComponent::CalculateAngleCharacterPivot(FVector pivotPosition) {
+FVector USSDPlayerMovementComponent::CalculateCharacterPivotDistance(FVector pivotPosition) {
 
 	FVector playerPosition = CharacterOwner->GetActorLocation();
 
@@ -763,7 +765,18 @@ float USSDPlayerMovementComponent::CalculateAngleCharacterPivot(FVector pivotPos
 			theta = 2 * PI - theta;
 		}
 	}
-	return theta;
+
+	FVector updatePos = FVector::ZeroVector;
+
+	updatePos.Y = lengthOfPendulum * FMath::Cos(theta);
+	updatePos.Z = lengthOfPendulum * FMath::Sin(theta);
+
+
+	// if actorLocation.Z > pivotLocation.Z quad 1 or 2
+	// if actorLocation.Y > pivotlocation.Y quat 2 or 3 fucking level is backwards
+
+	FVector newLocation = FVector(0.f, pivotPosition.Y - updatePos.Y, pivotPosition.Z + updatePos.Z);
+	return newLocation;
 }
 
 FVector USSDPlayerMovementComponent::NewSwingVelocity(const FVector& InitialVelocity, const FVector& Gravity, const FVector& Tension, float DeltaTime) const {
@@ -776,9 +789,11 @@ FVector USSDPlayerMovementComponent::NewSwingVelocity(const FVector& InitialVelo
 		//Result += Tension * DeltaTime;
 		Result += SumOfForces * DeltaTime;
 		// Don't exceed terminal velocity.
-		const float TerminalLimit = FMath::Abs(GetPhysicsVolume()->TerminalVelocity);
+		//const float TerminalLimit = FMath::Abs(GetPhysicsVolume()->TerminalVelocity);
+		const float TerminalLimit = TerminalSwingVelocity;
 		if (Result.SizeSquared() > FMath::Square(TerminalLimit))
 		{
+
 			const FVector SumOfForcesDir = SumOfForces.GetSafeNormal();
 			if ((Result | SumOfForcesDir) > TerminalLimit)
 			{

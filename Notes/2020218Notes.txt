@@ -203,3 +203,43 @@ Death Animation
 	TODO:
 		Fix Swing movement bug
 		Add player input for swing movement
+
+2020-09-05
+	
+	Tinkered with the Swing Movement, its getting there
+
+	Added Frog Mesh with materials to game
+
+2020-09-13
+	This is more of an overview of what was accomplished over the weekend
+	The main menu in all its glory is roughly complete, with the character resting idle post and Display name available along with a press start animation widget
+
+	TODO:
+		Fix crashing bug when player is handled in editor <- BIG ISSUE NEEDS ADDRESSing
+		Polish Swing Movement <- Do not allow character to perform loops around the pivot
+			Also work in 1D blend space in order to have character actually rotating
+
+		Fix Grinding mechanic so that it can actually be used
+
+		Fix Focus Effect
+			Main Gimmick is painfully underdeveloped however its worth wrenching on after the movement modes are created
+
+		Add Bird enemy
+
+		Add Credits
+
+DEVLOG Potential Entries
+	
+	Title Screen Main Menu
+
+	Wall Sliding and C++ PhysCustom
+
+2020-09-18
+	
+	Work have progressed slowly as I haven't poured a decent amount of hours into the game recently. However I did locate and remove the UE4 crashing bug that plagued my game
+		Using EditAnywhere on ActorComponents causes read access violation which is a tad suprising 
+
+	TODO:
+		Find and Fix grinding mechanic bug
+
+		Improve enemy AI - Don't have them walk into bottomless pits (leaping into them is allowed)
