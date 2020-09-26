@@ -243,3 +243,103 @@ DEVLOG Potential Entries
 		Find and Fix grinding mechanic bug
 
 		Improve enemy AI - Don't have them walk into bottomless pits (leaping into them is allowed)
+
+2020-09-21
+	
+	Worked on Spline Mesh Component, the autoscaling is proportional to the direction that the spline point is at, needs work
+
+	TODO:
+		Add Capsule/Sphere/Cube Component at the beginning and end of a spline mesh to know when not rail grinding anymore
+		Figure out how to reduce mesh size for different direction
+2020-09-24
+	Narrowed down that the view plane attached to my ActorComponent was constantly causing the crashes
+
+2020-09-25
+	No work done today but I wanted to make a TODO list for tomorrow
+
+	TODO:
+		Fix Shape plane effect
+
+		Expand level to introduce mechanics
+
+		Bird Enemy
+
+		Fix Bug with pendulum swinging
+
+		Lower max velocity when attacking ( Sound effect comes in later )
+
+2020-09-26
+	
+	Changed the shape plane location to Begin Play instead of the constructor and havent incountered any issues regarding that
+
+	Need to find ideal way of storing information between modes
+	
+
+	I have the player movement handler class so it might be best to just create a handful of player movements
+
+	Perhaps for the movement would be more interesting to use 1 health and it stays active for a few moments of time
+
+	Kinematics Different Versions per movement mode:
+		- Walking
+		- Walking + attacking 
+					Slight drop in speed
+		- Walking + Focus
+					Increase in speed, decrease in friction, Jump Velocity?
+		- Walking + Focus + Attacking
+
+		- Falling
+		- Falling + Attacking 
+					Slight drop in air control
+		- Falling + Focus
+					Fall faster? More or less air control
+		- Falling + Focus + Attacking
+
+
+		- Swing 
+		- Swing + Focus
+					Increase in pendulum swing Acceleration
+			*note cannot attack while swinging
+
+		- Wall Slide
+		- Wall Slide + Attacking
+				Change nothing
+		- Wall Slide + Focus
+				Increased horizontal jump velocity?
+		- Wall Slide + Focus + Attacking
+
+		- Grinding....
+
+
+
+		Things to take note for this handler
+		MaxSwingAccel
+		PendulumFriction
+
+		MaxGrindAccel
+		MaxGrindSpeed
+		GrindFriction
+
+	FPlayerMovementHandler(float airControl, float jumpZVelocity, float groundFriction, float maxWalkSpeed, float maxAcceleration, float wallSlideJumpSpeed, float wallSlideFriction, 
+		float grindJumpSpeed, float grindMaxAccel, float grindMaxSpeed, float grindFriction, float swingMaxAccel, float swingMaxSpeed, float swingFriction)
+	{
+		this->AirControl = airControl;
+		this->JumpZVelocity = jumpZVelocity;
+		this->GroundFriction = groundFriction;
+		this->MaxWalkSpeed = maxWalkSpeed;
+		this->MaxAcceleration = maxAcceleration;
+
+		// Wall Slide (Climb is a bit of a misnomer)
+		this->WallSlideJumpSpeed = wallSlideJumpSpeed;
+		this->WallSlideFriction = wallSlideFriction;
+
+		// Grind
+		this->GrindJumpSpeed = grindJumpSpeed;
+		this->GrindMaxAccel = grindMaxAccel;
+		this->GrindMaxSpeed = grindMaxSpeed;
+		this->GrindFriction = grindFriction;
+
+		// Swing
+		this->SwingMaxAccel = swingMaxAccel;
+		this->SwingMaxSpeed = swingMaxSpeed;
+		this->SwingFriction = swingFriction;
+	}

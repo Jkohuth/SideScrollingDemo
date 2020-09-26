@@ -21,7 +21,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	// Custom Movement to make game unique
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	class USSDPlayerMovementComponent* PlayerMovement;
 	
 	// What status is the character? Active, Dead, Cutscene

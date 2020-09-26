@@ -187,7 +187,9 @@ void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 
 		ARail* Rail = Cast<ARail>(OtherActor);
 		if (Rail) {
-			GetPlayerMovement()->TriggerGrindMovement(Rail->GetRailSpline(), Hit);
+			GetPlayerMovement()->TriggerGrindMovement(Rail, Hit);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Grind Movement Triggered");
+
 		}
 	}
 	else if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::EnvironmentDamageTag)) {

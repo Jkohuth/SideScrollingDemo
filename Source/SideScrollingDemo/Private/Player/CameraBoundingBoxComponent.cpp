@@ -29,7 +29,7 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 
 	GetBoundingBox()->SetUsingAbsoluteLocation(true);
 	GetBoundingBox()->SetUsingAbsoluteRotation(true);
-	GetBoundingBox()->bHiddenInGame = false;
+	GetBoundingBox()->bHiddenInGame = true;
 	//BoundingBox->SetRelativeRotation(FQuat::MakeFromEuler(FVector(0.f, 0.f, 180.f)));
 	//BoundingBox->bAbsoluteRotation = true;
 	
@@ -62,10 +62,14 @@ UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
 	CaveCameraTransform.SetScale3D(FVector(1.f));
 
 	ViewPlane = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ViewPlane"));
-
+	
 	verify(ViewPlane->IsValidLowLevel());
 
 	GetViewPlane()->SetupAttachment(BoundingBox);
+	GetViewPlane()->SetRelativeLocation(FVector(15.f, 0.f, 0.f));
+	GetViewPlane()->SetRelativeRotation(FRotator(0.f, 90.f, 180.f));
+	//GetViewPlane()->SetStaticMesh()
+
 }
 /*void UCameraBoundingBoxComponent::OnConstructionComponent() {
 	//SetCameraMode(ECameraMode::MAIN);
@@ -142,12 +146,12 @@ void UCameraBoundingBoxComponent::OnSSDCharacterBeginPlay(UCapsuleComponent* tar
 	viewPlaneVector.X -= 35.f;
 	GetViewPlane()->SetRelativeLocation(viewPlaneVector);
 	
-	FString tmp = "Camera" + GetCameraComponent()->GetRelativeLocation().ToCompactString() + " Origin of the bounding box " + Origin.ToCompactString() + " ViewPlane: " + GetViewPlane()->GetComponentLocation().ToCompactString();
+	FString tmp = "Camera" + GetCameraComponent()->GetRelativeLocation().ToCompactString() + " Origin of the bounding box " + Origin.ToCompactString() +" ViewPlane: " + GetViewPlane()->GetComponentLocation().ToCompactString();
 	UE_LOG(LogClass, Log, TEXT("Camera Bounding Box Information %s"), *tmp);
 
 }
 bool UCameraBoundingBoxComponent::ConfirmComponentValidLowLevel() {
-	if (GetViewPlane()->IsValidLowLevel() && GetBoundingBox()->IsValidLowLevel() && GetCameraComponent()->IsValidLowLevel()) return true;
+	if (GetBoundingBox()->IsValidLowLevel() && GetCameraComponent()->IsValidLowLevel() && GetViewPlane()->IsValidLowLevel()) return true;
 	return false;
 }
 void UCameraBoundingBoxComponent::OnBoundingBoxOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {

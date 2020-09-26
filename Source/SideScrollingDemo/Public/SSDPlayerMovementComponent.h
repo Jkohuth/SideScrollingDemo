@@ -25,26 +25,58 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MaxWalkSpeed;
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float MaxFlySpeed;
+	float MaxAcceleration; // Is actually used when calculating certain movementmodes
+
+	// WallSlide
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float MaxAcceleration;
+	float WallSlideJumpSpeed;
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float WallSlideFriction;
 
+	
+	// Grind
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float JumpRailVelocity;
+	float GrindJumpSpeed;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float GrindMaxAccel;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float GrindMaxSpeed;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float GrindFriction;
+
+	// Swing
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float SwingMaxAccel;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float SwingMaxSpeed;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float SwingFriction;
+	
 	FPlayerMovementHandler() {}
 
-	FPlayerMovementHandler(float airControl, float jumpZVelocity, float groundFriction, float maxWalkSpeed, float maxFlySpeed, float maxAcceleration, float wallSlideFriction, float jumpRailVelocity)
+	FPlayerMovementHandler(float airControl, float jumpZVelocity, float groundFriction, float maxWalkSpeed, float maxAcceleration, float wallSlideJumpSpeed, float wallSlideFriction, 
+		float grindJumpSpeed, float grindMaxAccel, float grindMaxSpeed, float grindFriction, float swingMaxAccel, float swingMaxSpeed, float swingFriction)
 	{
 		this->AirControl = airControl;
 		this->JumpZVelocity = jumpZVelocity;
 		this->GroundFriction = groundFriction;
 		this->MaxWalkSpeed = maxWalkSpeed;
-		this->MaxFlySpeed = maxFlySpeed;
 		this->MaxAcceleration = maxAcceleration;
+
+		// Wall Slide (Climb is a bit of a misnomer)
+		this->WallSlideJumpSpeed = wallSlideJumpSpeed;
 		this->WallSlideFriction = wallSlideFriction;
-		this->JumpRailVelocity = jumpRailVelocity;
+
+		// Grind
+		this->GrindJumpSpeed = grindJumpSpeed;
+		this->GrindMaxAccel = grindMaxAccel;
+		this->GrindMaxSpeed = grindMaxSpeed;
+		this->GrindFriction = grindFriction;
+
+		// Swing
+		this->SwingMaxAccel = swingMaxAccel;
+		this->SwingMaxSpeed = swingMaxSpeed;
+		this->SwingFriction = swingFriction;
 	}
 };
 
@@ -145,6 +177,9 @@ public:
 	float towardWall = 0.f;
 	float climbCheckPadding = 10.f;
 	
+
+	// Need to clean this up later thinking a speed and direction vector
+	float WallSlideJumpSpeed;
 	UPROPERTY(EditAnywhere)
 	FVector wallSlideVelocity;
 
@@ -158,14 +193,19 @@ public:
 	float updraftSpeed;
 
 	// Focus
-	float JumpRailVelocity;
+	float GrindJumpSpeed;
 	// Brute force it for now does it really matter if you prematurly optimize?
 
 	UPROPERTY(EditAnywhere)
-		FPlayerMovementHandler NormalPlayerMovement = FPlayerMovementHandler(0.6f, 1750.f, 2.f, 1300.f, 600.f, 3500.f, 3.f, 1000.f);
+		FPlayerMovementHandler NormalPlayerMovement =		FPlayerMovementHandler(0.6f, 1750.f, 2.f, 1300.f, 3500.f, 1000.f, 3.f, 1000.f, 1000.f, 1500.f, 1.f, 400.f, 1700.f, .8f);
 	UPROPERTY(EditAnywhere)
-		FPlayerMovementHandler FocusPlayerMovement = FPlayerMovementHandler(1.2f, 2000.f, 0.f, 1600.f, 600.f, 4250.f, 3.f, 1500.f);
-	UFUNCTION()
+		FPlayerMovementHandler NormalPlayerMovementAttack = FPlayerMovementHandler(0.2f, 1450.f, 2.f, 1000.f, 3500.f, 1000.f, 3.f, 1000.f, 1000.f, 1500.f, 1.f, 400.f, 1700.f, .8f);
+	UPROPERTY(EditAnywhere)
+		FPlayerMovementHandler FocusPlayerMovement =		FPlayerMovementHandler(1.2f, 2000.f, 0.f, 1600.f, 4250.f, 1000.f, 3.f, 1500.f, 1000.f, 1500.f, 1.f, 400.f, 1700.f, .8f);
+	UPROPERTY(EditAnywhere)
+		FPlayerMovementHandler FocusPlayerMovementAttack =  FPlayerMovementHandler(0.6f, 1600.f, 0.f, 1200.f, 4250.f, 1000.f, 3.f, 1500.f, 1000.f, 1500.f, 1.f, 400.f, 1700.f, .8f);
+
+	UFUNCTION(BlueprintCallable)
 		void UpdateCharacterMovementValues(FPlayerMovementHandler newPlayerMovementValues);
 	/*
 	FPlayerMovementHandler(float airControl, float jumpZVelocity, float groundFriction, float maxWalkSpeed, float maxFlySpeed, float maxAcceleration, float wallSlideFriction, float jumpRailVelocity)
@@ -201,16 +241,19 @@ public:
 	// Grind
 	void PhysGrind(float DeltaTime, int32 Iterations);
 	bool IsGrinding() const;
-	void TriggerGrindMovement(USplineComponent* RailSpline, const FHitResult& RailCollision);
-	float MaxGrindSpeed;
-	float grindFriction = 1.f;
+	void TriggerGrindMovement(class ARail* RailSpline, const FHitResult& RailCollision);
+	float GrindMaxAccel = 1000.f;
+	float GrindMaxSpeed;
+	float GrindFriction = 1.f;
 	float distanceAlongSpline;
-	float MaxGrindAccel = 1000.f;
 	float grindSpeed; // Speed not velocity it's only 2Dimensional 
 	float slopeNormal;
 	bool bJumpOffGrind = false;
+	float railRadius;
 	FVector UpdateLocation;
 	FVector minGrindVelocity = FVector(0.f, 500.f, 0.f);
+	float GetDistanceAlongSpline(USplineComponent* SplineComponent);
+
 
 	// Swing
 	void PhysSwing(float DeltaTime, int32 Iterations);
@@ -229,11 +272,11 @@ public:
 	int reduceLogging = 0.f;
 	float lengthOfPendulum = 220.f;
 	UPROPERTY(EditAnywhere)
-	float PendulumFriction = .8f;
+	float SwingFriction = .8f;
 	UPROPERTY(EditAnywhere)
-	float TerminalSwingVelocity = 2500.f;
+	float SwingMaxSpeed = 2500.f;
 	UPROPERTY(EditAnywhere)
-	float MaxSwingAccel = 400.f;
+	float SwingMaxAccel = 400.f;
 
 	void PrintStringToScreen(FString print);
 

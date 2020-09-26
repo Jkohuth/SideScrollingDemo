@@ -23,6 +23,7 @@ ARail::ARail()
 	//RailCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Rail Capsule"));
 
 	RootComponent = RailSpline;
+	RailSpline->SetRelativeScale3D(FVector(1.0f, .3f, .3f));
 	//RailCapsule->SetupAttachment(RootComponent);
 	CylinderMesh->SetupAttachment(RootComponent);
 	//RailSpline->SetWorldLocation(RailCapsule->GetComponentLocation());
@@ -137,6 +138,23 @@ void ARail::RailRayCast() {
 	}
 	FHitResult result(1.0f);
 	//return false;*/
+}
+float ARail::GetRailRadius() {
+
+	FVector min;
+	FVector max;
+
+	GetCylinderMesh()->GetLocalBounds(min, max);
+
+	FString RailString = "Min: " + min.ToCompactString() + " Max: " + max.ToCompactString();
+	FVector Scale = GetRailSpline()->GetRelativeScale3D();
+	RailString += " Scale of rail " + Scale.ToCompactString();
+	UE_LOG(LogClass, Log, TEXT("%s"), *RailString);
+
+
+
+	return (Scale.Z * max.Z);
+
 }
 FVector ARail::GetSplineLocation() {
 	return SplineLocation;

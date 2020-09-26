@@ -12,6 +12,7 @@
 #include "Updraft.h"
 #include "Engine.h"
 #include "Math/UnrealMathUtility.h"
+#include "Rail.h"
 
 
 DEFINE_LOG_CATEGORY_STATIC(LogCharacterMovement, Log, All);
@@ -60,11 +61,6 @@ void USSDPlayerMovementComponent::TickComponent(float DeltaTime, enum ELevelTick
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	if (IsUpdrafting()) UpdateUpdraftMovement(DeltaTime);
-	/*if (GravityScale == FallingGravityScalar) {
-		FString tmp = "Its falling gravity this time" + FString::SanitizeFloat(GetGravityZ());
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, tmp);
-
-	}*/
 }
 
 void USSDPlayerMovementComponent::BeginPlay() {
@@ -177,11 +173,20 @@ void USSDPlayerMovementComponent::UpdateCharacterMovementValues(FPlayerMovementH
 	JumpZVelocity = newPlayerMovementValues.JumpZVelocity;
 	GroundFriction = newPlayerMovementValues.GroundFriction;
 	MaxWalkSpeed = newPlayerMovementValues.MaxWalkSpeed;
-	MaxFlySpeed = newPlayerMovementValues.MaxFlySpeed; 
-
 	MaxAcceleration = newPlayerMovementValues.MaxAcceleration;
+
+	WallSlideJumpSpeed = newPlayerMovementValues.WallSlideJumpSpeed;
 	WallSlideFriction = newPlayerMovementValues.WallSlideFriction;
-	JumpRailVelocity = newPlayerMovementValues.JumpRailVelocity;
+	
+	GrindJumpSpeed = newPlayerMovementValues.GrindJumpSpeed;
+	GrindMaxAccel = newPlayerMovementValues.GrindMaxAccel;
+	GrindMaxSpeed = newPlayerMovementValues.GrindMaxSpeed;
+	GrindFriction = newPlayerMovementValues.GrindFriction;
+
+	SwingMaxAccel = newPlayerMovementValues.SwingMaxAccel;
+	SwingMaxSpeed = newPlayerMovementValues.SwingMaxSpeed;
+	SwingFriction = newPlayerMovementValues.SwingFriction;
+
 }
 
 // Climb
@@ -375,7 +380,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 
 		// Compute Current Gravity - Use dot product to find Gravity along the angle of the rail
 		//FVector worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
-		FVector worldDirAtDist = RailSplineReference->FindDirectionClosestToWorldLocation(CharacterOwner->GetActorLocation(), ESplineCoordinateSpace::World);
+		FVector worldDirAtDist = RailSplineReference->FindDirectionClosestToWorldLocation(GetActorFeetLocation(), ESplineCoordinateSpace::World);
 		
 		FVector Gravity = FVector(0.f, 0.f, GetGravityZ());
 		float GravityMagInDir = FVector::DotProduct(Gravity, worldDirAtDist);
@@ -386,7 +391,10 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		// Calculate Velocity - currently there is no terminal limit
 		Velocity += GravityAlongRail * timeTick;
 
-		Velocity = Velocity * worldDirAtDist;
+		// Ensure the Velocity is along the rail
+		Velocity = worldDirAtDist * FVector::DotProduct(Velocity, worldDirAtDist);
+
+
 		// Require a minimum velocity so character doesn't stand stationary
 		if (FMath::IsNearlyEqual(GravityMagInDir, 0.f, 2.f) && Velocity.Equals(FVector::ZeroVector, minGrindVelocity.Size())) {
 			Velocity = minGrindVelocity * ActorForwardVector;
@@ -398,8 +406,24 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 		debugGrind += " Velocity " + Velocity.ToCompactString() + " OldVelocity " + OldVelocity.ToCompactString()+" Adjusted " + Adjusted.ToCompactString();
 
 		SafeMoveUpdatedComponent(Adjusted, PawnRotation, true, Hit);
-		LogAtReducedRate(debugGrind, 30);
+
+		debugGrind = "";
+		debugGrind += "Hit Component Information: " + Hit.ToString();
 		
+
+		LogAtReducedRate(debugGrind, 5);
+		
+		if (Hit.GetActor() && Hit.GetActor()->ActorHasTag(ECustomTags::GrindTag)) {
+			distanceAlongSpline = GetDistanceAlongSpline(RailSplineReference);
+			FVector location = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
+			location.Z += capsuleHalfHeight + railRadius;
+			CharacterOwner->SetActorLocation(location);
+			ARail* rail = Cast<ARail>(Hit.GetActor());
+			if (rail) {
+				continue;
+			}
+			
+		}
 /*
 		// Express Velocity as a speed along the rail
 		grindSpeed = FVector::DotProduct(Velocity, worldDirAtDist);
@@ -454,7 +478,7 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 
 		if(bJumpOffGrind){
 			FVector upVector  = RailSplineReference->GetUpVectorAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
-			Velocity.Z += JumpRailVelocity;
+			Velocity.Z += GrindJumpSpeed;
 			float jumpMagnitude = FVector::DotProduct(Velocity, upVector);
 			Velocity = jumpMagnitude * upVector;
 
@@ -553,6 +577,45 @@ void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
  	}
 }
 
+void USSDPlayerMovementComponent::TriggerGrindMovement(ARail* Rail, const FHitResult& RailCollision) {
+	if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) { return; }
+	else {
+		SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Grind);
+		MaxAcceleration = GrindMaxAccel;
+		SetCharacterGravity(RisingGravityScalar);
+		MaxCustomMovementSpeed = GrindMaxSpeed;
+		RailSplineReference = Rail->GetRailSpline();
+
+		distanceAlongSpline = GetDistanceAlongSpline(RailSplineReference);
+
+		FVector worldLocAtDist = RailSplineReference->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
+		FVector worldDirAtDist = RailSplineReference->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
+
+		grindSpeed = FVector::DotProduct(Velocity, worldDirAtDist);
+		Velocity = grindSpeed * worldDirAtDist;
+
+		railRadius = Rail->GetRailRadius();  // Since I am no longer using SetActorLocation and am instead using SafeMoveUpdate I think the collisions are holding me back
+		worldLocAtDist.Z += capsuleHalfHeight;
+		CharacterOwner->SetActorLocation(worldLocAtDist);
+
+		FString triggerGrind = "Velocity At Grind Initialization: " + Velocity.ToCompactString() + " WorldDirection: " + worldDirAtDist.ToCompactString() + " RailRadius " + FString::SanitizeFloat(railRadius) ;
+		LogAtReducedRate(triggerGrind, 1);
+		return;
+	}
+}
+float USSDPlayerMovementComponent::GetDistanceAlongSpline(USplineComponent* SplineComponent) {
+
+	float playerDistInSplinePt = SplineComponent->FindInputKeyClosestToWorldLocation(GetActorFeetLocation());
+	float splinePtBeforePlayer = FMath::TruncToFloat(playerDistInSplinePt);
+	float splinePtAfterPlayer = splinePtBeforePlayer + 1;
+
+	float distanceToSplinePt1 = SplineComponent->GetDistanceAlongSplineAtSplinePoint(splinePtBeforePlayer);
+	float distanceToSplinePt2 = SplineComponent->GetDistanceAlongSplineAtSplinePoint(splinePtAfterPlayer);
+
+	return ((playerDistInSplinePt - splinePtBeforePlayer) * (distanceToSplinePt2 - distanceToSplinePt1)) + distanceToSplinePt1;
+}
+
+
 bool USSDPlayerMovementComponent::IsClimbing() const {
 	return (MovementMode == MOVE_Custom) && (CustomMovementMode == MOVE_Climb) && UpdatedComponent;
 }
@@ -628,7 +691,7 @@ void USSDPlayerMovementComponent::TriggerSwingMovement(FVector pivotPosition) {
 	this->pivotPosition = pivotPosition;
 	
 	CharacterOwner->SetActorLocation(CalculateCharacterPivotDistance(pivotPosition));
-	MaxAcceleration = MaxSwingAccel;
+	MaxAcceleration = SwingMaxAccel;
 
 	FVector dirPlayerPivot = this->pivotPosition - CharacterOwner->GetActorLocation();
 
@@ -665,7 +728,7 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 		// Get Player Input for horizontal movement
 		// Add acceleration in direction of the forces (Tension + Gravity)
 
-		CalcVelocity(timeTick, PendulumFriction, false, MaxDecel); // Using this function can I set a resonable max acceleration
+		CalcVelocity(timeTick, SwingFriction, false, MaxDecel); // Using this function can I set a resonable max acceleration
 
 		debugSwing = "";
 
@@ -790,7 +853,7 @@ FVector USSDPlayerMovementComponent::NewSwingVelocity(const FVector& InitialVelo
 		Result += SumOfForces * DeltaTime;
 		// Don't exceed terminal velocity.
 		//const float TerminalLimit = FMath::Abs(GetPhysicsVolume()->TerminalVelocity);
-		const float TerminalLimit = TerminalSwingVelocity;
+		const float TerminalLimit = SwingMaxSpeed;
 		if (Result.SizeSquared() > FMath::Square(TerminalLimit))
 		{
 
@@ -820,36 +883,6 @@ void USSDPlayerMovementComponent::KnockBack(const FHitResult& Hit){
 	SetMovementMode(MOVE_Falling);
 }
 
-void USSDPlayerMovementComponent::TriggerGrindMovement(USplineComponent* RailSpline, const FHitResult& RailCollision){
- 	if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) { return; }
-	else {
-		SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Grind);
-		MaxAcceleration = MaxGrindAccel;
-		SetCharacterGravity(RisingGravityScalar);
-		MaxCustomMovementSpeed = MaxGrindSpeed;
-		RailSplineReference = RailSpline;
-		
-		float playerDistInSplinePt = RailSpline->FindInputKeyClosestToWorldLocation(GetActorFeetLocation());
-		float splinePtBeforePlayer = FMath::TruncToFloat(playerDistInSplinePt);
-		float splinePtAfterPlayer = splinePtBeforePlayer +1;
-
-		float distanceToSplinePt1 = RailSpline->GetDistanceAlongSplineAtSplinePoint(splinePtBeforePlayer);
-		float distanceToSplinePt2 = RailSpline->GetDistanceAlongSplineAtSplinePoint(splinePtAfterPlayer);
-		distanceAlongSpline = (playerDistInSplinePt - splinePtBeforePlayer) * (distanceToSplinePt2 - distanceToSplinePt1);
-		distanceAlongSpline += distanceToSplinePt1;
-
-		FVector worldLocAtDist = RailSpline->GetWorldLocationAtDistanceAlongSpline(distanceAlongSpline);
-		FVector worldDirAtDist = RailSpline->GetDirectionAtDistanceAlongSpline(distanceAlongSpline, ESplineCoordinateSpace::World);
-		
-		grindSpeed = FVector::DotProduct(Velocity, worldDirAtDist);
-		Velocity = grindSpeed * worldDirAtDist;
-
-		float fudgeFactor = 15.f; // Since I am no longer using SetActorLocation and am instead using SafeMoveUpdate I think the collisions are holding me back
-		worldLocAtDist.Z += capsuleHalfHeight + fudgeFactor;
-		CharacterOwner->SetActorLocation(worldLocAtDist);
-		return;
-	}
-}
 
 void USSDPlayerMovementComponent::JumpOffWall() {
 	SetMovementMode(MOVE_Falling);

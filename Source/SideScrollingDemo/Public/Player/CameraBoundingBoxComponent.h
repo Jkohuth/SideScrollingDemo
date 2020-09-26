@@ -21,7 +21,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* CameraComponent;
 
-	UPROPERTY(BlueprintReadWrite, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))
 		class UBoxComponent* BoundingBox;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "CameraBounds", meta = (AllowPrivateAccess = "true"))

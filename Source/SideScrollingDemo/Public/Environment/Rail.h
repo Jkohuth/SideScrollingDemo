@@ -57,8 +57,10 @@ public:
 	UFUNCTION(Category=Trigger, BlueprintCallable)
 		void RailRayCast();
 
+	float GetRailRadius();
 
-	//FORCEINLINE class UStaticMeshComponent* GetCylinderMesh() const { return CylinderMesh;  }
+
+	FORCEINLINE class UStaticMeshComponent* GetCylinderMesh() const { return CylinderMesh;  }
 	FORCEINLINE class USplineComponent* GetRailSpline() const { return RailSpline; }
 	//FORCEINLINE class USplineMeshComponent* GetRailMeshSpline() const { return RailMesh; }
 	
