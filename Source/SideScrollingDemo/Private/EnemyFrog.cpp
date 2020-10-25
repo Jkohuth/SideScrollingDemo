@@ -5,6 +5,7 @@
 #include "Perception/PawnSensingComponent.h"
 #include "Engine.h"
 #include "SSDCharacter.h"
+#include "Perception/AIPerceptionComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFrog, Log, All);
 
@@ -17,13 +18,16 @@ AEnemyFrog::AEnemyFrog()
 	//GetCapsuleComponent()->SetCollisionObjectType(COLLISION_ENEMY);
 	//GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_ENEMY, ECollisionResponse::ECR_Block);
 
-	PawnSensor = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("Sensor"));
-	PawnSensor->SensingInterval = .25f; // How often does pawn react
-	PawnSensor->bOnlySensePlayers = false;
-	PawnSensor->SetPeripheralVisionAngle(35.f);
+	//PawnSensor = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("Sensor"));
+	//PawnSensor->SensingInterval = .25f; // How often does pawn react
+	//PawnSensor->bOnlySensePlayers = false;
+	//PawnSensor->SetPeripheralVisionAngle(35.f);
 
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 	GetCharacterMovement()->JumpZVelocity = 400.f;
+
+	//AIPerception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AISense"));
+
 }
 
 // Called when the game starts or when spawned
@@ -42,7 +46,7 @@ void AEnemyFrog::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	// Expensive call but stick with me here
-	if(!playerSpotted)
+	/*if(!playerSpotted)
 		AddMovementInput(GetActorForwardVector(), 10.f);
 	//AddMovementInput(GetActorForwardVector());
 	//float dist = FVector::Dist(GetActorLocation(), OriginPos);
@@ -54,7 +58,7 @@ void AEnemyFrog::Tick(float DeltaTime)
 	}
 	if (GetActorLocation().Equals(OriginPos, 20.f)) {
 		rotated = false; // Crude Fix
-	}
+	}*/
 }
 
 // Called to bind functionality to input
@@ -67,8 +71,8 @@ void AEnemyFrog::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 void AEnemyFrog::PostInitializeComponents() {
 	Super::PostInitializeComponents();
-	PawnSensor->OnSeePawn.AddDynamic(this, &AEnemyFrog::OnSeePawn);
-	PawnSensor->OnHearNoise.AddDynamic(this, &AEnemyFrog::OnHearNoise);
+	//PawnSensor->OnSeePawn.AddDynamic(this, &AEnemyFrog::OnSeePawn);
+	//PawnSensor->OnHearNoise.AddDynamic(this, &AEnemyFrog::OnHearNoise);
 }
 
 void AEnemyFrog::TurnAround() {
@@ -118,24 +122,6 @@ void AEnemyFrog::InflictDamage(AActor* ImpactActor, const FHitResult& Hit) {
 		ASSDCharacter* player = Cast<ASSDCharacter>(ImpactActor);
 		if (player) {
 			player->ReceiveDamage(DamageAmount, DamageEvent, EnemyController, this);
-		}
-	}
-}
-
-void AEnemyFrog::OnHearNoise(APawn *OtherActor, const FVector &Location, float Volume) {
-	//const FString VolumeDesc = FString::Printf(TEXT(" at volume %f"), Volume);
-	//FString message = TEXT("Heard Actor ") + OtherActor->GetName() + VolumeDesc;
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, message);
-}
-void AEnemyFrog::OnSeePawn(APawn* OtherPawn) {
-	//FString message = TEXT("Saw Actor ") + OtherPawn->GetName();
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, message);
-	if (!playerSpotted) {
-		ASSDCharacter* player = Cast<ASSDCharacter>(OtherPawn);
-		if (player && player->GetCharacterState() == ECharacterState::ACTIVE) {
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Pawn was seen");
-
-			TriggerAttack();
 		}
 	}
 }

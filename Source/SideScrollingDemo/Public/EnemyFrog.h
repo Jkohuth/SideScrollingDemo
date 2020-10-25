@@ -22,8 +22,9 @@ protected:
 
 	virtual void PostInitializeComponents() override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Awareness")
-		class UPawnSensingComponent* PawnSensor;
+	// AIPerception is the new thing that is supposedly more efficient, however I will wait for updates before I store it in the C++ class	
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Awareness")
+	//	class UAIPerceptionComponent* AIPerception;
 
 public:	
 	// Called every frame
@@ -36,11 +37,12 @@ public:
 	bool playerSpotted = false;
 	UPROPERTY()
 		FVector OriginPos;
-	UPROPERTY(EditAnywhere)
-		float MaxWalkRadius = 1000.f;
+	UPROPERTY(BlueprintReadWrite)
+		float WalkRadius = 200.f;
 
 	FTimerHandle AnticipationTimer;
 
+	UPROPERTY(BlueprintReadWrite)
 	float lungeVelocity = 1000.f;
 	UPROPERTY()
 	float Health = 1.f;
@@ -64,10 +66,4 @@ public:
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpluse, const FHitResult& Hit);
 
-	// PawnSensingComponent Delegates
-	UFUNCTION()
-		void OnHearNoise(APawn *OtherActor, const FVector &Location, float Volume);
-
-	UFUNCTION()
-		void OnSeePawn(APawn *OtherPawn);
 };

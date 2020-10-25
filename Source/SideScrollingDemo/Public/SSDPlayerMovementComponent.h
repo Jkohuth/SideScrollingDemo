@@ -195,15 +195,23 @@ public:
 	// Focus
 	float GrindJumpSpeed;
 	// Brute force it for now does it really matter if you prematurly optimize?
-
-	UPROPERTY(EditAnywhere)
-		FPlayerMovementHandler NormalPlayerMovement =		FPlayerMovementHandler(0.6f, 1750.f, 2.f, 1300.f, 3500.f, 1000.f, 3.f, 1000.f, 1000.f, 1500.f, 1.f, 400.f, 1700.f, .8f);
+	UPROPERTY(EditAnywhere)				  	//AirControl, JumpZVelocity, GroundFriction, MaxWalkSpeed, MaxAcceleration, WallSlideJumpSpeed, WallSlideFriction, GrindJumpSpeed, GrindMaxAccel, GrindMaxSpeed, GrindFriction, SwingMaxAccel, SwingFriction
+		FPlayerMovementHandler NormalPlayerMovement =		FPlayerMovementHandler(0.6f, 1750.f, 2.f, 1300.f, 3500.f, 1000.f, 3.f, 1000.f, 1000.f, 1500.f, 1.f, 1200.f, 1700.f, .4f);
 	UPROPERTY(EditAnywhere)
 		FPlayerMovementHandler NormalPlayerMovementAttack = FPlayerMovementHandler(0.2f, 1450.f, 2.f, 1000.f, 3500.f, 1000.f, 3.f, 1000.f, 1000.f, 1500.f, 1.f, 400.f, 1700.f, .8f);
 	UPROPERTY(EditAnywhere)
 		FPlayerMovementHandler FocusPlayerMovement =		FPlayerMovementHandler(1.2f, 2000.f, 0.f, 1600.f, 4250.f, 1000.f, 3.f, 1500.f, 1000.f, 1500.f, 1.f, 400.f, 1700.f, .8f);
 	UPROPERTY(EditAnywhere)
 		FPlayerMovementHandler FocusPlayerMovementAttack =  FPlayerMovementHandler(0.6f, 1600.f, 0.f, 1200.f, 4250.f, 1000.f, 3.f, 1500.f, 1000.f, 1500.f, 1.f, 400.f, 1700.f, .8f);
+
+	UFUNCTION(BlueprintCallable)
+		FPlayerMovementHandler GetNormalPlayerMovement() { return NormalPlayerMovement;  }
+	UFUNCTION(BlueprintCallable)
+		FPlayerMovementHandler GetNormalPlayerMovementAttack() { return NormalPlayerMovementAttack; }
+	UFUNCTION(BlueprintCallable)
+		FPlayerMovementHandler GetFocusPlayerMovement() { return FocusPlayerMovement; }
+	UFUNCTION(BlueprintCallable)
+		FPlayerMovementHandler GetFocusPlayerMovementAttack() { return FocusPlayerMovementAttack; }
 
 	UFUNCTION(BlueprintCallable)
 		void UpdateCharacterMovementValues(FPlayerMovementHandler newPlayerMovementValues);
@@ -271,6 +279,8 @@ public:
 	FVector NewSwingVelocity(const FVector& InitialVelocity, const FVector& Gravity, const FVector& Tension, float DeltaTime) const;
 	int reduceLogging = 0.f;
 	float lengthOfPendulum = 220.f;
+	UPROPERTY(BlueprintReadOnly)
+		float horizontalDistanceFromPivot;
 	UPROPERTY(EditAnywhere)
 	float SwingFriction = .8f;
 	UPROPERTY(EditAnywhere)

@@ -4,12 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/MovementComponent.h"
+#include "Delegates/Delegate.h"
 
 #define COLLISION_ENEMY ECollisionChannel::ECC_GameTraceChannel6
 #define COLLISION_PLAYER ECollisionChannel::ECC_GameTraceChannel4
 #define COLLISION_WALL ECollisionChannel::ECC_GameTraceChannel8 // I believe this is outdated... Perhaps interactable?
 
 #pragma region ENUMS
+
+DECLARE_DELEGATE
+(
+	FRenderedDelegate
+)
 
 namespace EPlayerEffect
 {

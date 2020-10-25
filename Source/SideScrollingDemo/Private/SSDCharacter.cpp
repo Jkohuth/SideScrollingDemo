@@ -273,6 +273,7 @@ void ASSDCharacter::InflictDamageHandler(bool isHit, TArray<FHitResult> HitArray
 // DAMAGE
 
 void ASSDCharacter::InflictDamage(AActor* ImpactActor){
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Black, "Inflicting Damage");
 	AController* controller = Cast<AController>(GetController());
 	if (controller != nullptr) {
 		if ((ImpactActor != nullptr) && (ImpactActor != this)) {
@@ -281,6 +282,8 @@ void ASSDCharacter::InflictDamage(AActor* ImpactActor){
 
 			const float DamageAmount = 1.0f;
 			ImpactActor->TakeDamage(DamageAmount, DamageEvent, controller, this);
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Black, "Called Damage");
+
 	
 		}
 	}

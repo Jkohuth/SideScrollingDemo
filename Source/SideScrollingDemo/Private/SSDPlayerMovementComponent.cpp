@@ -694,7 +694,7 @@ void USSDPlayerMovementComponent::TriggerSwingMovement(FVector pivotPosition) {
 	MaxAcceleration = SwingMaxAccel;
 
 	FVector dirPlayerPivot = this->pivotPosition - CharacterOwner->GetActorLocation();
-
+	horizontalDistanceFromPivot = dirPlayerPivot.Y;
 	Velocity = Velocity.Size() * dirPlayerPivot.GetSafeNormal();
 	// TODO: Find the sum of forces (Gravity and Tension) here and then get the velocity using the dot product against that
 	//Velocity = FVector::ZeroVector;
@@ -723,6 +723,8 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 		const FVector OldVelocity = Velocity;
 		float MaxDecel = GetMaxBrakingDeceleration();
 
+		bool debugLog = false;
+
 
 		// TODO: 
 		// Get Player Input for horizontal movement
@@ -737,6 +739,7 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 		//debugSwing += "Velocity init: " + Velocity.ToCompactString() + " Gravity: " + Gravity.ToCompactString();
 
 		FVector dirPlayerPivot = pivotPosition - CharacterOwner->GetActorLocation();
+		horizontalDistanceFromPivot = dirPlayerPivot.Y;
 
 		float theta = GetAngleForSwing(dirPlayerPivot);
 		FVector Tension = FVector::ZeroVector;
@@ -745,10 +748,12 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 
 		if (GetActorLocation().Z >= pivotPosition.Z) {
 			Tension = FVector::ZeroVector;
-
+			//Velocity.Z -= 20.f;
+			//Velocity = FVector::ZeroVector;
 			debugSwing += " ThetaDegrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " ThetaRadians " + FString::SanitizeFloat(theta);
+			debugLog = true;
 		}
-	/**/	//debugSwing += " Tension: " + Tension.ToCompactString() + " theta Degrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " dirPlayerPivot " + dirPlayerPivot.ToCompactString();
+		//debugSwing += " Tension: " + Tension.ToCompactString() + " theta Degrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " dirPlayerPivot " + dirPlayerPivot.ToCompactString();
 		//debugSwing += " Velocity After Gravity: " + Velocity.ToCompactString() +  " Direction of TensionVec: " + dirPlayerPivot.GetSafeNormal().ToCompactString() + " Tension " + Tension.ToCompactString() + " timeTick " + FString::SanitizeFloat(timeTick);
 
 		Velocity = NewSwingVelocity(Velocity, Gravity, Tension, timeTick);
@@ -759,7 +764,7 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 
 		FVector Adjusted = 0.5f * (OldVelocity + Velocity) * timeTick;
 
-		debugSwing += " Adjusted " + Adjusted.ToCompactString();
+		//debugSwing += " Adjusted " + Adjusted.ToCompactString();
 
 		FHitResult Hit(1.f);
 		SafeMoveUpdatedComponent(Adjusted, PawnRotation, true, Hit);
@@ -773,17 +778,21 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 
 		//theta = CalculateAngleCharacterPivot(pivotPosition);
 
-		reduceLogging++;
-		if (reduceLogging % 1 == 0) {
+		//reduceLogging++;
+		if (reduceLogging % 1 == 0 && debugLog) {
 			UE_LOG(LogCharacterMovement, Log, TEXT("%s"), *debugSwing);
 			reduceLogging = 1;
+			debugLog = false;
 		}
+
 	}
 }
 void USSDPlayerMovementComponent::HaltSwingMovement() {
 	SetMovementMode(MOVE_Falling);
 	isSwinging = false;
 	this->pivotPosition = FVector::ZeroVector;
+	FString str = "Current Velocity " + Velocity.ToCompactString();
+	LogAtReducedRate(str, 1);
 	//CharacterOwner->SetActorRotation(actorRotationPreSwing);
 
 }
@@ -857,11 +866,11 @@ FVector USSDPlayerMovementComponent::NewSwingVelocity(const FVector& InitialVelo
 		if (Result.SizeSquared() > FMath::Square(TerminalLimit))
 		{
 
-			const FVector SumOfForcesDir = SumOfForces.GetSafeNormal();
-			if ((Result | SumOfForcesDir) > TerminalLimit)
-			{
-				Result = FVector::PointPlaneProject(Result, FVector::ZeroVector, SumOfForcesDir) + SumOfForcesDir * TerminalLimit;
-			}
+			const FVector SumOfForcesDir = Result / Result.Size(); // I don't get why I have to make my own unit direction vector
+			
+
+			Result = SumOfForcesDir * TerminalLimit; // I've decided to clamp it and see what happens
+			UE_LOG(LogClass, Log, TEXT("2 NewSwingVelocity %s and this is the SumOfForcesDir %s"), *Result.ToCompactString(), *SumOfForcesDir.ToCompactString());
 		}
 	}
 	return Result;

@@ -319,27 +319,140 @@ DEVLOG Potential Entries
 		MaxGrindSpeed
 		GrindFriction
 
-	FPlayerMovementHandler(float airControl, float jumpZVelocity, float groundFriction, float maxWalkSpeed, float maxAcceleration, float wallSlideJumpSpeed, float wallSlideFriction, 
-		float grindJumpSpeed, float grindMaxAccel, float grindMaxSpeed, float grindFriction, float swingMaxAccel, float swingMaxSpeed, float swingFriction)
-	{
-		this->AirControl = airControl;
-		this->JumpZVelocity = jumpZVelocity;
-		this->GroundFriction = groundFriction;
-		this->MaxWalkSpeed = maxWalkSpeed;
-		this->MaxAcceleration = maxAcceleration;
+2020-09-27
+	
+	TODO:
+		Make the bird
 
-		// Wall Slide (Climb is a bit of a misnomer)
-		this->WallSlideJumpSpeed = wallSlideJumpSpeed;
-		this->WallSlideFriction = wallSlideFriction;
+	Enemy Pawn
+		Static (Eventually Skeletal) mesh
+		SphereComponent
+		ArrowComponent
+		PawnSensing 
 
-		// Grind
-		this->GrindJumpSpeed = grindJumpSpeed;
-		this->GrindMaxAccel = grindMaxAccel;
-		this->GrindMaxSpeed = grindMaxSpeed;
-		this->GrindFriction = grindFriction;
+		Behavior: The bird will fly back and forth around a set area perhaps in an oscillating fashion?
+					If it senses the player and is in the viewport
+						Pause and then dive towards the player
+						Go back to idling in a circle and after a set amount of time if player is still in view attack again
+				Will it keep following the player? Right now no
 
-		// Swing
-		this->SwingMaxAccel = swingMaxAccel;
-		this->SwingMaxSpeed = swingMaxSpeed;
-		this->SwingFriction = swingFriction;
-	}
+
+
+		Particle Effects:
+			Healing 
+			Drips coming from Falling Icicles 
+			Wind Wisps from updraft
+
+		Remake the special effect to not be a bar but to take the health and let it persist for a defined amount of time
+
+2020-09-28
+	
+	Made the skeleton for the Enemy Bird, no functionality yet looking in determining object rendering
+
+2020-09-29
+	TODO: 
+		Finish making the Bird
+
+		Mess around with the pendulum physics as it does not feel great
+
+	Accomplished
+		Actually big brained the pendulum physics and got a better functioning version of what was in place, now its more realistic however carry over velocity still has the player rotate around the pivot
+
+2020-10-09
+	Long time since I last worked on my game project with the trip to ohio a welcomed one but throwing me off what I am use to, its 6:37AM and I don't really have any drive or idea of what to 
+	work on right now. Perhaps I should've immediately started working on something as soon as I woke
+
+	Spent 10 minutes trying to install a plugin that broke my build and then reverted it. I have no discipline today
+2020-10-11 
+	Yesterday was dedicated entirely to (seperate) Music and I didn't make a ton of progress in that regard. Feeling refreshed and more focused I want to spend at least 30 minutes today wrenching on particular tasks
+
+	Tasks:
+		EnemyBird - When rendered on screen wait for a moment and fly towards character
+						Steps:
+							Determine when rendered on screen - Debug logs - DONE
+							When rendered on screen move towards player - location at that exact instance, no chasing
+							when rendered on screen pause for a minute and then move towards player
+							Only move towards player when in Pawn Sensing Radius
+							Give it Idle movement
+
+		PhysSwing - Don't want character doing loops around the swing
+					Make animation of character swinging, 1D animation blend of y-Axis distance from the pivot
+
+
+2020-10-12
+	Updated Character Attack Animation so you cant repeatedly slam the attack button, now attack can only be used OnSwingEnd flag triggered
+
+	Fixed PawnSensing on EnemyBird
+
+2020-10-13
+	No work done
+
+2020-10-14
+	Let's work on the PhysSwing aspect for now and take a break from the bird
+
+	Did a bit of introductory level design on pen/paper
+	Put in the 1D blend space for swing animation - will require more exagerrated movements and possibly a 2D blend space to deal with height
+
+	TODO:
+		Swing Animations
+		Swing Movement Logic you've been neglecting
+		Bird Movement See 10-11 steps
+		Particle Wind Effect
+		Particle Healing Effect
+
+		Test out different focus movement
+		Revamp level design
+
+		Sound FX
+		Music
+
+2020-10-16
+	Not super productive learned about Unreals style of AI including BlackBoards and Behavior trees, working on redefining movement for Frog character to not be hardcoded
+
+2020-10-17
+	TODO: 
+		Work on behavior trees for Enemy AI, use frog as starting point
+			RoadMap:
+				Frog
+					Walk back and forth from a central point (perhaps a specific point would be better)
+					OnSeePawn trigger Attack
+
+		Redesign Level
+
+		Sound Fx
+			Player:
+				Scythe Slash
+				Footstep
+			Enemy:
+				Frog:
+					Growl
+					Alert
+					Leap
+					Footstep
+			Bird:
+				Bird:
+					Caw
+					Wing Flap
+			Worm:
+				????
+
+		Particle Effects:
+			Dust trail on heavy landing
+
+			Health spot particles
+
+			Wind Wisps
+
+			Sparks from enemy destruction
+
+
+2020-10-21/22
+	Watched a tutorial on the basics of AI in Unreal to round out my knowledge of what I needed to know, didn't finish tutorial as I don't require complex AI for this game
+
+	Learned Hotkeys:
+		 ' - in game mode to show Debug
+		 1, 2, 3, 4 - To toggle from Numpad once in debug mode
+		 alt + click - to immediately disconnect nodes
+		 F7 - to compile blueprints
+		 
+	Finished Frog AI, needs polish
