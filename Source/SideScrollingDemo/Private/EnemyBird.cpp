@@ -7,12 +7,15 @@
 #include "Perception/PawnSensingComponent.h"
 #include "SSDCharacter.h"
 #include "Engine.h"
+#include "GameFramework/FloatingPawnMovement.h"
+
 // Sets default values
 AEnemyBird::AEnemyBird()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	
+	//: APawn(ObjectInitializer.SetDefaultSubobjectClass<UFloatingPawnMovement>(APawn::MovementComponentName))
+		
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
 	SphereComponent->SetSphereRadius(100.f);
 	RootComponent = SphereComponent;
@@ -22,13 +25,10 @@ AEnemyBird::AEnemyBird()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	MeshComponent->SetupAttachment(SphereComponent);
 
-	/*PawnSensor = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("Sensor"));
-	PawnSensor->SensingInterval = .25f; // How often does pawn react
-	PawnSensor->bOnlySensePlayers = false;
-	PawnSensor->SetPeripheralVisionAngle(35.f);
-	PawnSensor->HearingThreshold = 600.f;
-	PawnSensor->LOSHearingThreshold = 600.f;*/
-
+	PawnMovement = Cast<UFloatingPawnMovement>(GetMovementComponent());
+	if (PawnMovement) {
+		PawnMovement->UpdatedComponent = RootComponent;
+	}
 }
 
 // Called when the game starts or when spawned
@@ -57,7 +57,6 @@ void AEnemyBird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 }
 float AEnemyBird::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser) {
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, "Get Hit Got Wrecked");
 	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	if (ActualDamage > 0.f) {
 		Health -= ActualDamage;

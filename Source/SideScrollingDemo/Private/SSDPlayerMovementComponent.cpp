@@ -83,7 +83,10 @@ void USSDPlayerMovementComponent::MoveRightInput(float Value){
 				case ECustomMovementMode::MOVE_Climb:
 					break;
 				case ECustomMovementMode::MOVE_Swing:
-					AddInputVector(FVector(0.f, -Value, 0.f));
+					//if (pivotPosition.Z > GetActorLocation().Z) {
+						AddInputVector(FVector(0.f, -Value, 0.f));
+					//}
+
 					break;
 			}
 			break;
@@ -105,6 +108,7 @@ void USSDPlayerMovementComponent::OnJumpInput() {
 	}
 	else if (CheckCustomMovementMode(ECustomMovementMode::MOVE_Swing) || isSwinging) {
 		HaltSwingMovement();
+
 	}
 }
 void USSDPlayerMovementComponent::SetCustomMovementMode(uint8 CustomMovement) {
@@ -276,6 +280,7 @@ void USSDPlayerMovementComponent::PhysClimb(float DeltaTime, int32 Iterations){
 		if (!wallTraces[0] && !wallTraces[1] && !wallTraces[2]) {
 			SetMovementMode(MOVE_Falling);
 			StartNewPhysics(remainingTime + timeTick, Iterations - 1);
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, "No longer on wall");
 			return;
 		}
 	}
@@ -284,11 +289,23 @@ void USSDPlayerMovementComponent::TriggerClimbMovement(FHitResult ClimbTrigger){
 
 	FHitResult Hit;
 
-	float climbOffset = capsuleRadius + 10.f; //Radius plus some buffer region
+	// Since this is a 2D game I can cut a quick corner. Actor Rotation needs to either be FRotator(0.f, -90.f, 0.f) or FRotator(0.f, 90.f, 0.f) based on the impact point
+
+	// The actor rotation to always face away from the way needs needs to be the opposite of the impact normal point
+
+	if (ClimbTrigger.ImpactNormal.Y == 1) {
+		CharacterOwner->SetActorRotation(FRotator(0.f, 90.f,0.f));
+
+	}
+	else if (ClimbTrigger.ImpactNormal.Y == -1) {
+		CharacterOwner->SetActorRotation(FRotator(0.f, -90.f, 0.f));
+	}
+
+	towardWall = -1.f*ClimbTrigger.ImpactNormal.Y;// Normal Points away from wall we want towards
+
+	/*float climbOffset = capsuleRadius + 10.f; //Radius plus some buffer region
 	FVector StartTrace = GetActorLocation();
 	FVector EndTrace = StartTrace;
-	//EndTrace.Y += climbOffset*GetCharacterOwner()->GetActorForwardVector().Y * ClimbTrigger.ImpactNormal.Y;
-	towardWall = -1.f*ClimbTrigger.ImpactNormal.Y;// Normal Points away from wall we want towards
 	FVector forward = CharacterOwner->GetActorForwardVector();
 	FString tmp = "The forward vector" + forward.ToCompactString() + " towardwall" + FString::SanitizeFloat(towardWall);
 	if (FMath::IsNearlyEqual(forward.Y,towardWall), 0.2f) {
@@ -303,7 +320,8 @@ void USSDPlayerMovementComponent::TriggerClimbMovement(FHitResult ClimbTrigger){
 	EndTrace.Z += capsuleHalfHeight;
 	StartTrace.Z += capsuleHalfHeight; 
 
-	
+	// This was started in good faith to have the character roll onto ledges but I think its better to not use this for the demo
+
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(CharacterOwner);
 	for(int i = 0; i < wallLinesCount; i++){
@@ -317,7 +335,7 @@ void USSDPlayerMovementComponent::TriggerClimbMovement(FHitResult ClimbTrigger){
 
 		EndTrace.Z -= wallLinesSpace;
 		StartTrace.Z -= wallLinesSpace;
-	}
+	}*/
 	ClimbCollisionHandler();
 }
 void USSDPlayerMovementComponent::ClimbCollisionHandler(){
@@ -341,8 +359,8 @@ void USSDPlayerMovementComponent::ClimbCollisionHandler(){
 	} else if(!wallRayCheck[0] && !wallRayCheck[midpoint]){
 		// Do Roll
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "You're trying to roll");
-	}*/
-	wallRayCheck.Empty();
+	}
+	wallRayCheck.Empty();*/
 }
 void USSDPlayerMovementComponent::PhysGrind(float DeltaTime, int32 Iterations){
 	
@@ -636,7 +654,7 @@ void USSDPlayerMovementComponent::TriggerUpdraftMovement(AUpdraft* updraft) {
 	updraftSpeed = updraft->GetDraftSpeed(GetActorFeetLocation(), GravityScale);
 	FString tmp = "Updraft speed on trigger " + FString::SanitizeFloat(updraftSpeed);
 	tmp += " GravityScale " + FString::SanitizeFloat(GravityScale);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *tmp);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, *tmp);
 	UpdraftReference = updraft;
 
 	// set bUpdraft to true
@@ -691,11 +709,25 @@ void USSDPlayerMovementComponent::TriggerSwingMovement(FVector pivotPosition) {
 	this->pivotPosition = pivotPosition;
 	
 	CharacterOwner->SetActorLocation(CalculateCharacterPivotDistance(pivotPosition));
-	MaxAcceleration = SwingMaxAccel;
 
+	FString triggerSwingString = "Max Acceleration Pre " + FString::SanitizeFloat(GetMaxAcceleration());// "Velocity At Swing Initialization " + Velocity.ToCompactString();
+	MaxAcceleration = SwingMaxAccel;
+	triggerSwingString += " Max Acceleration Post " + FString::SanitizeFloat(GetMaxAcceleration()) + " Swing Accel " + FString::SanitizeFloat(SwingMaxAccel);
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, triggerSwingString);
 	FVector dirPlayerPivot = this->pivotPosition - CharacterOwner->GetActorLocation();
 	horizontalDistanceFromPivot = dirPlayerPivot.Y;
+	
+	
 	Velocity = Velocity.Size() * dirPlayerPivot.GetSafeNormal();
+	Velocity = Velocity.GetClampedToMaxSize(SwingMaxSpeed);
+	//triggerSwingString = " Velocity After swing " + Velocity.ToCompactString() + " DirPivotGetSafeNormal "  + dirPlayerPivot.GetSafeNormal().ToCompactString();
+
+
+	
+	bOrientRotationToMovement = false;
+	bUseControllerDesiredRotation = false;
+	// This does the job but the character still wants to rotate
+	//RotationRate = FRotator::ZeroRotator;
 	// TODO: Find the sum of forces (Gravity and Tension) here and then get the velocity using the dot product against that
 	//Velocity = FVector::ZeroVector;
 
@@ -729,10 +761,10 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 		// TODO: 
 		// Get Player Input for horizontal movement
 		// Add acceleration in direction of the forces (Tension + Gravity)
-
-		CalcVelocity(timeTick, SwingFriction, false, MaxDecel); // Using this function can I set a resonable max acceleration
-
 		debugSwing = "";
+		debugSwing += "Acceleration " + Acceleration.ToCompactString() + " Velocity " + Velocity.ToCompactString();
+		CalcVelocity(timeTick, SwingFriction, false, MaxDecel); // Using this function can I set a resonable max acceleration
+		debugSwing += " Post Accel " + Acceleration.ToCompactString() + " Post Vel " + Velocity.ToCompactString();
 
 		FVector Gravity(0.f, 0.f, GetGravityZ());
 			
@@ -750,13 +782,17 @@ void USSDPlayerMovementComponent::PhysSwing(float DeltaTime, int32 Iterations) {
 			Tension = FVector::ZeroVector;
 			//Velocity.Z -= 20.f;
 			//Velocity = FVector::ZeroVector;
-			debugSwing += " ThetaDegrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " ThetaRadians " + FString::SanitizeFloat(theta);
+			//debugSwing += " ThetaDegrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " ThetaRadians " + FString::SanitizeFloat(theta);
+			Velocity.Y -= Velocity.Y /2.f;
 			debugLog = true;
 		}
 		//debugSwing += " Tension: " + Tension.ToCompactString() + " theta Degrees: " + FString::SanitizeFloat(FMath::RadiansToDegrees(theta)) + " dirPlayerPivot " + dirPlayerPivot.ToCompactString();
 		//debugSwing += " Velocity After Gravity: " + Velocity.ToCompactString() +  " Direction of TensionVec: " + dirPlayerPivot.GetSafeNormal().ToCompactString() + " Tension " + Tension.ToCompactString() + " timeTick " + FString::SanitizeFloat(timeTick);
 
 		Velocity = NewSwingVelocity(Velocity, Gravity, Tension, timeTick);
+		if (debugLog) {
+		//	debugSwing += " NewVel " + Velocity.ToCompactString() + " OldVel " + OldVelocity.ToCompactString() + " Gravity " + Gravity.ToCompactString() + " Tension " + Tension.ToCompactString();
+		}
 
 		//debugSwing += "Velocity Size" + FString::SanitizeFloat(Velocity.Size()) + " Velocity + Accelerations: " + Velocity.ToCompactString();
 
@@ -793,6 +829,9 @@ void USSDPlayerMovementComponent::HaltSwingMovement() {
 	this->pivotPosition = FVector::ZeroVector;
 	FString str = "Current Velocity " + Velocity.ToCompactString();
 	LogAtReducedRate(str, 1);
+	bOrientRotationToMovement = true;
+	bUseControllerDesiredRotation = true;
+	Velocity.Z += JumpVelocity;
 	//CharacterOwner->SetActorRotation(actorRotationPreSwing);
 
 }
@@ -870,7 +909,7 @@ FVector USSDPlayerMovementComponent::NewSwingVelocity(const FVector& InitialVelo
 			
 
 			Result = SumOfForcesDir * TerminalLimit; // I've decided to clamp it and see what happens
-			UE_LOG(LogClass, Log, TEXT("2 NewSwingVelocity %s and this is the SumOfForcesDir %s"), *Result.ToCompactString(), *SumOfForcesDir.ToCompactString());
+			//UE_LOG(LogClass, Log, TEXT("2 NewSwingVelocity %s and this is the SumOfForcesDir %s"), *Result.ToCompactString(), *SumOfForcesDir.ToCompactString());
 		}
 	}
 	return Result;

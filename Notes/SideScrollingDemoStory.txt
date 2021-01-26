@@ -148,3 +148,63 @@ Ways to convey emotional state
 17 - 7 - 20
 	Did the basics of aligning the animation with the animation with the Pivot
 		Perhaps rotating the Player is the best course of action so that I wont have an immediate need to do more animations?
+
+22 - 11 - 20
+	The story has way to much background that the individual doesn't need to know in order to get the point across. Say more with less. You can have the setting and political climate expressed in writing
+	but it feels pointless to try and express them in any meaningful way other than through various hint drops through the game. Make your game a series of intense and purposeful moments that touch on
+	the reason the story needs to be there. Striking light direction, vibrant dialogue and compositions that could be desktop background.
+
+
+	Introduction:
+		Menu screen is the silhouette of the protagonist sitting underneath a tree next to a smoldering fire at the darkest part of night with his weapon resting next to him. This is a scene of looping 
+		animation and ambiance until the player presses start causing the sun to break over the horizion illuminating everything. A short cutscene of small camera pans around the player as he wakes to 
+		show little bits of information about his character up close before the pulled back camera obscures it. Dark sunken in eyes on a hollow face. Worn out clothes and tattered boots and haired slicked
+		back and shaved on the sides before he slowly rises and picks up his scythe.
+
+	Even if this is a bit ambitious I would like roughly 4 or 5 scenes about the scope of the climax. I think that may be asking for a lot, but keep track when you think of them.
+
+	Wouldn't mind a small sidestory involving a love interest but thats stretching to thin. Perhaps hint at?
+
+	Memory dream sequences
+		Protagonist standing up for himself against the gov
+		Town buring 
+		Execution of guardsmen using the gimmick effect
+
+	Town level (with restricted movement)
+		Small subtle ways of enforcing government interrupting and abusing the individuals lives
+
+	Prison Break Metroidvania Level
+		Wakin from a damp cell deep underground and need to escape
+
+	Post Credit scene of a grave visit
+
+	Climax:
+		Throne room deep in a castle during the midst of a civil war. The civil war isn't the story being told but only a consequence.
+
+			A dignified young King walks off his thone hearing the battle raging right outside the castle doors. His contempt for his people and the situation displayed plain on his face by his sneer.
+		Believeing the king owns the people his constant measures of replacement and destruction have brought the country to a boiling point, since throughout the areas of the country the protagonist
+		has acted as a Catayst to ensure that people disatification and rebellous spirit grew as the protagonist forced the hand of the government to expose the true intentions and malice behind their actions
+
+			As the (snake) king steps off his throne and walks to the hall he turns around to see a man resembling the grim reaper, draped in a robe, sitting not on the seat but on the head of the throne
+		the scythe located where the kings head was only moments prior. The (snake) king expecting someone after his head is clearly prepared and calls to the man as a ghost that has been haunting his
+		empire. Accusations and contempt are thrown at the direction of the hooded figure, but in the hooded figured eyes are no malice or hate and only the emptiness of a man pursuing a job that needs
+		to be done.
+
+			A few lines of dialgoue are spoken by the hooded man "king doesn't own the people" "people and their culture aren't replaceable" - something to that effect.
+
+			The kings response is crass boastful and dismissive. While in mid speech the protagonist leaps forward in an effort to strike but is perried. Then the boss fight begins
+
+		Boss Fight
+			Not sure what to do about this, or what the kings gimmick would be to make things interesting. I do want it related to some sort of armour that is removed slowly by the protagonist attacks
+			resulting in a more desperate king.
+
+		Post Boss Fight
+			As the resolution of the fight continues broken and defeated the king stands on his knees as before. The sun turning black from an eclipse as he raises his scythe striking an intense silloute 
+			of reds and blacks. The camera fades to black as the sounds of the war outside get softer only leaving the sound of a swinging scythe and a meaty thud a moment later. Credits
+
+	Post Credits:
+		The game would end there but after the credits I want one more level that will serve as a detante. Perhaps having still during the credits as a celebrating people overthrow the government. The protagonist standing in the background. Perhaps visiting different levels and people to see their interactions while having him be there but not interacted with.
+
+
+
+

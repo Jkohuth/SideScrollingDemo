@@ -21,14 +21,14 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnyWhere, BlueprintReadWrite, Category = Enemy, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category=Enemy, VisibleAnyWhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		class UStaticMeshComponent* MeshComponent; // Eventually will need to be static mesh
-	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = Enemy, meta=(AllowPrivateAccess = "true"))
+	UPROPERTY(Category=Enemy, VisibleAnyWhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 		class USphereComponent* SphereComponent;
-	UPROPERTY(VisibleAnyWhere, BlueprintReadWrite, Category = Enemy, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category=Enemy, VisibleAnyWhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		class UArrowComponent* ArrowComponent;
-	//UPROPERTY(VisibleAnyWhere, BlueprintReadWrite, Category = Enemy, meta = (AllowPrivateAccess = "true"))
-	//	class UPawnSensingComponent* PawnSensor;
+	UPROPERTY(Category=Movement, VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		class UFloatingPawnMovement* PawnMovement;
 
 public:	
 	// Called every frame
@@ -39,10 +39,6 @@ public:
 
 	bool playerSpotted = false;
 	float Health = 1.f;
-
-	// Probably a dangerous thing to do but....
-	UPROPERTY(BlueprintReadWrite)
-		APlayerController* MainPlayerController;
 
 	
 	// Damage Handlers
@@ -60,9 +56,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 		bool isRenderedToScreen(APlayerController *playerController);
 
-	//UPROPERTY(BlueprintAssignable)
-	//	FEnemyRenderSignature OnEnemyRenderCheck;
-
 	UPROPERTY(BlueprintReadWrite, Category = "Render")
 		float checkScreenRendered = 0.5f;
 	
@@ -71,5 +64,6 @@ public:
 
 	FORCEINLINE class UStaticMeshComponent* GetMeshComponent() const { return MeshComponent; }
 	FORCEINLINE class USphereComponent* GetSphereComponent() const { return SphereComponent; }
+	FORCEINLINE class UFloatingPawnMovement* GetPawnMovement() const { return PawnMovement; }
 
 };

@@ -10,6 +10,7 @@
 #include "Camera/PlayerCameraManager.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine.h"
 
 // Sets default values for this component's properties
 UCameraBoundingBoxComponent::UCameraBoundingBoxComponent()
@@ -159,23 +160,6 @@ void UCameraBoundingBoxComponent::OnBoundingBoxOverlapBegin(UPrimitiveComponent*
 	// Maybe using tags for everything isn't idea but before I start effecting performance you need to have something made
 	if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::LevelBoundsTag)) {
 		SetLevelBounds(OtherComp);
-		/*UBoxComponent* NewBounds = Cast<UBoxComponent>(OtherComp);
-		ALevelCameraFollowBounds* levelBounds = Cast<ALevelCameraFollowBounds>(OtherComp->GetAttachmentRootActor());
-		if (NewBounds && levelBounds) {
-			if (CameraFollowLocation == FVector::ZeroVector) {
-				CameraFollowExtents = NewBounds->GetScaledBoxExtent();
-				CameraFollowLocation = levelBounds->GetActorLocation() + NewBounds->GetRelativeTransform().GetLocation();
-			}
-			else {
-				CameraFollowLocationPrevious = CameraFollowLocation;
-				CameraFollowExtentsPrevious = CameraFollowExtents;
-				CameraFollowLocationNext = levelBounds->GetActorLocation() + NewBounds->GetRelativeTransform().GetLocation();
-				CameraFollowExtentsNext = NewBounds->GetScaledBoxExtent();
-
-				// Will have to clean this up later
-				CameraFollowExtents += NewBounds->GetScaledBoxExtent();
-			}
-		}*/
 	}
 }
 void UCameraBoundingBoxComponent::OnBoundingBoxOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
@@ -200,9 +184,9 @@ void UCameraBoundingBoxComponent::OnBoundingBoxOverlapEnd(UPrimitiveComponent* O
 	}
 }
 void UCameraBoundingBoxComponent::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
-	if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::LevelBoundsTag)) {
+	/*if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::LevelBoundsTag)) {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, "Hit the level bounds");
-	}
+	}*/
 }
 void UCameraBoundingBoxComponent::SetLevelBounds(UPrimitiveComponent* Bounds) {
 	UBoxComponent* NewBounds = Cast<UBoxComponent>(Bounds);
@@ -224,13 +208,7 @@ void UCameraBoundingBoxComponent::SetLevelBounds(UPrimitiveComponent* Bounds) {
 	}
 }
 
-void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsule, float DeltaTime){
-	if (targetCapsule == NULL) {
-		return;
-	}
-	TargetLocation = targetCapsule->GetComponentLocation();
-
-
+void UCameraBoundingBoxComponent::UpdatePosition(FVector TargetLocation, float DeltaTime){
 	targetLeft = TargetLocation.Y + radius;
 	targetRight = TargetLocation.Y - radius;
 	targetTop = TargetLocation.Z + halfHeight;
@@ -240,10 +218,10 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 	Origin  = GetBoundingBox()->GetComponentLocation();
 	BoxExtent = GetBoundingBox()->GetScaledBoxExtent();
 	
-	right = Origin.Y - BoxExtent.Y; // The sign has to do with the way the screen is oriented
-	left = Origin.Y + BoxExtent.Y;
-	top = Origin.Z + BoxExtent.Z;
-	bottom = Origin.Z - BoxExtent.Z;
+	cameraBoxRight = Origin.Y - BoxExtent.Y; // The sign has to do with the way the screen is oriented
+	cameraBoxLeft = Origin.Y + BoxExtent.Y;
+	cameraBoxTop = Origin.Z + BoxExtent.Z;
+	cameraBoxBottom = Origin.Z - BoxExtent.Z;
 
 	//FString tmpBounds = CameraFollowLocation.ToCompactString() + " " + CameraFollowExtents.ToCompactString();
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, tmpBounds);
@@ -261,29 +239,29 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 	shift.Z = 0;
 
 	// Has to do with dumb orientation I need to fix that
-	if (targetRight > levelBoundsRight && targetRight < right) {
-		shift.Y = targetRight - right;
+	if (targetRight > levelBoundsRight && targetRight < cameraBoxRight) {
+		shift.Y = targetRight - cameraBoxRight;
 	}
-	else if (targetLeft < levelBoundsLeft && targetLeft > left) {
-		shift.Y = targetLeft - left;
+	else if (targetLeft < levelBoundsLeft && targetLeft > cameraBoxLeft) {
+		shift.Y = targetLeft - cameraBoxLeft;
 	}
-	left += shift.Y;
-	right += shift.Y;
+	cameraBoxLeft += shift.Y;
+	cameraBoxRight += shift.Y;
 
-	if (targetBottom > levelBoundsBottom && targetBottom < bottom) {
-		shift.Z = targetBottom - bottom;
+	if (targetBottom > levelBoundsBottom && targetBottom < cameraBoxBottom) {
+		shift.Z = targetBottom - cameraBoxBottom;
 	}
-	else if (targetTop < levelBoundsTop && targetTop > top) {
-		shift.Z = targetTop - top;
+	else if (targetTop < levelBoundsTop && targetTop > cameraBoxTop) {
+		shift.Z = targetTop - cameraBoxTop;
 
 	}
-	if (lockCameraToBottom && targetBottom != bottom) {
-		shift.Z = (targetBottom - bottom);
-		if (shift.Z >= maxDistanceLimiter) {
-			shift.Z *= DeltaTime;
+	if (lockCameraToBottom && targetBottom != cameraBoxBottom && CharacterWithinLevelBounds()) {
+		shift.Z = (targetBottom - cameraBoxBottom);
+		if (FMath::Abs(shift.Z) >= maxDistanceLimiter) {
+			shift.Z *= 3*DeltaTime;
 		}
 		else {
-			shift.Z = 0.f;
+			shift.Z = (targetBottom - cameraBoxBottom);
 		}
 	}
 
@@ -302,18 +280,19 @@ void UCameraBoundingBoxComponent::UpdatePosition(UCapsuleComponent* targetCapsul
 	//UE_LOG(LogClass, Log, TEXT("Camera Component Update Location %s"), *updatedLocation.ToCompactString());
 	GetBoundingBox()->SetWorldLocation(updatedLocation);
 }
-bool UCameraBoundingBoxComponent::CheckLevelBounds() {
-	if (CameraFollowLocation != FVector::ZeroVector) {
-		FMath::Clamp(Origin.Y + shift.Y, CameraFollowLocation.Y + CameraFollowExtents.Y, CameraFollowLocation.Y - CameraFollowExtents.Y);
-		if (Origin.Y + shift.Y < (CameraFollowLocation.Y + CameraFollowExtents.Y)) {
-			return false;
-		}
-		else if (Origin.Y - shift.Y > (CameraFollowLocation.Y - CameraFollowExtents.Y)) {
-			return false;
-		}
+bool UCameraBoundingBoxComponent::CharacterWithinLevelBounds() {
+	// Calculating the same values twice, poor form, pass them in as function signature?		
+	float levelBoundsRight = CameraFollowLocation.Y - CameraFollowExtents.Y;
+	float levelBoundsLeft = CameraFollowLocation.Y + CameraFollowExtents.Y;
+	float levelBoundsTop = CameraFollowLocation.Z + CameraFollowExtents.Z;
+	float levelBoundsBottom = CameraFollowLocation.Z - CameraFollowExtents.Z;
 
+
+	// -Y direction really being annoying
+	if (levelBoundsLeft > cameraBoxLeft && cameraBoxRight > levelBoundsRight && cameraBoxBottom > levelBoundsBottom && cameraBoxTop < levelBoundsTop) {
+		return true;
 	}
-	return true;
+	return false;
 }
 void UCameraBoundingBoxComponent::InitializePosition(APlayerController*  PlayerController, AActor* ActorInFocus, UCapsuleComponent* targetCapsule) {
 	GetBoundingBox()->SetWorldLocation(targetCapsule->GetComponentLocation());
@@ -336,4 +315,15 @@ void UCameraBoundingBoxComponent::ResetCamera(AActor* targetActor) {
 	UE_LOG(LogClass, Log, TEXT("%s"), *resetString);
 	GetBoundingBox()->SetWorldLocation(OffsetGround);	
 }
+void UCameraBoundingBoxComponent::LogAtReducedRate(int counter, FString Log) {
+	reducedRateLoggingCounter++;
+	/*if (targetBottom < bottom) {
+		FString tmp = "Bottom: " + FString::SanitizeFloat(bottom) + " TargetBottom: " + FString::SanitizeFloat(targetBottom) + " ShiftZ: " + FString::SanitizeFloat(shift.Z);
+		if (reducedRateLoggingCounter % 10 == 0) {
+			reducedRateLoggingCounter = 0;
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Black, tmp);
+		}
+	}*/
+}
+
 void UCameraBoundingBoxComponent::setLockCameraToBottom(bool setLock) { lockCameraToBottom = setLock; }

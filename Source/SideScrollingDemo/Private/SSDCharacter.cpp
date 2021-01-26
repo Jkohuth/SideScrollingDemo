@@ -50,6 +50,8 @@ ASSDCharacter::ASSDCharacter(const FObjectInitializer& ObjectInitializer)
 	CharacterEffects->Settings.AutoExposureMaxBrightness = 1.f;
 	CharacterEffects->bEnabled = false;
 
+	targetCameraLocation = GetCapsuleComponent()->GetComponentLocation();
+
 	PlayerMovement = Cast<USSDPlayerMovementComponent>(GetCharacterMovement());
 
 	if (PlayerMovement) {
@@ -81,7 +83,7 @@ void ASSDCharacter::BeginPlay()
 	else {
 		UE_LOG(LogClass, Log, TEXT("PlayerMovement failed to load"));
 	}
-	//SetCharacterState(ECharacterState::ACTIVE);
+	//SetCharacterState(ECharacterState::REST);
 	
 }
 
@@ -91,7 +93,9 @@ void ASSDCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	AdjustFocusBarPercentage(DeltaTime);
 	// Keep Player within Camera Bounds
-	GetCameraBounds()->UpdatePosition(GetCapsuleComponent(), DeltaTime);
+	GetCameraBounds()->UpdatePosition(targetCameraLocation, DeltaTime);
+	UpdateTargetCameraLocation();
+
 }
 
 // Called to bind functionality to input
@@ -122,6 +126,16 @@ void ASSDCharacter::MoveUp(float Value) {
 	if (GetPlayerMovement() && (GetPlayerMovement()->UpdatedComponent == RootComponent)) {
 		GetPlayerMovement()->MoveUpInput(Value);
 	}
+	UpdateTargetCameraLocation(Value);
+}
+FVector ASSDCharacter::UpdateTargetCameraLocation(float Value) {
+	targetCameraLocation = GetCapsuleComponent()->GetComponentLocation();
+	float lookOffset = 200.f;
+	if (GetPlayerMovement() && GetPlayerMovement()->Velocity.Size() == 0) {
+		targetCameraLocation.Z += Value * lookOffset;
+	}
+
+	return targetCameraLocation;
 }
 
 // EVENT TRIGGERS
@@ -149,13 +163,10 @@ void ASSDCharacter::OnActorOverlapBegin(UPrimitiveComponent* OverlappedComp, AAc
 		}
 	}
 	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::CaveTag)) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Cave Overlap");
 		GetCameraBounds()->SetCameraMode(ECameraMode::CAVE);
 
 	}
 	else if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::LevelBoundsTag)) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Overlapped with level bounds");
-
 	}
 
 
@@ -171,30 +182,48 @@ void ASSDCharacter::OnActorOverlapEnd(UPrimitiveComponent* OverlappedComp, AActo
 void ASSDCharacter::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
 	// Check for Wall Movement
 
-	if( OtherActor && OtherActor->ActorHasTag(ECustomTags::ClimbTag) && 
-		FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.4f) 
- 		&& GetPlayerMovement()->MovementMode == MOVE_Falling){ // Angle Tolerance
-		if (GetPlayerMovement()) {
+	if( OtherActor && GetPlayerMovement() ){
+		if( OtherActor->ActorHasTag(ECustomTags::ClimbTag) && 
+			FMath::IsNearlyEqual(FMath::Abs(Hit.ImpactNormal.Y), 1.f, 0.4f) && GetPlayerMovement()->MovementMode == MOVE_Falling){ // Angle Tolerance
+
 			GetPlayerMovement()->TriggerClimbMovement(Hit);
 		}
+		// Check for Rail Movement
+		else if (OtherActor->ActorHasTag(ECustomTags::GrindTag)) {
+
+			if (GetPlayerMovement()->CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) return;
+
+			if (Hit.ImpactNormal.Y > 0.8f || Hit.ImpactNormal.Z <= -0.1f) return;
+
+			ARail* Rail = Cast<ARail>(OtherActor);
+			if (Rail) {
+				GetPlayerMovement()->TriggerGrindMovement(Rail, Hit);
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Grind Movement Triggered");
+
+			}
+		}
+		else if (OtherActor->ActorHasTag(ECustomTags::DeathTag)) {
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, "Hit death");
+
+			TriggerDeath();
+		}
 	} 
-	// Check for Rail Movement
-	else if (OtherActor && OtherActor->ActorHasTag(ECustomTags::GrindTag)) {
-
-		if (GetPlayerMovement()->CheckCustomMovementMode(ECustomMovementMode::MOVE_Grind)) return;
-
-		if (Hit.ImpactNormal.Y > 0.8f || Hit.ImpactNormal.Z <= -0.1f) return;
-
-		ARail* Rail = Cast<ARail>(OtherActor);
-		if (Rail) {
-			GetPlayerMovement()->TriggerGrindMovement(Rail, Hit);
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Grind Movement Triggered");
+	else if (OtherComp){
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Hit an Other Component");
+		for (int i = 0; i < OtherComp->ComponentTags.Num(); ++i) {
+			UE_LOG(LogClass, Log, TEXT("Other Component %s"), *OtherComp->ComponentTags[i].ToString());
 
 		}
+		if (OtherComp->ComponentHasTag(ECustomTags::EnvironmentDamageTag)) {
+			ReceiveEnvironmentalDamage(Hit);
+		}
+		else if (OtherComp->ComponentHasTag(ECustomTags::DeathTag)) {
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, "Hit death");
+
+			TriggerDeath();
+		}
 	}
-	else if (OtherComp && OtherComp->ComponentHasTag(ECustomTags::EnvironmentDamageTag)) {
-		ReceiveEnvironmentalDamage(Hit);
-	}
+	
 }
 void ASSDCharacter::InitializeLevelBounds(UPrimitiveComponent* Bounds) {
 	if (GetCameraBounds()->IsValidLowLevel() && Bounds) {
@@ -273,7 +302,6 @@ void ASSDCharacter::InflictDamageHandler(bool isHit, TArray<FHitResult> HitArray
 // DAMAGE
 
 void ASSDCharacter::InflictDamage(AActor* ImpactActor){
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Black, "Inflicting Damage");
 	AController* controller = Cast<AController>(GetController());
 	if (controller != nullptr) {
 		if ((ImpactActor != nullptr) && (ImpactActor != this)) {
@@ -282,9 +310,6 @@ void ASSDCharacter::InflictDamage(AActor* ImpactActor){
 
 			const float DamageAmount = 1.0f;
 			ImpactActor->TakeDamage(DamageAmount, DamageEvent, controller, this);
-			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Black, "Called Damage");
-
-	
 		}
 	}
 }
@@ -310,12 +335,20 @@ float ASSDCharacter::ReceiveDamage_Implementation(float Damage, struct FPointDam
 	}
 	return ActualDamage;
 }
+
 void ASSDCharacter::ReceiveEnvironmentalDamage(FHitResult HitInfo) {
 	if (CanReceiveDamage()) {
 		GetPlayerMovement()->KnockBack(HitInfo);
 		Health -= EnvironmentDamage;
+		immuneToDamage = true;
+		GetWorld()->GetTimerManager().SetTimer(DamageImmunityTimer, this, &ASSDCharacter::ResetDamageImmunity, immunityDurationInSeconds, false);
+
 		DeathHandler();
 	}
+}
+void ASSDCharacter::TriggerDeath() {
+	Health = 0;
+	DeathHandler();
 }
 void ASSDCharacter::DeathHandler() {
 	if (Health <= 0.f && GetCharacterState() != ECharacterState::DEAD) {
@@ -340,6 +373,7 @@ void ASSDCharacter::Respawn(FVector LastCheckPoint){
 	SetCharacterState(ECharacterState::ACTIVE);
 	FocusBarPercentage = 1.f;
 	SetActorLocation(LastCheckPoint); // May need to use a different method
+	UpdateTargetCameraLocation(0.f);
 	GetCameraBounds()->ResetCamera(this);
 }
 bool ASSDCharacter::IsDead(){
@@ -453,4 +487,5 @@ void ASSDCharacter::DebugString() {
 	}
 
 	UE_LOG(LogClass, Log, TEXT("%s"), *output);
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, output);
 }

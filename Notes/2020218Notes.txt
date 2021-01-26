@@ -456,3 +456,300 @@ DEVLOG Potential Entries
 		 F7 - to compile blueprints
 		 
 	Finished Frog AI, needs polish
+
+2020-10-23/25
+	Did quite a bit over the past few days, predominantly ironed out all the kinks in AI with the frog. Now it uses AI perception and can have its main values set, attacks player and has a cooldown
+
+	Working on EnemyHawk now, got the basics down but floating pawn movement component doesn't respond well to basic MoveTo AI functions so I'll have to do something a bit more homegrown or make it a character
+
+	Also Quick fix character no longer rotates when swinging
+
+2020-10-26
+	I feel very close to finishing a demo of my game while simultaneously having a billion tweaks that need to be implemented. As these notes splintered into more of the thoughts about
+	what was accomplished today than what needs to be done I am thinking of making an excel spreadsheet to keep track of task and more importantly time (recorded) time management
+
+	Perhaps swallow your pride and make the bird a character? Although I feel as though I need to prove to myself I can make the correct movment mode with just a floatingPawnMovementComponent
+
+	Started on a spreadsheet to take care of the remaining tasks I had in mind
+
+	Spent some time working out floating pawn movement for the bird, not sure if this is a waste as making it a character would give me a lot of advantage, who am I trying to impress? mysefl? If thats the case youshouldn't even be using unreal
+
+2020-10-29
+	Took a break from caffeine which for some reason also meant taking a break from working on the game. Still I'll probably tackle something simple today, so I'll work on either level design or 
+	destructible wall (objects)
+
+	Did some level design and watched a tutorial on destructible objects, did not implement
+2020-10-31
+	Happy Halloween 5 day coffee clense is over now it time to get back to work
+
+	My aim today is to squash bugs and build more of a level and boy do I have a ton of bugs to squash
+
+	Accomplished quite a lot today surprisingly
+
+	Fixed falling platform jump and corrected the time
+	Made more of the playable level
+	Added camera panning up and down when stationary
+	Worked on Pendulum movement
+2020-11-2
+	Created more of the intro sequence of the level
+
+	TODO:
+		Destrutible Wall
+		Swing Movement
+		Hawk AI/Movement
+2020-11-15
+	Election has kept me anxious and ruined my ability to focus, however that is on the back burner and there is a game I that I want to make.
+
+	Gameplay Hurdles:
+		Swing Movement:
+			No Animation
+			Character can swing all the way around
+				- Perhaps a hard stop to all velocity when character reaches a certain apex?
+				- Clamp the velocity of the player when he starts the physSwing movement
+
+		Climb Movement:
+			Misnomer Wall Slide is more accurate 
+			Rotate character to face away from the wall on trigger regardless of current rotation
+				With a variation of 360 degrees of what the character can be when hitting the wall need to 
+					A. Find Character Roatation Angle that points away from the wall
+					B. Rotate character by that amount
+
+				FINISHED: Set values to hardcoded toward or away from wall, only works in 2D but this project needs to be finished
+
+2020-11-16
+	I am going to mess around with pendulum movement to see if I can get the desired effect
+
+	Cause: I don't have true pendulum movement implemented instead I have a rotational movement with a lock on how far the character can divert from the path
+
+	Resolution: Temporary but I now set the characters Y velocity to 0.f when its horizontal to the swing. Once again not true pendulum movement but it works in the short term
+
+2020-11-17
+	Movement Mechanics or level design? I don't know what I should work on at this moment, but I feel like level design could do more to further my game along
+
+	So far I've built out my level a bit more, and have exposed them to everything they will encounter in the level. Acting as a "Tutorial" Stage. Now I want to create a 2 way path that will split to a 
+	3 way path that will converge at 1 path at the end of the level.
+
+	Reasons for taking more difficult path? Items? Cutscene (yeah right) Powerups most likely
+
+	Bug found on falling platform player teleports with platform
+
+	Did a lot of level design but still not hitting the interesting nail on the head yet, needs more work across the board in expanding and making the level
+
+	Bounding box bugs with respect to camera movement in new area
+
+2020-11-19
+	Exploring the errors with level Camera Bounds and why the camera won't follow the bounds I added in the new level
+
+	SOLVED: The camera bounding box wasn't overlapping properly based on the location, It didn't overlap with it in its default position because on spawn the players bounding box already overlapped with it slightly
+
+2020-11-20
+	Began by working on Level design a little bit only to discover that the pendulum movement is very slow and boring despite me tweaking the values. Need to once again adjust the values in order to 
+	have a more fluid experience 
+
+	Looks as though something is consuming my acceleration Vector
+
+	Spikes in cave fall to fast and due more damage than they should needs to be adjusted
+
+2020-11-21
+	If I decide to rework the pendulum movment I should express the motion in terms of energy and not in terms of velocity. I need to figure out why the friction/tension isn't being applied
+	in the x (Y) direction as well. Manually setting it to zero on the surface resolves my issue but doesn't actually address the problem.
+
+	Check if the acceleration based on player input is actually adding any value
+
+	Bug found in swing movment because attacking is required to activate MOVE_SWING the characters swing acceleration gets overriden by the acceleration limiter when attacking 
+
+2020-11-22
+	Tooks some notes on the scenes I want to see in the game and the way they would be played out. I may want to draw some pictures of the screen.
+
+	Pendulum movement still doesn't feel right, may add additional movement when jumping off and see if that is a good fit
+
+	Background needs to be added so that when on empty platforms you can get a grasp for movement
+	Perhaps fix the rotation of the character speed
+	Make sure Camera doesn't clip into environment
+
+	Foot Step sounds FX Find some
+	Clink sound effect when entering pendulum movement
+	Perhaps set velocity (or make it approach 0) as you get to a certain angle above the pivot
+
+	11:11 - Going to begin spending time decorating and adding stylistic flare to the level
+
+	11:30 - Lot of options for SFX, may want to do more level design to get a feel for what I want first
+			May spend some money on stylized water shader
+
+	11:44 - Bug Report put limit on negative velocity when updrafting
+
+	11:57 - Did more level design
+
+2020-11-25
+	Took some days off since I had a rather long session on the 22nd.
+
+	Morning: Played the level to get a feel for what needs adjustment
+	Accomplishments:
+		Environmental Damage now trigger Damage immunity timer
+		Some Level modifications
+		15:33
+			Fixed Death animation issues bug
+			Updraft no longer allows player to fall all the way through
+
+	TODO: 
+		MOVE_Swing still needs work, if you jump off at the right time the characters vertical velocity is to high
+		Icicle needs adjusting but that could be polish work
+		Enemy Bird with Character Inheritence 
+		Updrafts that don't let players fall all the way through
+		Decorating
+
+	Evening:
+		Game is actually coming together quite nicely and wrapping it up seems actually possible at this point.
+
+		Playable Demo requirements:
+			Enemy_Bird - Inherit from Character use MOVE_Flying AI nodes
+
+			MOVE_Swing - Work around the hack of offsetting the velocity at certain angles, causing weird jumping
+
+			Level Design - Needs at least 1/3 more level per level
+
+			Level Decoration Design - Get Premade assets and sprinkle them throughout the level in order to give it a sense of space
+
+			Animation..... none for the enemies as that is a lot of work
+
+			Respawning at Rest Points
+
+			Particles:
+				Wind Gusts
+
+			Sound FX:
+				FootSteps
+				Scythe Slash
+				Enemy Frog Growl
+				Enemy Worm crick
+				Enemy Bird Caw
+				Faint Breeze for background noise
+
+			Tweak Gimmick to reach more difficult areas easier
+
+2020-11-26
+	Thanksgiving. Called the family had breakfast but no game development today, instead I am recording music for my project with Zack.
+		Dance, Dance - Prank but also good experience
+			Opening of dance dance, drum beat bassline shaker, maybe vocals
+
+		Bass riffs - One you currently have recorded on your phone add a simple drum beat
+
+		Mundane Bridge- No lyrics today just the chord progression you played with the other day maybe add a drum beat
+
+		Stretch:
+			Second Bassline
+
+2020-11-29
+	Spent a few days doing nothing but Music. I am not worried about neglecting the game as those few days were very productive and situation (ie being home alone).
+
+	Pull Back camera and adjust Camera Bounding Box location
+		For throwing obstacles at the player the camera is to close up for him to get a comfortagble read on the situation.
+
+	Started looking into Vulkan once again, I want to pick at the Unreal Engines graphics engine to get an idea of how it works
+
+
+
+2020-12-2
+	As mentioned above I took a few days off my game to focus on music and it really paid off.
+
+	Relating to my  game I told Zack I'd have a playable demo by december 18th, and there is a few things that need to be done by then. I will list them in order of importance.
+
+	Finish Level
+		Currently you need about 1/3 more level in order to get the idea down
+	Decorate Level
+		Sprinkle Assets and Textures to provide a sense of place
+	Add Sound FX
+		Foot steps, wind gust, monster growl, slash, regular ambiance (might be a little much)
+	Handle Death
+		Currently character falling below map leads to them just falling eternally
+	Make Goal
+		Level needs an ending and short animation
+	Flying Enemy?
+
+
+	Accomplishments
+		Made a death floor for players who don't know how to stay within the level bounds.
+		Death still needs work
+		Wrote of list required for game
+
+
+
+2020-12-7
+	Worked on more of the level design and fixed a few oversights (Deleted the climb trigger)
+
+2020-12-13
+	Progress on the game has slowed to a halt as work has been taking a large amount of my time. It will suffer for 3 weeks when I am Vacationing as well.
+
+	LetzteDelight
+
+	Camera doesn't pan to character when outside bounds
+	Replaced Geometry with static mesh called death block
+
+2020-12-16
+	Worked on own GameEngine. Believed that the VertexAttribPointer was the cause of the error but I believe it was the predefined marcos that was causing me headaches. Swapping GLEW for 
+	glad and removing BINDVERTEXARRAY and GENVERTEXARRAYS macro made both of my shaders work. Go back and investigate that gl-Macros function and attempt to fix the error
+
+
+	Didn't get any real work done on my Unreal Engine game today. Played the level a bit and messed around but that is all
+
+
+2021-01-16
+	I haven't touched this game in about a month and while that is disappointing today is a brand new day and I can start with a new routine to wrap up the game
+
+	After playing through the level a few times I have some thoughts
+
+	EnemyBird - Make it a character object so it can function with AI, I know you want to prove something to yourself but a finished game is what you want
+	Updraft - Needs particle effects in order to inform the player what is happening
+	Falling Spikes - Make them bigger and give obstacles to make them more threatening, I also think they don't even do damage anymore
+
+2021-01-20
+	I'm having difficulties getting back into the groove of working on a project, today however I spent some time reviewing the AI i had for the enemy Hawk since I am replacing it
+	with an enemy character. Not to much changed, the behavior tree will need adjustments.
+
+2021-01-21
+	Trying to get back into a routine of working, need to make a check list for today
+
+	Flying Enemy AI
+		- Have since replaced the flying enemy pawn with enemy character to take advantage of the pre made code that comes with it
+		- Set Up AI such that the EnemyFlying will act of its own accord and move based on whether a character is available
+
+	Started working on the AI for enemy flying, got a visual on what it looks like but couldn't get the simple MoveTo to work well enough will revisit
+
+
+NOTE ' is how you activate the gameplay debugger
+
+
+2021-01-24
+	Haven't touched the game in earnest the past few days as Ive been preoccupied with recording music
+
+	I want to go through and wrap up the basics on the AI of the flying enemy
+
+	EnemyFlying: Receive Damage, I have to work through this everytime I create a new enemy I need to figure out what to do in order to keep it consistent. 
+					With my next project I am going to have an enemy base class
+					DONE: Needed the "enemy" tag
+
+				AI MoveTo - I need the behavior tree to move the enemy Flying toward a direction
+					Still not responding, but I had to resolve an issue with Debug Logs prior to moving forward
+					Selector with no condition never goes through with the second option, needed to swap it out for sequence
+					Seems that when the entity interacts with the ground the movementmode becomes changes, I'll have to overload that function 	
+2021-01-25
+	Came back after spending a few hours on the game yesterday just to touch thing and polish everything up
+
+	EnemyFlying: The AI is not implemented but the base of things are there
+					Base: AI can Move
+						  Can Give/Take Damage
+
+				Needs more work on the actual AI movement
+					- What to do when spot player
+					- How big should the sense component be?
+					- Avoid colliding with the floor
+					- Don't let it move outside a restricted 2D range
+				I believe that I need to overwrite the bird movement component as it keeps colliding in with the ground
+				
+	I've also thrown around the idea of having a monthly DevLog
+		This month I have done XYZ for my game here is the before and after, I think it would be a good way to hold myself accountable
+
+		Steps to do this:
+			Screen Capture Software: Need to grab bits of code/unreal for my game
+			Video Sequencer: Need to find a video sequencer program, adobe priemer is what Im expereienced in but I don't think its that useful now since I have to pay
+			Audio Overlay: This one will be the simplest as I currently have all the tools ready to record an audio overlay

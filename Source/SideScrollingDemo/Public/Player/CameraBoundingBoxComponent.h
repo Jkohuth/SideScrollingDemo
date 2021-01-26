@@ -74,7 +74,7 @@ public:
 	FVector Origin; // This is just origin
 	FVector BoxExtent; // This should exist somewhere in here
 
-	float right, left, top, bottom;
+	float cameraBoxRight, cameraBoxLeft, cameraBoxTop, cameraBoxBottom;
 
 	FVector TargetLocation;
 	float halfHeight, radius;
@@ -90,7 +90,7 @@ public:
 	FVector CameraFollowLocationPrevious;
 	FVector CameraFollowExtentsPrevious;
 	
-	bool CheckLevelBounds();
+	bool CharacterWithinLevelBounds();
 
 	void SetCameraMode(ECameraMode mode);
 
@@ -115,9 +115,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void InitializePosition(APlayerController*  PlayerController, AActor* ActorInFocus, UCapsuleComponent* targetCapsule);
 	UFUNCTION(BlueprintCallable)
-		void UpdatePosition(UCapsuleComponent* targetCapsule, float DeltaTime);
+		void UpdatePosition(FVector TargetLocation, float DeltaTime);
 	UFUNCTION(BlueprintCallable)
 		void ResetCamera(AActor* targetActor);
+
+	void LogAtReducedRate(int counter, FString Log);
+
+	int reducedRateLoggingCounter = 0;
 
 	bool ConfirmComponentValidLowLevel();
 

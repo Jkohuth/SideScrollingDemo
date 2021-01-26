@@ -21,7 +21,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	// Custom Movement to make game unique
-	UPROPERTY(BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	class USSDPlayerMovementComponent* PlayerMovement;
 	
 	// What status is the character? Active, Dead, Cutscene
@@ -76,6 +76,7 @@ public:
 	void InitializeLevelBounds(UPrimitiveComponent* Bounds);
 
 
+
 	// DAMAGE
 
 	UPROPERTY(EditAnywhere)
@@ -90,6 +91,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float FullHealth = 3.0;
+
+	UPROPERTY()
+		FVector targetCameraLocation;
+
+	UFUNCTION()
+		FVector UpdateTargetCameraLocation(float Value = 0.f);
 
 	//UFUNCTION()
 	//	void Attack();
@@ -111,6 +118,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Damage")
 		void DeathHandler();
+	
+	UFUNCTION(BlueprintCallable, Category = "Damage")
+		void TriggerDeath();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Anim")
 	void TriggerDeathAnim();

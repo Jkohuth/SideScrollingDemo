@@ -25,9 +25,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UParticleSystem* Draft;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	float strongDraftSpeed;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	float weakDraftSpeed;
 
 	float strongDraftThreshold;

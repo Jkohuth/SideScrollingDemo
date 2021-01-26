@@ -61,6 +61,7 @@ namespace ECustomTags {
 	const FName EnemyTag = FName("enemy");
 	const FName LevelBoundsTag = FName("levelbounds");
 	const FName RestTag = FName("rest");
+	const FName DeathTag = FName("death");
 
 
 };
