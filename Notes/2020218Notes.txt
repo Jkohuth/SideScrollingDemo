@@ -745,7 +745,7 @@ NOTE ' is how you activate the gameplay debugger
 					- Avoid colliding with the floor
 					- Don't let it move outside a restricted 2D range
 				I believe that I need to overwrite the bird movement component as it keeps colliding in with the ground
-				
+
 	I've also thrown around the idea of having a monthly DevLog
 		This month I have done XYZ for my game here is the before and after, I think it would be a good way to hold myself accountable
 
@@ -753,3 +753,116 @@ NOTE ' is how you activate the gameplay debugger
 			Screen Capture Software: Need to grab bits of code/unreal for my game
 			Video Sequencer: Need to find a video sequencer program, adobe priemer is what Im expereienced in but I don't think its that useful now since I have to pay
 			Audio Overlay: This one will be the simplest as I currently have all the tools ready to record an audio overlay
+2021-01-26
+	Not much progress was made yesterday
+
+	Today I want to reorganize my files but I am a little nervous that doing so will break my build. I've saved all of my current progress off in github so now I should be more flexible
+	Organizing worked out fine, not much got in the way of things. 
+
+	Doesn't look like there is any way around it, I'm going to have to make a flying enemy character movement class
+
+	Did some of the basic plumbing for adding custom flying movement to an enemy
+2021-01-27
+	Started work on the flying enemies movement component. I don't want it to stall out when hitting the ground. By making its own movement component, a bit of a pain, I can prevent
+	it from leaving the MovementMode that I want it to be in by overriding the necessary functions. Now I am experimenting with the "Landed" function trying to ensure it doesn't get
+	called whenever it hits ground so it can keep being a flying enemy
+
+	After adding the necessary components I need to confirm that the blueprint is getting the flying movement components changes
+	Looks like I have to rebuild the blueprint to include the movement component
+2021-01-28
+	Yesterday I had to recreate the blueprint with the custom movement component for the flying enemy, and now the AI systems I put into place are no longer functioning.
+
+	Today My aim is:
+		- Have Flying enemy AI move towards player
+		- Go back to idle position if it hits the ground of the player
+2021-01-29
+	Did a lot of debugging with respect to the enemy yesterday, and today I will attempt to recreate the movement using the custom enemy movement
+
+	- Have flying enemy AI move towards player
+	- Get off the ground if it touches it
+
+	Another day of troublshooting and nothing to show for it except an enemy that still wont move
+
+2021-02-15
+	Quite some time has passed since I last dedicated a chunk of time to my game. I am losing momentum as I desire the project to be rebooted with a third dimension, however that is 
+	not the main reason for the break. That reason is due to me working on getting a functioning website up and running in order to blog and talk about the progress of my game, and I 
+	kind of do? It's still rough but EmptyVolk.com has it's first blog post, unfortunately its not parsing CSS correctly but I'll revisit that in a bit
+
+	Today I want to call the Bird AI to move towards the player
+
+	RESULT: Flying AI enemies cannot use the MoveTo Function
+		MoveTo function includes pathfinding and despite it being a volume it only works for grounded enemies, with MOVE_FLYING it does not permit the entity to use the MoveTo function,
+		so you're back to square one of rolling you own. I personally prefer the FloatingPawnMovementComponent for this as it is lighter and will get the job done.
+
+	Need to map out the desired effects of the floating pawn movement
+
+	EnemyBird - Movement
+		Idle - Need it to fly between two points on the Y axis while maintaining its height on the Z
+
+		OnPlayerSpotter - Pause for a brief moment (To inform the player that the Alert has happened)
+			Move Towards player (GetPlayerLocation - GetBirdLocation for direction) * Velocity
+
+			if(Hit Player || Made it to desired location)
+				Move Back to idle height and to idle location
+
+			Repeat
+
+2021-02-16
+	Going to try and implement the floating pawn movement component for EnemyBird, triggering functions for that class specifically with Blueprint functions and tasks, no AI moveto
+
+	Looks like a few of my components are not showing up in the EnemyBird_BP, trying different things to get them to load,
+		DEBUG: FAILED - Removed the UPROPERTY from the object, recompiling and am now readding them
+				FAILED - Reparenting the Pawn to a different class before reparenting to the Correct C++ class
+				I am actually quite livid that the blueprints don't work, what a piece of shit software ^v^
+
+	Wasted time on a trivial matter of trying to get the Components to list all the components the Blueprint actually inherited
+
+	Worked on AI triggering a function within the Blueprint. It could trigger an event instead if the use of timelines is desired, but as of right now the AI has the skeleton in place
+	I just need to add the movement to the functions and then it will be one step closer to being done
+
+2021-02-17
+	My aim today is to make the idle task for the flying enemey
+
+	Move back and forth around its initial location
+
+	Took a detour to read over the default pawn class and how to implement the problem I faced the few days prior. Movement component was not being overriden successfully. Switching to defaultPawn class.
+
+	EnemyHawk is now my go to class for the flying enemy, everything is setup and moved over to enable the hawk to idle successfully, now he just needs to be fed the idle information
+
+2021-02-18
+	Still working on the idle task for EnemyHawk. Some time was spent trying to find which class, DefaultPawn/Pawn/Character would work best for flying enemy and while Pawn could've
+	worked with more effort, DefaultPawn has the bones in places to achieve my ends
+
+	My Aim is to have it Fly left and right, and stop whenit overlaps with a player 
+
+	On EventBeginPlay I have it's inital Location Set, now I need to determine if it'll move left of right first when idling
+
+	First Determine which direction the Enemy is facing and set the desired location, I can skip a lot of this if I use the fact that I know trigonometry
+
+	So I was able to get it to move and oscillate on a single axis but it has an inprecision issue, when moving on an axis left and right the check I use to justify changing
+	directions repeatedly gets called stopping it from moving in an ideal way
+2021-02-19
+	No progress today on the unreal front, spent the morning working on a pokemon style RPG clone for the Heimat Jam coming in a few weeks
+2021-02-22
+	Update, decided that sprite art is bullshit. Got frustrated atthe current system in place in unity for creating tilemaps. Will do the game jam in Unreal with premade assests and not sprites
+
+	Short day today, I am only going to try and work with the flying enemy movement
+
+	Timeline it is
+
+2021-02-23
+	Today I am going to work on the players Idle movement, triggering an back and forth movement with a timeline. Trying to manually code in the behavior I want isn't ideal and isn't functioning
+	the way I intended. A timeline is a quick and dirty solution to get what I want
+
+	Due to the use of timelines I need to make idle movement an event
+
+2021-02-24
+	Oscillating Idle movement for the bird is done
+	Now I need the bird upon seeing 
+2021-02-25
+	Today need to lerp the bird from its location to the player using a timeline and going back to it's initial location after
+
+	The code is a spaghetti mess but it works, I need to prevent AI perception from updating with the necessary information until the bird is back in its default position or else it will keep
+	going after the player
+
+	Oregairu

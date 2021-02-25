@@ -27,7 +27,7 @@ AEnemyHawk::AEnemyHawk()
 		ArrowComponent->bTreatAsASprite = true;
 		//ArrowComponent->SpriteInfo.Category = ConstructorStatics.ID_Characters;
 		//ArrowComponent->SpriteInfo.DisplayName = ConstructorStatics.NAME_Characters;
-		ArrowComponent->SetupAttachment(GetMeshComponent());
+		ArrowComponent->SetupAttachment(GetCollisionComponent());
 		ArrowComponent->bIsScreenSizeScaled = true;
 	}
 #endif // WITH_EDITORONLY_DATA
@@ -89,6 +89,11 @@ void AEnemyHawk::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UP
 	if (OtherActor && OtherActor->ActorHasTag(ECustomTags::PlayerTag)) {
 		InflictDamage(OtherActor, Hit);
 	}
+	//TODO: Turn around if it collides with something other than the actor
+	/*else {
+		// Turn around if it hit something other than the player
+		GetCollisionComponent()->SetWorldRotation(FRotator::MakeFromEuler(FVector(0.f, 180.f, 0.f)));
+	}*/
 
 }
 

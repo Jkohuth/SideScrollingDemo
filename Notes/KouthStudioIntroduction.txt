@@ -4,9 +4,95 @@ Kouth.Studio Introduction Video
 
 Hey My Name is Jakob, I've been a software Engineer for roughly 4 years now and have a few years learning and creating projects prior to my employment. 
 I have small scattered amounts of experience creating Games dating back to my first project, a Rough C++ based Game Engine. It wasn't much but the process taught me
-the fundalmentals of programming as I took a lower level approach from using OpenGL and a simple Text Editor to creating my own Makefiles and window contexts.
+the fundalmentals of programming as I took a lower level approach using OpenGL, a simple Text Editor, my own Makefile, and GLFW for window contexts.
 
 Now I spend most of my personal dev time wrenching an Unreal Engine project for a SideScroller I've been wanting to make for quite some time. Despite the ambitious aspirations
 this project has been something I've been working on for over a year now and I want to showcase not only the game, but what I've learned about Unreal Engine and game programming along the way.
 
+The games title is EmptyVolk2D, and with this blog I hope to share code bits, setup, and different tools I learned and used along the way to make this simple indie project a reality.
+
+
+
+
+
 So if that's your beat stick around from some tutorials and be on the lookout for the rough demo of my first real project dropping on itch.io
+
+
+
+
+13-2-21
+Perhaps the blog should start in Medias Res?
+
+Overriding the default Unreal Engine Character Movement Script
+
+For my first blog post a tutorial seems like an apt place to start with an abundance of pictures and code snippets in order to ease the viewer into it
+
+
+#Custom Movement Component Instantiation
+
+When using Unreal Engine one typically starts with the basic classes provided by Epic Games. The Character class and the character movement class being the most common. However, if 
+greater flexibility and more options are required you can override the CharacterMovementComponent class and build on the foundation Epic Games has layed out.
+
+Begin with the ThirdPerson template or the 2D template. Once build add a new class and select CharacterMovementComponent as the parent class.
+
+![Add CustomerMovementComponent]()
+
+Now that we have an inherited class we can edit all functionality and build on the base provided by the CharacterMovementComponent, but first we must add it to the character class.
+
+
+The provided templates already setup a character inherited class to add our own functionality to. Within the character inherited class we want to add the custom movement component
+
+
+BlogTutorialCharacter.h:
+```
+class ABlogTutorialCharacter : public ACharacter
+{
+	GENERATED_BODY()
+
+public:
+	/** In the constructor we need to reference the object initializer, so add the following parameters to the constructor **/
+	ABlogTutorialCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+...
+protected:
+		/** Define the custom movement object and enable it to be edited with blueprints **/
+		UPROPERTY(BlueprintReadWrite)
+		class UBlogTutorialMovementComponent* BlogTutorialMovement;
+
+...
+public:
+	/** Returns BlogTutorialMovement subobject **/
+	FORCEINLINE class UBlogTutorialMovementComponent* GetBlogTutorialMovement() const { return BlogTutorialMovement; }
+
+```
+
+Going through this step by step, we add a pointer to the custom movement in the header and a getter with the keyword FORCEINLINE to inform the compiler that any instance that calls for the pointer
+to put the class in memory at that point. We do not need to include the BlogTutorialMovementComponent in the header as the class keyword informs the compiler that it will be defined in the cpp class.
+
+BlogTutorialCharacter.cpp:
+```
+#include "BlogTutorialMovementComponent.h"
+
+ABlogTutorialCharacter::ABlogTutorialCharacter(const FObjectInitializer& ObjectInitializer)
+	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UBlogTutorialMovementComponent>(ACharacter::CharacterMovementComponentName))
+{
+	/** Since we set the default subobject as our custom movement we want to cast the Character Movement to the custom BlogTutorialMovement **/
+	BlogTutorialMovement = Cast<UBlogTutorialMovementComponent>(GetCharacterMovement());
+
+	/** Verify its success **/
+	if (BlogTutorialMovement) {
+		BlogTutorialMovement->UpdatedComponent = RootComponent;
+	}
+	else {
+		/** Log the failure **/
+		UE_LOG(LogClass, Log, TEXT("BlogTutorialMovement failed to load"));
+	}
+
+```
+
+Once that's done, recompile the code in the editor, you may have to reload the blueprint in order for the changes to take into effect.
+ ![Asset Actions Reload](assetActionsReload.jpeg)
+
+Now when you open the Blueprint for the character you'll see it using the custom movement we have defined. 
+![Blueprint Components](blueprintComponents.jpeg)
+
+In the next tutorial we will cover adding in custom movement modes to our new class.

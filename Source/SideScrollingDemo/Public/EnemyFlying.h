@@ -13,15 +13,22 @@ class SIDESCROLLINGDEMO_API AEnemyFlying : public ACharacter
 
 public:
 	// Sets default values for this character's properties
-	AEnemyFlying();
+	AEnemyFlying(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 protected:
+
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = Movement, meta = (AllowPrivateAccess = "true"))
+		class UEnemyFlyingMovementComponent* EnemyFlyingMovement;
+
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void Landed(const FHitResult& Hit);
 
 	bool playerSpotted = false;
 	float Health = 1.f;
@@ -50,5 +57,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Render")
 		void TriggerScreenRenderedCheck();
+
+	FORCEINLINE class UEnemyFlyingMovementComponent* GetEnemyFlyingMovement() const { return EnemyFlyingMovement;  }
 
 };

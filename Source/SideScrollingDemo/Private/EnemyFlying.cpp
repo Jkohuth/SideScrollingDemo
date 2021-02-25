@@ -6,30 +6,33 @@
 #include "Engine.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "Components/ArrowComponent.h"
+#include "EnemyFlyingMovementComponent.h"
 
 // Sets default values
-AEnemyFlying::AEnemyFlying()
+AEnemyFlying::AEnemyFlying(const FObjectInitializer& ObjectInitializer)
+	: ACharacter(ObjectInitializer.SetDefaultSubobjectClass<UEnemyFlyingMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	EnemyFlyingMovement = Cast<UEnemyFlyingMovementComponent>(GetCharacterMovement());
 }
 
 // Called when the game starts or when spawned
 void AEnemyFlying::BeginPlay()
 {
 	Super::BeginPlay();
-	if (GetMovementComponent() != nullptr) {
-		GetMovementComponent()->SetPlaneConstraintAxisSetting(LockXAxis);
+	if (GetEnemyFlyingMovement() != nullptr) {
+	//	GetEnemyFlyingMovement()->SetPlaneConstraintAxisSetting(LockXAxis);
+		GetEnemyFlyingMovement()->SetMovementMode(MOVE_Flying);
+	//	GetEnemyFlyingMovement()->bConstrainToPlane = true;
+
 	}
 
 	// Check twice a second to see if the bird is rendered to the screen
 	GetWorld()->GetTimerManager().SetTimer(isRenderedTimer, this, &AEnemyFlying::TriggerScreenRenderedCheck, 1, true, 0.5);
 
-	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AEnemyFlying::OnHit);
-	GetCharacterMovement()->SetPlaneConstraintAxisSetting(LockXAxis);
-	GetCharacterMovement()->bConstrainToPlane = true;
 }
 
 // Called every frame
@@ -88,4 +91,10 @@ bool AEnemyFlying::isRenderedToScreen(APlayerController *playerController) {
 
 	return ScreenLocation.X >= 0 && ScreenLocation.Y >= 0 && ScreenLocation.X < ScreenWidth && ScreenLocation.Y < ScreenHeight;
 
+}
+
+void AEnemyFlying::Landed(const FHitResult& Hit) {
+	Super::Landed(Hit);
+
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "OnLanded called for flying enemy");
 }

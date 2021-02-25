@@ -27,7 +27,7 @@ protected:
 		class USphereComponent* SphereComponent;
 	UPROPERTY(Category=Enemy, VisibleAnyWhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		class UArrowComponent* ArrowComponent;
-	UPROPERTY(Category=Movement, VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
 		class UFloatingPawnMovement* PawnMovement;
 
 public:	

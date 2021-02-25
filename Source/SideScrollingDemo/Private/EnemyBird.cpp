@@ -8,6 +8,7 @@
 #include "SSDCharacter.h"
 #include "Engine.h"
 #include "GameFramework/FloatingPawnMovement.h"
+#include "GameFramework/PawnMovementComponent.h"
 
 // Sets default values
 AEnemyBird::AEnemyBird()
@@ -25,10 +26,10 @@ AEnemyBird::AEnemyBird()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	MeshComponent->SetupAttachment(SphereComponent);
 
-	PawnMovement = Cast<UFloatingPawnMovement>(GetMovementComponent());
+	/*PawnMovement = Cast<UPawnMovementComponent, UFloatingPawnMovement>(GetMovementComponent());
 	if (PawnMovement) {
 		PawnMovement->UpdatedComponent = RootComponent;
-	}
+	}*/
 }
 
 // Called when the game starts or when spawned
